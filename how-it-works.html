@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How ShopBrain Works</title>
+<link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAADACAYAAABS3GwHAAAFeUlEQVR4nO3dXVLbQBBF4ZEr+4EdhaXBjmBFzgsispFszV/PdN/zPaZSIKQ+M7LskCVN5uXv9Tr6GNDX18eyjD6G1dADYdixGhWF+Tdl6PGMZQxm34jBRy6LELp/AwYftXqG0O0LM/horUcIzb8gg4/eWoZwafWFUmL4YaPlnDUpicHHKLW7QfUOwPBjpNr5qwqA4ccMauawOACGHzMpnceiABh+zKhkLrMDYPgxs9z5zAqA4YcHOXN6OgCGH56cnddTATD88OjM3D4NgOGHZ8/mt+lHIQBvHgbA6o8IHs3xYQAMPyI5mmdugSBtNwBWf0S0N9fsAJD2KwBWf0R2P9/sAJB2EwCrPxRs55wdANJ+AmD1h5J13tkBII0AIG1Jidsf6GIHgDQCgDQCgDQCgLQLL4ChjB0A0ggA0ggA0ggA0ggA0ggA0ggA0ggA0ggA0v6MPoARPt9HH8GcXt9GH4G9ReWjEAx9PoUgwgfA4NeLHELo1wAMfxuRz2PIHSDyBRst2m4Qbgdg+PuKdn5DBRDt4swq0nkOE0Cki+JBlPMdJgCgRIgAoqxG3kQ47+4DiHARPPN+/t0HANRwHYD31ScKz9dB8sNwM7h/Q8nzEHlGAMaO3kld/5wQbLm9BfI4KGc+RuD1owYer0dKjgMAWiAAIzkru9ddwCMCgDQCgDQCgDQCMJLzlMTrExWPCADSCGBCPAWyQwBGtkO9d4vz+X7750Rgw+0/ivd0n/xs+Gv//iw8RssO0FnJMLMT2CGAjmpWciKwQQCdtLiNIYL+CKCDlvfwRNAXATTW4wUsEfRDAA31fHrj6WmQJwTQiOWjS3aBdgigAavh51aoPQKoZP2mFRG0RQAVRr1jSwTtEECh0R9XIII2CKDA6OHf+95EUIbfC7Tj0S+tmmX4V5/v/4/p9e1xFDMc72z4NOhGzio62zDNcOwedyFugb7NMEA1co7J46D2QgCZZhz+1czHNisCSHF+aVWUn8MSAUAaT4EKsHrGwQ4AaewA6fZZ+pm/O7MoP4cVdgBII4BvZ1ZED6tmlJ/DCrdAG+tgeP8IQZSfwwIB7IgyKFF+jp64BYI0AoA0AoA0AoA0AoA0AoA0AoA0AoA0AoA0AoA0AoA0AoA0AoA0AoA0AoA0twHwmxnm4vV6uA0AaIEAII0AUM3r7U9KzgPwfOIxB9cBALXcB8AuMJb38+8+gJT8XwSvIpz3EAHAXoThTylQAFEuCGyFCSAlIrAS6TyHCiClWBdnNq9v8c5vuABSinmhRot6PkMGsIp60axFPo9u/6PsXPym5DyRh35LJoAtYtinMvRb/P8AGRQHJLrQrwH2lK7+DH9McgGUYPjjIoAnGP7YCOABhj8+AoA0AjjA6q9BKoCzT4AYfh1SAZzB8GshgA2GXw8BQBoBfGP110QAieFXJhPA0RMghl+bTADAHukAWP0hGwDDj5REA2D4sZILgOHHlkQA/BtgHJEIYMXqj3syATD82CMRAMOPIxIBAEcIANIIANIIANIIANIIANIuXx/LMvoggFHYASCNACCNACCNACDtklJKvBCGoq+PZWEHgDQCgLSfALgNgpJ13tkBIO0mAHYBKNjOOTsApP0KgF0Akd3PNzsApO0GwC6AiPbmmh0A0g4DYBdAJEfz/HAHIAJE8GiOuQWCtKcBsAvAs2fze2oHIAJ4dGZuT98CEQE8OTuvWa8BiAAe5Mxp9otgIsDMcuez6CkQEWBGJXNZ/BiUCDCT0nmseh+ACDCDmjmsfiOMCDBS7fw1Hd6Xv9dry68HHGm18Db9KAS7ASy0nLNuA8tugNZ6LLDdV2xCQK2edxZmtyyEgFwWt9Tm9+yEgGcsX0sOfdFKDFiNeoDyD6+KhdT/yDrjAAAAAElFTkSuQmCC">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F7F7F4; --paper-dim:#EFEFEA; --ink:#14171C; --ink-soft:#4B5058; --line:#DDDCD5;
+    --cobalt:#2F5FFF; --cobalt-dim:#EAEFFF; --orange:#FF6B45; --orange-dim:#FFEDE6;
+    --mint:#1FAA80; --mint-dim:#E6F5EF; --white:#FFFFFF;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;line-height:1.55;}
+  h1,h2,h3{font-family:'Space Grotesk',sans-serif;font-weight:600;letter-spacing:-0.01em;line-height:1.15;margin:0;}
+  p{margin:0;}
+  a{color:inherit;text-decoration:none;}
+  .wrap{max-width:920px;margin:0 auto;padding:0 24px;}
+  @media(max-width:640px){.wrap{padding:0 18px;}}
+
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:13px 22px;border-radius:8px;font-weight:600;font-size:15px;cursor:pointer;border:1.5px solid transparent;white-space:nowrap;}
+  .btn-primary{background:var(--cobalt);color:var(--white);}
+  .btn-ghost{background:transparent;color:var(--ink);border-color:var(--line);}
+
+  header{position:sticky;top:0;z-index:50;background:rgba(247,247,244,0.9);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);}
+  nav{display:flex;align-items:center;justify-content:space-between;padding:16px 0;}
+  .logo{display:flex;align-items:center;gap:9px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:18px;}
+  .logo-mark{width:26px;height:26px;border-radius:7px;background:var(--cobalt);display:flex;align-items:center;justify-content:center;overflow:hidden;flex:none;}
+
+  .hero{padding:64px 0 48px;text-align:center;}
+  .hero h1{font-size:38px;margin-bottom:16px;}
+  @media(max-width:640px){.hero h1{font-size:29px;}}
+  .hero p{font-size:16.5px;color:var(--ink-soft);max-width:60ch;margin:0 auto;}
+
+  .section{padding:44px 0;border-top:1px solid var(--line);}
+  .section h2{font-size:24px;margin-bottom:14px;}
+  .section p.lead{font-size:15.5px;color:var(--ink-soft);margin-bottom:24px;max-width:70ch;}
+
+  .steps{display:flex;flex-direction:column;gap:18px;}
+  .step{display:flex;gap:16px;background:var(--white);border:1px solid var(--line);border-radius:14px;padding:20px;}
+  .step-num{width:34px;height:34px;border-radius:50%;background:var(--cobalt-dim);color:var(--cobalt);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex-shrink:0;}
+  .step h3{font-size:16px;margin-bottom:5px;}
+  .step p{font-size:13.5px;color:var(--ink-soft);}
+
+  .usecase-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+  @media(max-width:700px){.usecase-grid{grid-template-columns:repeat(2,1fr);}}
+  .usecase{background:var(--white);border:1px solid var(--line);border-radius:12px;padding:16px;text-align:center;}
+  .usecase .emoji{font-size:24px;margin-bottom:8px;}
+  .usecase h4{font-size:13.5px;margin-bottom:3px;}
+  .usecase p{font-size:11.5px;color:var(--ink-soft);}
+
+  .callout{background:var(--mint-dim);border-radius:14px;padding:22px;margin-top:20px;}
+  .callout h3{font-size:16px;margin-bottom:8px;color:#0E7A5C;}
+  .callout p{font-size:13.5px;color:var(--ink-soft);}
+
+  .cta{text-align:center;padding:56px 0 72px;}
+  .cta h2{font-size:26px;margin-bottom:12px;}
+  .cta p{font-size:15px;color:var(--ink-soft);margin-bottom:26px;}
+  .cta-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
+
+  footer{border-top:1px solid var(--line);padding:24px 0;text-align:center;font-size:13px;color:var(--ink-soft);}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <nav>
+      <a href="index.html" class="logo"><span class="logo-mark"><svg viewBox="0 0 24 24" style="width:68%;height:68%;"><path d="M5 5h14a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-8.5l-3.8 3.6v-3.6H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z" fill="#fff"/><line x1="9" y1="10.6" x2="15" y2="10.6" stroke="#2F5FFF" stroke-width="1" stroke-linecap="round"/><line x1="9" y1="10.6" x2="12" y2="8" stroke="#2F5FFF" stroke-width="1" stroke-linecap="round"/><line x1="15" y1="10.6" x2="12" y2="8" stroke="#2F5FFF" stroke-width="1" stroke-linecap="round"/><circle cx="9" cy="10.6" r="1.15" fill="#2F5FFF"/><circle cx="15" cy="10.6" r="1.15" fill="#2F5FFF"/><circle cx="12" cy="8" r="1.15" fill="#2F5FFF"/></svg></span>ShopBrain</a>
+      <a href="auth.html?mode=signup" class="btn btn-primary btn-sm" style="padding:9px 16px;font-size:14px;">Create AI Agent — Free</a>
+    </nav>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <h1>How ShopBrain Works</h1>
+    <p>An AI assistant you can add to any website — answers questions, helps visitors, and works around the clock. Not just for online stores.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <h2>Four simple steps</h2>
+    <p class="lead">No coding, no technical setup — everything happens from your phone.</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div><h3>Create your AI — free</h3><p>Give it a name and tell us what your business is about. Takes under a minute.</p></div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div><h3>Teach it about your business</h3><p>Add business info, FAQs, and policies in Training Center. Selling products? Add those too. Not selling anything? Skip that part entirely — the AI works fine without it.</p></div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div><h3>Add it to your website</h3><p>One small snippet of code, pasted once. Works on Shopify, WordPress, Wix, Squarespace, or a custom-built site.</p></div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div><h3>Your visitors get instant answers</h3><p>Day or night, your AI responds using only what you've actually told it — never making things up.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <h2>Not just for online stores</h2>
+    <p class="lead">ShopBrain works for any website that wants to answer visitor questions automatically — selling physical products is optional, not required.</p>
+    <div class="usecase-grid">
+      <div class="usecase"><div class="emoji">🛍️</div><h4>Online stores</h4><p>Products, prices, delivery, returns</p></div>
+      <div class="usecase"><div class="emoji">💇</div><h4>Service businesses</h4><p>Salons, repair shops, clinics</p></div>
+      <div class="usecase"><div class="emoji">🏢</div><h4>Company websites</h4><p>Answer "what do you do?" instantly</p></div>
+      <div class="usecase"><div class="emoji">🎓</div><h4>Consultants & agencies</h4><p>Explain services, pricing, process</p></div>
+      <div class="usecase"><div class="emoji">📝</div><h4>Blogs & content sites</h4><p>Help readers find what they need</p></div>
+      <div class="usecase"><div class="emoji">🏠</div><h4>Local businesses</h4><p>Hours, location, booking questions</p></div>
+    </div>
+
+    <div class="callout">
+      <h3>✅ Don't sell products? That's completely fine.</h3>
+      <p>The Products section in Training Center is entirely optional. If your business doesn't sell physical items, just leave it empty — your AI will still answer confidently using your Business Information, FAQs, Policies, and Custom Knowledge. Nothing breaks, nothing looks incomplete to your visitors.</p>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <h2>Built to stay honest</h2>
+    <p class="lead">Your AI only ever answers using what you've actually told it. If it doesn't know something, it says so — it never invents prices, policies, or promises on your behalf.</p>
+  </div>
+</section>
+
+<section class="cta">
+  <div class="wrap">
+    <h2>Ready to try it?</h2>
+    <p>Free to create. Free to use. No card required.</p>
+    <div class="cta-row">
+      <a href="auth.html?mode=signup" class="btn btn-primary">Create AI Agent — Free</a>
+      <a href="demo/index.html" target="_blank" class="btn btn-ghost">See a Live Demo</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">© 2026 ShopBrain</div>
+</footer>
+
+</body>
+</html>
