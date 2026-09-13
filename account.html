@@ -1,0 +1,1357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — ShopBrain</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="sb-config.js"></script>
+<style>
+  :root{
+    --paper:#F7F7F4; --paper-dim:#EFEFEA; --ink:#14171C; --ink-soft:#4B5058; --line:#DDDCD5;
+    --cobalt:#2F5FFF; --cobalt-dim:#EAEFFF; --orange:#FF6B45; --orange-dim:#FFEDE6;
+    --mint:#1FAA80; --mint-dim:#E6F5EF; --white:#FFFFFF;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:'Inter',sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased;}
+  h1,h2,h3{font-family:'Space Grotesk',sans-serif;font-weight:600;letter-spacing:-0.01em;line-height:1.15;margin:0;}
+  p{margin:0;}
+  a{color:inherit;text-decoration:none;}
+
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 18px;border-radius:8px;font-family:'Inter',sans-serif;font-weight:600;font-size:14px;cursor:pointer;border:1.5px solid transparent;transition:background .15s ease, transform .15s ease, border-color .15s ease;}
+  .btn:active{transform:scale(0.98);}
+  .btn:disabled{opacity:0.6;cursor:default;}
+  .btn-primary{background:var(--cobalt);color:var(--white);}
+  .btn-primary:hover{background:#2450DE;}
+  .btn-ghost{background:transparent;color:var(--ink);border-color:var(--line);}
+  .btn-ghost:hover{border-color:var(--ink);}
+  .btn-orange{background:var(--orange);color:var(--white);}
+  .btn-orange:hover{background:#E85A34;}
+  .btn-sm{padding:8px 14px;font-size:13px;}
+  .btn-block{width:100%;}
+
+  /* ===== Shell layout ===== */
+  .shell{display:flex;min-height:100vh;}
+  .sidebar{
+    width:230px;flex:none;background:var(--white);border-right:1px solid var(--line);
+    display:flex;flex-direction:column;padding:20px 14px;position:sticky;top:0;height:100vh;
+  }
+  .side-logo{display:flex;align-items:center;gap:9px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:18px;padding:8px 8px 22px;}
+  .logo-mark{width:24px;height:24px;border-radius:6px;background:var(--cobalt);position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;flex:none;}
+
+  .nav-item{
+    display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:8px;
+    font-size:14px;font-weight:600;color:var(--ink-soft);cursor:pointer;margin-bottom:2px;
+    transition:background .15s ease, color .15s ease;
+  }
+  .nav-item svg{width:17px;height:17px;stroke:currentColor;flex:none;}
+  .nav-item:hover{background:var(--paper-dim);color:var(--ink);}
+  .nav-item.active{background:var(--cobalt-dim);color:var(--cobalt);}
+
+  .sidebar-footer{margin-top:auto;padding-top:14px;border-top:1px solid var(--line);}
+  .side-profile{display:flex;align-items:center;gap:10px;padding:8px;border-radius:8px;font-size:13px;font-weight:600;}
+  .avatar-circle{width:28px;height:28px;border-radius:50%;background:var(--cobalt-dim);color:var(--cobalt);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;font-family:'Space Grotesk',sans-serif;flex:none;}
+  .side-profile .name-truncate{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .logout-row{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:8px;font-size:13.5px;font-weight:600;color:var(--ink-soft);cursor:pointer;}
+  .logout-row:hover{background:var(--paper-dim);color:var(--ink);}
+  .logout-row svg{width:16px;height:16px;stroke:currentColor;}
+
+  .main-col{flex:1;min-width:0;}
+  .topbar{
+    display:none;align-items:center;justify-content:space-between;
+    padding:14px 18px;border-bottom:1px solid var(--line);background:var(--white);position:sticky;top:0;z-index:20;
+  }
+  .content{max-width:920px;margin:0 auto;padding:36px 32px 100px;}
+  @media(max-width:900px){
+    .sidebar{display:none;}
+    .topbar{display:flex;}
+    .content{padding:24px 18px 90px;}
+  }
+
+  .bottom-nav{
+    display:none;position:fixed;bottom:0;left:0;right:0;background:var(--white);
+    border-top:1px solid var(--line);z-index:30;padding:6px 4px;
+  }
+  @media(max-width:900px){.bottom-nav{display:flex;}}
+  .bnav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 2px;cursor:pointer;color:var(--ink-soft);}
+  .bnav-item svg{width:19px;height:19px;stroke:currentColor;}
+  .bnav-item span{font-size:10px;font-weight:600;}
+  .bnav-item.active{color:var(--cobalt);}
+
+  .view{display:none;}
+  .view.active{display:block;}
+
+  .page-title{font-size:24px;margin-bottom:4px;}
+  .page-sub{color:var(--ink-soft);font-size:14px;margin-bottom:32px;}
+
+  /* Cards / shared */
+  .card{border:1px solid var(--line);border-radius:14px;background:var(--white);padding:24px;}
+  .empty-card{border:1.5px dashed var(--line);border-radius:14px;padding:38px 28px;text-align:center;background:var(--white);}
+  .empty-card .icon{width:48px;height:48px;border-radius:11px;background:var(--cobalt-dim);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;}
+  .empty-card .icon svg{width:22px;height:22px;stroke:var(--cobalt);}
+  .empty-card h3{font-size:17px;margin-bottom:8px;}
+  .empty-card p{color:var(--ink-soft);font-size:14px;max-width:360px;margin:0 auto 20px;}
+
+  .sec-title{display:flex;align-items:center;justify-content:space-between;margin:36px 0 14px;}
+  .sec-title:first-of-type{margin-top:0;}
+  .sec-title h2{font-size:16.5px;}
+  .sec-title a.link{font-size:13px;font-weight:600;color:var(--cobalt);cursor:pointer;}
+
+  /* Overview: agent card */
+  .agent-card{border:1px solid var(--line);border-radius:14px;background:var(--white);padding:24px;display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;}
+  .agent-card-left{display:flex;align-items:center;gap:15px;}
+  .ai-avatar{width:44px;height:44px;border-radius:10px;background:var(--cobalt);position:relative;flex:none;}
+  .ai-avatar::before,.ai-avatar::after{content:'';position:absolute;background:var(--white);border-radius:2px;}
+  .ai-avatar::before{width:15px;height:2.5px;top:20.5px;left:14.5px;}
+  .ai-avatar::after{width:2.5px;height:15px;top:14.5px;left:20.5px;}
+  .agent-card h3{font-size:15.5px;margin-bottom:3px;}
+  .agent-status{font-size:12px;color:var(--mint);font-weight:600;display:flex;align-items:center;gap:5px;}
+  .agent-status::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--mint);}
+  .agent-actions{display:flex;gap:8px;flex-wrap:wrap;}
+
+  .stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:18px 0 4px;}
+  @media(max-width:600px){.stat-grid{grid-template-columns:1fr;}}
+  .stat-card{border:1px solid var(--line);border-radius:12px;background:var(--white);padding:18px 20px;}
+  .stat-card .num{font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:700;}
+  .stat-card .label{font-size:12.5px;color:var(--ink-soft);margin-top:3px;}
+
+  .quick-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;}
+  @media(max-width:600px){.quick-grid{grid-template-columns:1fr;}}
+  .quick-card{border:1px solid var(--line);border-radius:12px;background:var(--white);padding:18px;cursor:pointer;transition:border-color .15s ease;}
+  .quick-card:hover{border-color:var(--cobalt);}
+  .quick-card h4{font-size:14px;margin-bottom:4px;}
+  .quick-card p{font-size:12.5px;color:var(--ink-soft);}
+
+  /* AI Assistants list */
+  .assistant-row{display:flex;align-items:center;justify-content:space-between;border:1px solid var(--line);border-radius:12px;padding:18px 20px;background:var(--white);margin-bottom:10px;flex-wrap:wrap;gap:12px;}
+  .assistant-row .meta{font-size:12.5px;color:var(--ink-soft);margin-top:3px;}
+
+  /* Services */
+  .no-sub-strip{text-align:center;font-size:13px;color:var(--ink-soft);margin-bottom:24px;}
+  .service-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;}
+  @media(max-width:700px){.service-grid{grid-template-columns:1fr;}}
+  .service-card{border:1px solid var(--line);border-radius:14px;background:var(--white);padding:22px;cursor:pointer;transition:border-color .15s ease;position:relative;}
+  .service-card:hover{border-color:var(--orange);}
+  .service-card.popular{border-color:var(--orange);border-width:1.5px;}
+  .pc-badge{position:absolute;top:-9px;right:16px;background:var(--orange);color:white;font-size:10.5px;font-weight:700;padding:3px 10px;border-radius:100px;}
+  .service-card h4{font-size:16px;margin-bottom:6px;}
+  .service-card .price{font-family:'Space Grotesk',sans-serif;font-size:21px;font-weight:700;margin-bottom:8px;}
+  .service-card p.desc{font-size:13px;color:var(--ink-soft);margin-bottom:14px;}
+  .service-card ul{margin:0;padding:0 0 0 18px;font-size:12.5px;color:var(--ink-soft);}
+  .service-card li{margin-bottom:4px;}
+
+  .order-item{border:1px solid var(--line);border-radius:12px;background:var(--white);padding:18px 20px;margin-bottom:10px;}
+  .order-top{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px;}
+  .order-name{font-weight:600;font-size:14.5px;}
+  .order-sub{font-size:12px;color:var(--ink-soft);margin-top:2px;}
+  .status-pill{font-size:11px;font-weight:700;padding:4px 10px;border-radius:100px;}
+  .status-pill.received{background:var(--orange-dim);color:var(--orange);}
+  .status-pill.approved{background:var(--mint-dim);color:#0E7A5C;}
+  .status-pill.in_progress{background:var(--cobalt-dim);color:var(--cobalt);}
+  .status-pill.completed{background:var(--mint-dim);color:#0E7A5C;}
+  .status-pill.rejected{background:#F3D9D5;color:#A3392A;}
+  .stepper-wrap{position:relative;padding-bottom:20px;}
+  .stepper{display:flex;align-items:center;}
+  .step{display:flex;align-items:center;flex:1;}
+  .step-dot{width:18px;height:18px;border-radius:50%;background:var(--paper-dim);border:2px solid var(--line);flex:none;display:flex;align-items:center;justify-content:center;}
+  .step-dot svg{width:9px;height:9px;stroke:white;display:none;}
+  .step.done .step-dot{background:var(--mint);border-color:var(--mint);}
+  .step.done .step-dot svg{display:block;}
+  .step.current .step-dot{background:var(--cobalt);border-color:var(--cobalt);}
+  .step-line{flex:1;height:2px;background:var(--line);margin:0 5px;}
+  .step.done .step-line{background:var(--mint);}
+  .step-label{font-size:10.5px;color:var(--ink-soft);margin-top:7px;position:absolute;transform:translateX(-50%);left:9px;white-space:nowrap;}
+
+  /* Connect */
+  .code-box{background:var(--ink);color:#D8DAE0;border-radius:10px;padding:18px 20px;font-family:monospace;font-size:12.5px;line-height:1.7;overflow-x:auto;margin-bottom:14px;position:relative;}
+  .copy-btn{position:absolute;top:12px;right:12px;background:rgba(255,255,255,0.1);color:white;border:none;border-radius:6px;padding:6px 11px;font-size:12px;font-weight:600;cursor:pointer;}
+  .copy-btn:hover{background:rgba(255,255,255,0.18);}
+
+  /* Settings */
+  .settings-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--line);gap:14px;}
+  .settings-row:last-child{border-bottom:none;}
+  .settings-row .label{font-size:13.5px;color:var(--ink-soft);}
+  .settings-row .value{font-size:14.5px;font-weight:600;}
+
+  /* Modal */
+  .modal-overlay{position:fixed;inset:0;background:rgba(20,23,28,0.5);display:none;align-items:flex-start;justify-content:center;padding:40px 20px;overflow-y:auto;z-index:100;}
+  .modal-overlay.active{display:flex;}
+  .modal{background:var(--white);border-radius:16px;max-width:480px;width:100%;padding:32px 30px;position:relative;}
+  .modal-close{position:absolute;top:20px;right:20px;background:none;border:none;cursor:pointer;width:28px;height:28px;}
+  .modal-close svg{width:16px;height:16px;stroke:var(--ink-soft);}
+  .modal-tag{font-size:13px;font-weight:600;color:var(--orange);margin-bottom:6px;}
+  .modal h3{font-size:22px;margin-bottom:6px;}
+  .modal .modal-price{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:16px;color:var(--ink-soft);margin-bottom:18px;}
+  .field{margin-bottom:15px;}
+  .field label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;}
+  .field .optional{font-weight:400;color:var(--ink-soft);}
+  .field input,.field textarea{width:100%;border:1.5px solid var(--line);border-radius:8px;padding:10px 12px;font-family:'Inter',sans-serif;font-size:14px;color:var(--ink);background:var(--paper);}
+  .field input:focus,.field textarea:focus{outline:none;border-color:var(--cobalt);}
+  .field textarea{resize:vertical;min-height:64px;}
+  .file-drop{border:1.5px dashed var(--line);border-radius:8px;padding:18px;text-align:center;cursor:pointer;background:var(--paper);font-size:13px;color:var(--ink-soft);}
+  .file-drop.filled{border-color:var(--mint);background:var(--mint-dim);color:#0E7A5C;font-weight:600;}
+  .field-required-note{font-size:11.5px;color:var(--ink-soft);margin-top:6px;}
+  .confirm-row{display:flex;align-items:flex-start;gap:8px;font-size:12.5px;color:var(--ink-soft);margin-bottom:16px;}
+  .confirm-row input{margin-top:2px;}
+  .order-summary{background:var(--paper-dim);border-radius:8px;padding:14px 16px;font-size:13px;margin-bottom:18px;}
+  .order-summary div{display:flex;justify-content:space-between;padding:3px 0;}
+  .modal-success{text-align:center;padding:10px 0 4px;}
+  .modal-success .check{width:50px;height:50px;border-radius:50%;background:var(--mint-dim);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;}
+  .modal-success .check svg{width:22px;height:22px;stroke:var(--mint);}
+  .error-box{background:var(--orange-dim);color:#B5431F;border:1px solid rgba(255,107,69,0.35);border-radius:8px;padding:10px 13px;font-size:13px;margin-top:12px;display:none;}
+  .error-box.show{display:block;}
+  .chat-thread{max-height:260px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;margin:14px 0;}
+  .chat-bubble{max-width:80%;padding:9px 12px;border-radius:10px;font-size:13px;}
+  .chat-bubble.customer{background:var(--cobalt);color:#fff;align-self:flex-end;}
+  .chat-bubble.shopbrain{background:var(--paper-dim);align-self:flex-start;}
+  .chat-input-row{display:flex;gap:8px;}
+  .chat-input-row input{flex:1;border:1.5px solid var(--line);border-radius:8px;padding:9px 12px;font-size:13.5px;}
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <aside class="sidebar">
+    <a href="index.html" class="side-logo"><span class="logo-mark"><svg viewBox="0 0 24 24" style="width:68%;height:68%;"><path d="M5 5h14a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-8.5l-3.8 3.6v-3.6H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z" fill="#fff"/><line x1="9" y1="10.6" x2="15" y2="10.6" stroke="#2F5FFF" stroke-width="1" stroke-linecap="round"/><line x1="9" y1="10.6" x2="12" y2="8" stroke="#2F5FFF" stroke-width="1" stroke-linecap="round"/><line x1="15" y1="10.6" x2="12" y2="8" stroke="#2F5FFF" stroke-width="1" stroke-linecap="round"/><circle cx="9" cy="10.6" r="1.15" fill="#2F5FFF"/><circle cx="15" cy="10.6" r="1.15" fill="#2F5FFF"/><circle cx="12" cy="8" r="1.15" fill="#2F5FFF"/></svg></span>ShopBrain</a>
+    <div class="nav-item active" data-view="overview" onclick="showView('overview')">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+      Overview
+    </div>
+    <div class="nav-item" data-view="assistants" onclick="showView('assistants')">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      AI Assistants
+    </div>
+    <a href="training-center.html" class="nav-item" data-view="training">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      Training Center
+    </a>
+    <div class="nav-item" data-view="conversations" onclick="showView('conversations')">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      Conversations
+    </div>
+    <div class="nav-item" data-view="connect" onclick="showView('connect')">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20z"/></svg>
+      Connect Website
+    </div>
+    <div class="nav-item" data-view="services" onclick="showView('services')">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2M9 4h6v3H9zM9 12h6M9 16h6"/></svg>
+      Services
+    </div>
+    <div class="nav-item" data-view="settings" onclick="showView('settings')">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Settings
+    </div>
+    <div class="sidebar-footer">
+      <div class="side-profile" style="display:flex;align-items:center;justify-content:space-between;">
+        <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+          <div class="avatar-circle" id="avatarInitial">…</div>
+          <span class="name-truncate" id="storeNameChip">Loading…</span>
+        </div>
+        <button id="notifBellDesktop" onclick="toggleNotifPanel()" style="position:relative;background:none;border:none;cursor:pointer;padding:4px;flex-shrink:0;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <span id="notifBadgeDesktop" style="display:none;position:absolute;top:0;right:0;background:var(--orange);color:#fff;font-size:10px;font-weight:700;border-radius:50%;width:15px;height:15px;align-items:center;justify-content:center;"></span>
+        </button>
+      </div>
+      <div class="logout-row" onclick="logout()">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>
+        Log Out
+      </div>
+    </div>
+  </aside>
+
+  <div class="main-col">
+    <div class="topbar">
+      <a href="index.html" class="side-logo" style="padding:0;"><span class="logo-mark"><svg viewBox="0 0 24 24" style="width:68%;height:68%;"><path d="M5 5h14a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-8.5l-3.8 3.6v-3.6H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z" fill="#fff"/><line x1="9" y1="10.6" x2="15" y2="10.6" stroke="#2F5FFF" stroke-width="1" stroke-linecap="round"/><line x1="9" y1="10.6" x2="12" y2="8" stroke="#2F5FFF" stroke-width="1" stroke-linecap="round"/><line x1="15" y1="10.6" x2="12" y2="8" stroke="#2F5FFF" stroke-width="1" stroke-linecap="round"/><circle cx="9" cy="10.6" r="1.15" fill="#2F5FFF"/><circle cx="15" cy="10.6" r="1.15" fill="#2F5FFF"/><circle cx="12" cy="8" r="1.15" fill="#2F5FFF"/></svg></span>ShopBrain</a>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <button id="notifBellMobile" onclick="toggleNotifPanel()" style="position:relative;background:none;border:none;cursor:pointer;padding:6px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <span id="notifBadgeMobile" style="display:none;position:absolute;top:2px;right:2px;background:var(--orange);color:#fff;font-size:10px;font-weight:700;border-radius:50%;width:16px;height:16px;align-items:center;justify-content:center;"></span>
+        </button>
+        <div class="avatar-circle" id="avatarInitialMobile">…</div>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- OVERVIEW -->
+      <div class="view active" id="view-overview">
+        <h1 class="page-title" id="overviewGreeting">Welcome</h1>
+        <p class="page-sub">Here's what's happening with your ShopBrain account.</p>
+
+        <div id="agentEmpty" class="empty-card">
+          <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+          <h3>You haven't created an AI agent yet</h3>
+          <p>It's free and takes just a few minutes — tell it about your store and it's ready to chat.</p>
+          <a href="create-agent.html" class="btn btn-primary">Create AI Agent — Free</a>
+        </div>
+
+        <div id="agentActive" class="agent-card" style="display:none;">
+          <div class="agent-card-left">
+            <div class="ai-avatar"></div>
+            <div>
+              <h3 id="ovAgentName">—</h3>
+              <div class="agent-status">Active</div>
+            </div>
+          </div>
+          <div class="agent-actions">
+            <a href="training-center.html" class="btn btn-ghost btn-sm">Train AI</a>
+            <a href="#" class="btn btn-ghost btn-sm" onclick="showView('connect');return false;">Connect Website</a>
+          </div>
+        </div>
+
+        <div class="stat-grid" id="statGrid" style="display:none;">
+          <div class="stat-card"><div class="num" id="statConversations">0</div><div class="label">Conversations</div></div>
+          <div class="stat-card"><div class="num" id="statMessages">0</div><div class="label">Messages</div></div>
+          <div class="stat-card"><div class="num" id="statKnowledge">0</div><div class="label">Knowledge Items</div></div>
+        </div>
+
+        <div class="sec-title"><h2>Quick actions</h2></div>
+        <div class="quick-grid">
+          <div class="quick-card" onclick="window.location.href='training-center.html'">
+            <h4>Training Center</h4>
+            <p>Improve what your AI knows.</p>
+          </div>
+          <div class="quick-card" onclick="showView('conversations')">
+            <h4>Conversations</h4>
+            <p>View customer conversations.</p>
+          </div>
+          <div class="quick-card" onclick="showView('connect')">
+            <h4>Connect Website</h4>
+            <p>Install the AI widget.</p>
+          </div>
+          <div class="quick-card" onclick="showView('services')">
+            <h4>ShopBrain Services</h4>
+            <p>Get professional help.</p>
+          </div>
+        </div>
+
+        <div class="sec-title"><h2>Recent service orders</h2><a class="link" onclick="showView('services')">View all</a></div>
+        <div id="ordersPreview"><p style="color:var(--ink-soft);font-size:13.5px;">Loading…</p></div>
+      </div>
+
+      <!-- AI ASSISTANTS -->
+      <div class="view" id="view-assistants">
+        <h1 class="page-title">AI Assistants</h1>
+        <p class="page-sub">Manage the AI assistants on your account.</p>
+        <div id="assistantsList"><p style="color:var(--ink-soft);font-size:13.5px;">Loading…</p></div>
+      </div>
+
+      <!-- CONVERSATIONS -->
+      <div class="view" id="view-conversations">
+        <h1 class="page-title">Conversations</h1>
+        <p class="page-sub">See what your customers are asking your AI.</p>
+        <div id="conversationsList"><p style="color:var(--ink-soft);font-size:13.5px;">Loading…</p></div>
+      </div>
+
+      <!-- CONNECT WEBSITE -->
+      <div class="view" id="view-connect">
+        <h1 class="page-title">Connect Your AI</h1>
+        <p class="page-sub">Add this to your website, or let ShopBrain install it for you.</p>
+        <div id="connectContent"><p style="color:var(--ink-soft);font-size:13.5px;">Loading…</p></div>
+      </div>
+
+      <!-- SERVICES -->
+      <div class="view" id="view-services">
+        <h1 class="page-title">Services</h1>
+        <p class="page-sub">Free to use. Pay only for hands-on help.</p>
+        <div class="no-sub-strip">One-time payment · No subscription · No recurring charges</div>
+        <div class="service-grid" id="serviceGrid"><p style="color:var(--ink-soft);font-size:13.5px;">Loading…</p></div>
+
+        <div class="sec-title"><h2>Your orders</h2></div>
+        <div id="ordersList"><p style="color:var(--ink-soft);font-size:13.5px;">Loading…</p></div>
+      </div>
+
+      <!-- SETTINGS -->
+      <div class="view" id="view-settings">
+        <h1 class="page-title">Settings</h1>
+        <p class="page-sub">Manage your account and AI.</p>
+
+        <div class="sec-title"><h2>Account</h2></div>
+        <div class="card">
+          <div class="settings-row">
+            <span class="label">Store name</span>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <input type="text" id="setStoreNameInput" value="" style="border:1.5px solid var(--line);border-radius:8px;padding:8px 11px;font-family:'Inter',sans-serif;font-size:14px;color:var(--ink);background:var(--paper);width:180px;">
+              <button class="btn btn-primary btn-sm" onclick="saveStoreName()" id="saveStoreNameBtn">Save</button>
+            </div>
+          </div>
+          <div class="settings-row"><span class="label">Email</span><span class="value" id="setEmail">—</span></div>
+        </div>
+        <div class="error-box" id="settingsError" style="margin-top:10px;"></div>
+        <div class="error-box" id="settingsSuccess" style="margin-top:10px;background:var(--mint-dim);color:#0E7A5C;border-color:rgba(31,170,128,0.35);"></div>
+
+        <div class="sec-title"><h2>AI</h2></div>
+        <div class="card" id="setAiCard">
+          <p style="color:var(--ink-soft);font-size:13.5px;">Loading…</p>
+        </div>
+
+        <div class="sec-title"><h2>Security</h2></div>
+        <div class="card">
+          <div class="settings-row"><span class="label">Log out of ShopBrain</span><button class="btn btn-ghost btn-sm" onclick="logout()">Log Out</button></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<nav class="bottom-nav">
+  <div class="bnav-item active" data-view="overview" onclick="showView('overview')">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+    <span>Home</span>
+  </div>
+  <a href="training-center.html" class="bnav-item" data-view="training">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+    <span>Train</span>
+  </a>
+  <div class="bnav-item" data-view="connect" onclick="showView('connect')">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20z"/></svg>
+    <span>Connect</span>
+  </div>
+  <div class="bnav-item" data-view="services" onclick="showView('services')">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2M9 4h6v3H9zM9 12h6M9 16h6"/></svg>
+    <span>Services</span>
+  </div>
+  <div class="bnav-item" data-view="settings" onclick="showView('settings')">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83"/></svg>
+    <span>Settings</span>
+  </div>
+</nav>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modalContent"></div>
+</div>
+
+<script>
+  let currentUser = null;
+  let currentAgent = null;
+  let SERVICES = {};
+  let selectedReceiptFile = null;
+
+  // ---------- View switching ----------
+  function showView(name){
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById('view-' + name).classList.add('active');
+    document.querySelectorAll('.nav-item, .bnav-item').forEach(el => {
+      el.classList.toggle('active', el.dataset.view === name);
+    });
+    window.scrollTo({top:0});
+  }
+
+  async function logout(){
+    await sb.auth.signOut();
+    window.location.href = 'auth.html';
+  }
+
+  // ---------- Overview ----------
+  async function loadOverview(){
+    document.getElementById('overviewGreeting').textContent = `Welcome, ${currentUser.storeName}`;
+
+    if(currentAgent){
+      document.getElementById('agentEmpty').style.display = 'none';
+      document.getElementById('agentActive').style.display = 'flex';
+      document.getElementById('ovAgentName').textContent = currentAgent.agent_name;
+      document.getElementById('statGrid').style.display = 'grid';
+
+      const { count: convCount } = await sb.from('conversations').select('id', {count:'exact', head:true}).eq('agent_id', currentAgent.id);
+      document.getElementById('statConversations').textContent = convCount || 0;
+
+      let knowledgeCount = 0;
+      const { count: prodCount } = await sb.from('products').select('id', {count:'exact', head:true}).eq('agent_id', currentAgent.id);
+      const { count: faqCount } = await sb.from('faqs').select('id', {count:'exact', head:true}).eq('agent_id', currentAgent.id);
+      knowledgeCount = (prodCount||0) + (faqCount||0);
+      document.getElementById('statKnowledge').textContent = knowledgeCount;
+
+      const { data: convIds } = await sb.from('conversations').select('id').eq('agent_id', currentAgent.id);
+      let msgCount = 0;
+      if(convIds && convIds.length){
+        const { count } = await sb.from('messages').select('id', {count:'exact', head:true}).in('conversation_id', convIds.map(c=>c.id));
+        msgCount = count || 0;
+      }
+      document.getElementById('statMessages').textContent = msgCount;
+    }
+
+    const { data: orders } = await sb.from('service_orders').select('service_key, status, created_at')
+      .eq('user_id', currentUser.id).order('created_at', {ascending:false}).limit(3);
+    const preview = document.getElementById('ordersPreview');
+    if(!orders || orders.length === 0){
+      preview.innerHTML = `<p style="color:var(--ink-soft);font-size:13.5px;">No service orders yet.</p>`;
+    } else {
+      preview.innerHTML = orders.map(o => `
+        <div class="order-item">
+          <div class="order-top">
+            <div><div class="order-name">${SERVICES[o.service_key]?.name || o.service_key}</div></div>
+            <span class="status-pill ${o.status}">${o.status.replace('_',' ')}</span>
+          </div>
+        </div>`).join('');
+    }
+  }
+
+  // ---------- AI Assistants ----------
+  async function loadAssistants(){
+    const list = document.getElementById('assistantsList');
+    if(!currentAgent){
+      list.innerHTML = `<div class="empty-card"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><h3>No AI assistants yet</h3><p>Create your first one for free.</p><a href="create-agent.html" class="btn btn-primary">Create AI Agent — Free</a></div>`;
+      return;
+    }
+    list.innerHTML = `
+      <div class="assistant-row">
+        <div>
+          <div style="font-weight:600;font-size:15px;">${currentAgent.agent_name}</div>
+          <div class="meta">Created ${new Date(currentAgent.created_at).toLocaleDateString()} · Status: ${currentAgent.status}</div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <a href="training-center.html" class="btn btn-ghost btn-sm">Train</a>
+          <button class="btn btn-ghost btn-sm" onclick="showView('connect')">Connect</button>
+        </div>
+      </div>`;
+  }
+
+  // ---------- Connect Website ----------
+  const WIDGET_SRC = 'https://shopbrain2.github.io/shopbrain/sb-chat.js';
+
+  async function loadConnect(){
+    const box = document.getElementById('connectContent');
+    if(!currentAgent){
+      box.innerHTML = `<div class="empty-card"><h3>Create an AI first</h3><p>You'll get a widget code to install once your AI exists.</p><a href="create-agent.html" class="btn btn-primary">Create AI Agent — Free</a></div>`;
+      return;
+    }
+    const { data: ws } = await sb.from('widget_settings').select('*').eq('agent_id', currentAgent.id).single();
+    const position = ws?.position || 'bottom-right';
+    const color = ws?.theme_color || '#2F5FFF';
+    const welcome = ws?.welcome_message || 'Hi! 👋 How can I help you today?';
+
+    box.innerHTML = `
+      <div class="shopify-card" id="shopifyCard">
+        <div class="shopify-card-head">
+          <div class="shopify-bag-icon">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16.5 6.5c0-2.2-1.8-4-4-4s-4 1.8-4 4" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/><path d="M5.5 8.2c.05-.6.55-1.05 1.15-1.05h10.7c.6 0 1.1.45 1.15 1.05l1.1 12.3c.06.68-.48 1.25-1.15 1.25H5.55c-.67 0-1.21-.57-1.15-1.25l1.1-12.3Z" fill="#fff"/><circle cx="9.5" cy="11" r="1.1" fill="#95BF47"/><circle cx="14.5" cy="11" r="1.1" fill="#95BF47"/></svg>
+          </div>
+          <div>
+            <div class="shopify-card-title">Connect to Shopify</div>
+            <div class="shopify-card-sub">Installs your AI directly on your storefront — no code, no copy-pasting.</div>
+          </div>
+        </div>
+        <div id="shopifyOAuthState">Loading…</div>
+      </div>
+
+      <p style="font-size:14px;color:var(--ink-soft);margin-bottom:14px;">Or install manually on any other platform:</p>
+      <style>
+        .shopify-card{background:#fff;border:1.5px solid #E1E9D8;border-radius:14px;padding:18px;margin-bottom:22px;box-shadow:0 1px 3px rgba(0,0,0,0.04);}
+        .shopify-card-head{display:flex;align-items:flex-start;gap:12px;margin-bottom:14px;}
+        .shopify-bag-icon{width:40px;height:40px;background:#95BF47;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+        .shopify-bag-icon svg{width:22px;height:22px;}
+        .shopify-card-title{font-weight:700;font-size:15px;color:var(--ink);}
+        .shopify-card-sub{font-size:12.5px;color:var(--ink-soft);margin-top:2px;}
+        .shopify-connect-row{display:flex;gap:8px;flex-wrap:wrap;}
+        .shopify-connect-row input{flex:1;min-width:180px;border:1.5px solid var(--line);border-radius:8px;padding:11px 14px;font-size:13.5px;}
+        .shopify-connect-btn{background:#95BF47;color:#fff;border:none;border-radius:8px;padding:11px 20px;font-size:13.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:7px;white-space:nowrap;}
+        .shopify-connect-btn:hover{background:#7EA83B;}
+        .shopify-connect-btn svg{width:16px;height:16px;}
+        .shopify-connected-pill{display:inline-flex;align-items:center;gap:6px;background:#E4F5EC;color:#1A7A4C;font-size:12.5px;font-weight:600;padding:6px 12px;border-radius:20px;margin-bottom:10px;}
+      </style>
+      <div class="code-box">
+        <button class="copy-btn" onclick="copyWidgetCode()">Copy</button>
+        <div>&lt;<span style="color:#7CA6FF;">script</span> <span style="color:#FFB27C;">src</span>=<span style="color:#7CE0B8;">"${WIDGET_SRC}"</span> <span style="color:#FFB27C;">data-agent</span>=<span style="color:#7CE0B8;">"${currentAgent.id}"</span>&gt;&lt;/<span style="color:#7CA6FF;">script</span>&gt;</div>
+      </div>
+
+      <div class="sec-title" style="margin-top:28px;"><h2>Customize your widget</h2></div>
+      <div class="field"><label>Welcome message</label><input type="text" id="wsWelcome" value="${welcome.replace(/"/g,'&quot;')}"></div>
+      <div class="field"><label>Position on page</label>
+        <select id="wsPosition">
+          <option value="bottom-right" ${position==='bottom-right'?'selected':''}>Bottom right</option>
+          <option value="bottom-left" ${position==='bottom-left'?'selected':''}>Bottom left</option>
+        </select>
+      </div>
+      <div class="field"><label>Theme color</label><input type="color" id="wsColor" value="${color}" style="height:42px;width:80px;padding:2px;"></div>
+      <button class="btn btn-primary btn-sm" onclick="saveWidgetSettings()">Save widget settings</button>
+      <div class="error-box" id="widgetSaveMsg" style="display:none;color:var(--cobalt);background:var(--cobalt-dim);"></div>
+
+      <a href="widget-preview.html?agent=${currentAgent.id}" target="_blank" style="font-size:13px;font-weight:600;color:var(--cobalt);display:block;margin-top:22px;">Preview your widget live →</a>
+
+      <div class="sec-title" style="margin-top:28px;"><h2>Where do I paste this?</h2></div>
+      <div class="card" style="margin-bottom:12px;">
+        <h4 style="font-size:14px;margin-bottom:8px;">🛍️ Shopify</h4>
+        <p style="font-size:13px;color:var(--ink-soft);">Use the "Connect to Shopify" button above instead — it installs automatically. Manual steps below are only needed if you'd rather do it yourself:</p>
+        <ol style="font-size:13px;color:var(--ink-soft);padding-left:18px;line-height:1.8;">
+          <li>Shopify Admin → <b>Online Store</b> → <b>Themes</b></li>
+          <li>On your active theme, tap the "…" menu → <b>Edit code</b></li>
+          <li>Open <code>layout/theme.liquid</code></li>
+          <li>Scroll to the very bottom, find <code>&lt;/body&gt;</code></li>
+          <li>Paste the code above right before it, then tap <b>Save</b></li>
+        </ol>
+      </div>
+      <div class="card" style="margin-bottom:12px;">
+        <h4 style="font-size:14px;margin-bottom:8px;">🌐 WordPress / Wix / Squarespace / other builders</h4>
+        <p style="font-size:13px;color:var(--ink-soft);">Look for a setting called <b>"Custom code," "Footer code,"</b> or <b>"Embed code"</b> — usually under Settings or Theme editor. Paste the snippet there; most site builders inject it near the closing <code>&lt;/body&gt;</code> tag automatically.</p>
+      </div>
+      <div class="card">
+        <h4 style="font-size:14px;margin-bottom:8px;">💻 Custom-built website (HTML)</h4>
+        <p style="font-size:13px;color:var(--ink-soft);">Paste it directly into your HTML file(s), right before the closing <code>&lt;/body&gt;</code> tag — on every page you want the chat to appear.</p>
+      </div>
+
+      <div class="card" style="margin-top:26px;background:var(--cobalt-dim);border:none;">
+        <h3 style="font-size:15px;margin-bottom:6px;">Prefer us to install it?</h3>
+        <p style="font-size:13.5px;color:var(--ink-soft);margin-bottom:14px;">Let ShopBrain handle the installation for you.</p>
+        <button class="btn btn-orange btn-sm" onclick="showView('services')">Order Professional Setup →</button>
+      </div>
+    `;
+    loadShopifyOAuthState();
+  }
+
+  async function loadShopifyOAuthState(){
+    const stateEl = document.getElementById('shopifyOAuthState');
+    const { data: status } = await sb.rpc('get_shopify_status', { p_agent_id: currentAgent.id });
+    const connected = status && status.length > 0 ? status[0] : null;
+
+    if(connected){
+      stateEl.innerHTML = `
+        <div class="shopify-connected-pill">✓ Connected to ${connected.shop_domain}</div>
+        <p style="font-size:11.5px;color:var(--ink-soft);margin-bottom:12px;">Installed ${new Date(connected.installed_at).toLocaleDateString()}</p>
+        <button class="shopify-connect-btn" onclick="connectToShopify()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
+          Reconnect / Update
+        </button>
+      `;
+    } else {
+      stateEl.innerHTML = `
+        <div class="shopify-connect-row">
+          <input type="text" id="shopifyShopDomain" placeholder="e.g. kith.com or mystore.myshopify.com">
+          <button class="shopify-connect-btn" onclick="connectToShopify()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            Connect to Shopify
+          </button>
+        </div>
+      `;
+    }
+  }
+
+  async function connectToShopify(){
+    const input = document.getElementById('shopifyShopDomain');
+    let domain = input ? input.value.trim() : '';
+    if(!domain){ domain = prompt('Enter your store\'s website (e.g. kith.com or mystore.myshopify.com):') || ''; }
+    domain = domain.replace(/^https?:\/\//, '').replace(/\/.*$/, '').trim();
+    if(!domain){ return; }
+
+    const stateEl = document.getElementById('shopifyOAuthState');
+    const originalHTML = stateEl.innerHTML;
+    stateEl.innerHTML = `<p style="font-size:13px;color:var(--ink-soft);">Looking up your store…</p>`;
+
+    let shop = domain;
+    if(!domain.endsWith('.myshopify.com')){
+      try {
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/shopify_oauth`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
+          body: JSON.stringify({ action: 'resolve', domain })
+        });
+        const data = await res.json();
+        if(!res.ok || data.error){
+          alert((data.error || 'Could not find your Shopify address.') + '\n\nYou can also find it manually in Shopify Admin → Settings → Domains — it ends in .myshopify.com.');
+          stateEl.innerHTML = originalHTML;
+          return;
+        }
+        shop = data.shop;
+      } catch (e) {
+        alert('Network error looking up your store: ' + e.message);
+        stateEl.innerHTML = originalHTML;
+        return;
+      }
+    }
+
+    const nonce = Math.random().toString(36).slice(2) + Date.now();
+    sessionStorage.setItem('shopify_oauth_nonce', nonce);
+    const state = `${currentAgent.id}.${nonce}`;
+    const clientId = 'b512d93efad1e1c45f5813ff582e0eeb';
+    const redirectUri = encodeURIComponent('https://shopbrain2.github.io/shopbrain/shopify-callback.html');
+    const authUrl = `https://${shop}/admin/oauth/authorize?client_id=${clientId}&scope=write_script_tags&redirect_uri=${redirectUri}&state=${encodeURIComponent(state)}`;
+    window.location.href = authUrl;
+  }
+
+  async function saveWidgetSettings(){
+    const welcome_message = document.getElementById('wsWelcome').value.trim();
+    const position = document.getElementById('wsPosition').value;
+    const theme_color = document.getElementById('wsColor').value;
+    await sb.from('widget_settings').update({ welcome_message, position, theme_color, updated_at: new Date().toISOString() }).eq('agent_id', currentAgent.id);
+    const msg = document.getElementById('widgetSaveMsg');
+    msg.textContent = 'Saved — changes apply next time your chat widget loads.';
+    msg.style.display = 'block';
+    setTimeout(()=>{ msg.style.display='none'; }, 2500);
+  }
+
+  function copyWidgetCode(){
+    const code = `<script src="${WIDGET_SRC}" data-agent="${currentAgent.id}"><\/script>`;
+    navigator.clipboard.writeText(code);
+    const btn = document.querySelector('#connectContent .copy-btn');
+    const original = btn.textContent;
+    btn.textContent = 'Copied!';
+    setTimeout(()=>btn.textContent = original, 1500);
+  }
+
+  // ---------- Conversations ----------
+  async function loadConversations(){
+    const box = document.getElementById('conversationsList');
+    if(!currentAgent){
+      box.innerHTML = `<div class="empty-card"><h3>Create an AI first</h3><p>Conversations will show up here once your AI is live.</p></div>`;
+      return;
+    }
+    const { data: convos } = await sb.from('conversations').select('*')
+      .eq('agent_id', currentAgent.id).order('last_message_at', {ascending:false}).limit(50);
+
+    if(!convos || !convos.length){
+      box.innerHTML = `<div class="empty-card">
+        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+        <h3>No conversations yet</h3>
+        <p>Once your AI is connected to your website, customer conversations will show up here.</p>
+      </div>`;
+      return;
+    }
+
+    box.innerHTML = convos.map(c => `
+      <div class="assistant-row" style="cursor:pointer;" onclick="openConversation('${c.id}')">
+        <div>
+          <div style="font-weight:600;font-size:14.5px;">${c.customer_identifier || 'Anonymous visitor'}</div>
+          <div class="meta">${new Date(c.last_message_at).toLocaleString()} · ${c.status}</div>
+        </div>
+        <span style="color:var(--cobalt);font-size:13px;font-weight:600;">View →</span>
+      </div>
+    `).join('');
+  }
+
+  async function openConversation(id){
+    const { data: msgs } = await sb.from('messages').select('*').eq('conversation_id', id).order('created_at', {ascending:true});
+    const modal = document.getElementById('modalContent');
+    modal.innerHTML = `
+      <button class="modal-close" onclick="closeModal()"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      <div class="modal-tag">Conversation</div>
+      <h3>Chat history</h3>
+      <div style="display:flex;flex-direction:column;gap:10px;max-height:55vh;overflow-y:auto;margin-top:16px;">
+        ${(msgs||[]).map(m => `
+          <div style="align-self:${m.sender==='customer'?'flex-end':'flex-start'};max-width:80%;background:${m.sender==='customer'?'var(--cobalt)':'var(--paper-dim)'};color:${m.sender==='customer'?'#fff':'inherit'};padding:9px 13px;border-radius:14px;font-size:13.5px;">${m.content.replace(/[&<>]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}</div>
+        `).join('') || '<p style="color:var(--ink-soft);font-size:13.5px;">No messages found.</p>'}
+      </div>
+    `;
+    document.getElementById('modalOverlay').classList.add('active');
+  }
+
+  // ---------- Notifications ----------
+  async function notifyAdmins(message){
+    const { data: admins } = await sb.from('admins').select('id');
+    if(admins && admins.length){
+      await sb.from('notifications').insert(admins.map(a => ({ user_id: a.id, type: 'admin_alert', message })));
+    }
+  }
+  let notifPollTimer = null;
+
+  async function refreshNotifBadge(){
+    if(!currentUser) return;
+    const { count } = await sb.from('notifications').select('id', {count:'exact', head:true}).eq('user_id', currentUser.id).eq('is_read', false);
+    ['notifBadgeMobile','notifBadgeDesktop'].forEach(id => {
+      const el = document.getElementById(id);
+      if(!el) return;
+      if(count && count > 0){ el.textContent = count > 9 ? '9+' : count; el.style.display = 'flex'; }
+      else { el.style.display = 'none'; }
+    });
+  }
+
+  function timeAgo(dateStr){
+    const diff = (Date.now() - new Date(dateStr).getTime()) / 1000;
+    if(diff < 60) return 'just now';
+    if(diff < 3600) return Math.floor(diff/60) + 'm ago';
+    if(diff < 86400) return Math.floor(diff/3600) + 'h ago';
+    return Math.floor(diff/86400) + 'd ago';
+  }
+
+  async function toggleNotifPanel(){
+    const panel = document.getElementById('notifPanel');
+    const open = panel.classList.toggle('open');
+    if(!open) return;
+
+    const { data: notifs } = await sb.from('notifications').select('*').eq('user_id', currentUser.id).order('created_at', {ascending:false}).limit(30);
+    panel.innerHTML = (notifs && notifs.length)
+      ? notifs.map(n => `<div class="notif-item ${n.is_read ? '' : 'unread'}"><div class="msg">${(n.message||'').replace(/[&<>]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}</div><div class="time">${timeAgo(n.created_at)}</div></div>`).join('')
+      : '<div class="notif-empty">No notifications yet.</div>';
+
+    const unreadIds = (notifs || []).filter(n => !n.is_read).map(n => n.id);
+    if(unreadIds.length){
+      await sb.from('notifications').update({ is_read: true }).in('id', unreadIds);
+      refreshNotifBadge();
+    }
+  }
+
+  document.addEventListener('click', (e) => {
+    const panel = document.getElementById('notifPanel');
+    if(!panel || !panel.classList.contains('open')) return;
+    if(!panel.contains(e.target) && !e.target.closest('#notifBellMobile') && !e.target.closest('#notifBellDesktop')){
+      panel.classList.remove('open');
+    }
+  });
+
+  function startNotifPolling(){
+    clearInterval(notifPollTimer);
+    refreshNotifBadge();
+    notifPollTimer = setInterval(refreshNotifBadge, 20000);
+  }
+
+  // ---------- Support (floating chat with ShopBrain) ----------
+  let supportChatId = null;
+  let supportPollTimer = null;
+  let supportLastCount = 0;
+
+  function toggleSupportWidget(){
+    if(supportBubbleWasDragged){ supportBubbleWasDragged = false; return; }
+    const panel = document.getElementById('supportPanel');
+    const open = panel.classList.toggle('open');
+    if(open){
+      positionPanelNearBubble('supportBubble', 'supportPanel');
+      loadSupportChat();
+      startSupportPolling();
+    }
+    else { clearInterval(supportPollTimer); }
+  }
+
+  // ---------- Draggable bubble (shared logic, mirrors index.html's marketing widget) ----------
+  let supportBubbleWasDragged = false;
+
+  function makeBubbleDraggable(bubbleId, storageKey){
+    const bubble = document.getElementById(bubbleId);
+    if(!bubble) return;
+    let startX, startY, origX, origY, dragging = false;
+
+    try {
+      const saved = JSON.parse(localStorage.getItem(storageKey));
+      if(saved){
+        bubble.style.left = saved.x + 'px';
+        bubble.style.top = saved.y + 'px';
+        bubble.style.right = 'auto';
+        bubble.style.bottom = 'auto';
+      }
+    } catch(e){}
+
+    bubble.addEventListener('pointerdown', (e) => {
+      dragging = false;
+      startX = e.clientX; startY = e.clientY;
+      const rect = bubble.getBoundingClientRect();
+      origX = rect.left; origY = rect.top;
+      bubble.setPointerCapture(e.pointerId);
+    });
+
+    bubble.addEventListener('pointermove', (e) => {
+      if(startX === undefined) return;
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+      if(!dragging && (Math.abs(dx) > 6 || Math.abs(dy) > 6)){
+        dragging = true;
+        bubble.style.transition = 'none';
+      }
+      if(dragging){
+        const rect = bubble.getBoundingClientRect();
+        let newX = origX + dx;
+        let newY = origY + dy;
+        newX = Math.max(4, Math.min(window.innerWidth - rect.width - 4, newX));
+        newY = Math.max(4, Math.min(window.innerHeight - rect.height - 4, newY));
+        bubble.style.left = newX + 'px';
+        bubble.style.top = newY + 'px';
+        bubble.style.right = 'auto';
+        bubble.style.bottom = 'auto';
+      }
+    });
+
+    bubble.addEventListener('pointerup', () => {
+      bubble.style.transition = '';
+      if(dragging){
+        supportBubbleWasDragged = true;
+        const rect = bubble.getBoundingClientRect();
+        localStorage.setItem(storageKey, JSON.stringify({ x: rect.left, y: rect.top }));
+        setTimeout(() => { supportBubbleWasDragged = false; }, 50);
+      }
+      startX = undefined;
+      dragging = false;
+    });
+  }
+
+  function positionPanelNearBubble(bubbleId, panelId){
+    const bubble = document.getElementById(bubbleId);
+    const panel = document.getElementById(panelId);
+    if(!bubble || !panel) return;
+    const rect = bubble.getBoundingClientRect();
+    const panelWidth = panel.offsetWidth || 320;
+    const panelHeight = panel.offsetHeight || 420;
+
+    const openLeft = rect.left + panelWidth > window.innerWidth - 10;
+    const openAbove = rect.top + rect.height + panelHeight > window.innerHeight - 10;
+
+    panel.style.right = 'auto'; panel.style.left = 'auto'; panel.style.top = 'auto'; panel.style.bottom = 'auto';
+
+    if(openLeft){ panel.style.left = Math.max(10, rect.right - panelWidth) + 'px'; }
+    else { panel.style.left = rect.left + 'px'; }
+
+    if(openAbove){ panel.style.bottom = (window.innerHeight - rect.top + 10) + 'px'; }
+    else { panel.style.top = (rect.bottom + 10) + 'px'; }
+  }
+
+  makeBubbleDraggable('supportBubble', 'shopbrain_support_bubble_pos');
+
+  async function loadSupportChat(){
+    const { data: chat } = await sb.from('site_visitor_chats').select('*').eq('user_id', currentUser.id).order('created_at', {ascending:false}).limit(1).maybeSingle();
+    if(!chat){
+      supportChatId = null;
+      document.getElementById('supportThread').innerHTML = '';
+      document.getElementById('supportSetup').style.display = 'flex';
+      document.getElementById('supportFoot').classList.remove('show');
+      return;
+    }
+    supportChatId = chat.id;
+    const { data: msgs } = await sb.from('site_visitor_messages').select('*').eq('chat_id', supportChatId).order('created_at');
+    document.getElementById('supportThread').innerHTML = (msgs||[]).map(m =>
+      `<div class="svc-msg ${m.sender === 'admin' ? 'admin' : 'visitor'}">${(m.message||'').replace(/[&<>]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}</div>`
+    ).join('') || '<p style="color:var(--ink-soft);font-size:13px;">No messages yet.</p>';
+    document.getElementById('supportThread').scrollTop = document.getElementById('supportThread').scrollHeight;
+    supportLastCount = (msgs || []).length;
+    document.getElementById('supportSetup').style.display = 'none';
+    document.getElementById('supportFoot').classList.add('show');
+  }
+
+  async function startSupportChat(){
+    const msg = document.getElementById('supportFirstMsg').value.trim();
+    if(!msg) return;
+    const { data: chat, error } = await sb.from('site_visitor_chats').insert({
+      user_id: currentUser.id, visitor_name: currentUser.storeName, visitor_email: currentUser.email
+    }).select('id').single();
+    if(error){ alert('Something went wrong: ' + error.message); return; }
+    supportChatId = chat.id;
+    document.getElementById('supportFirstMsg').value = '';
+    await sb.from('site_visitor_messages').insert({ chat_id: supportChatId, sender: 'customer', message: msg });
+    await notifyAdmins(`${currentUser.storeName} started a support chat: "${msg.slice(0,60)}"`);
+    loadSupportChat();
+  }
+
+  async function sendSupportMessage(){
+    const input = document.getElementById('supportInput');
+    const msg = input.value.trim();
+    if(!msg || !supportChatId) return;
+    input.value = '';
+    await sb.from('site_visitor_messages').insert({ chat_id: supportChatId, sender: 'customer', message: msg });
+    await sb.from('site_visitor_chats').update({ last_message_at: new Date().toISOString() }).eq('id', supportChatId);
+    await notifyAdmins(`${currentUser.storeName} sent a support message: "${msg.slice(0,60)}"`);
+    loadSupportChat();
+  }
+
+  function startSupportPolling(){
+    clearInterval(supportPollTimer);
+    supportPollTimer = setInterval(async () => {
+      if(!supportChatId) return;
+      const { count } = await sb.from('site_visitor_messages').select('id', {count:'exact', head:true}).eq('chat_id', supportChatId);
+      if(count && count > supportLastCount){ loadSupportChat(); }
+    }, 8000);
+  }
+
+  // ---------- Services ----------
+  function renderServiceCards(){
+    const grid = document.getElementById('serviceGrid');
+    const items = Object.values(SERVICES).sort((a,b) => a.sort_order - b.sort_order);
+    grid.innerHTML = items.map(s => `
+      <div class="service-card ${s.is_popular ? 'popular' : ''}" onclick="openOrder('${s.key}')">
+        ${s.is_popular ? '<span class="pc-badge">Most Popular</span>' : ''}
+        <h4>${s.name}</h4>
+        <div class="price">$${s.price}</div>
+        <p class="desc">${s.description}</p>
+        <ul>${(s.features||[]).slice(0,3).map(f => `<li>${f}</li>`).join('')}</ul>
+      </div>
+    `).join('');
+  }
+
+  function renderStepper(status){
+    const STATUS_STEPS = ['received','approved','in_progress','completed'];
+    const labels = {received:'Received', approved:'Approved', in_progress:'In Progress', completed:'Completed'};
+    const currentIndex = STATUS_STEPS.indexOf(status);
+    let stepsHtml = '';
+    STATUS_STEPS.forEach((s, i) => {
+      let cls = '';
+      if(i < currentIndex) cls = 'done';
+      else if(i === currentIndex) cls = status === 'completed' ? 'done' : 'current';
+      const dotInner = (cls === 'done') ? '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg>' : '';
+      const line = i < STATUS_STEPS.length - 1 ? '<div class="step-line"></div>' : '';
+      stepsHtml += `<div class="step ${cls}"><div class="step-dot">${dotInner}</div>${line}</div>`;
+    });
+    const positions = ['9px','33.3%','66.6%','calc(100% - 9px)'];
+    const labelsHtml = STATUS_STEPS.map((s,i) => `<span class="step-label" style="left:${positions[i]};">${labels[s]}</span>`).join('');
+    return `<div class="stepper-wrap"><div class="stepper">${stepsHtml}</div>${labelsHtml}</div>`;
+  }
+
+  async function loadOrders(){
+    const { data: orders, error } = await sb.from('service_orders')
+      .select('id, order_number, service_key, status, created_at')
+      .eq('user_id', currentUser.id).order('created_at', {ascending:false});
+    const list = document.getElementById('ordersList');
+    if(error){
+      list.innerHTML = `<p style="color:var(--ink-soft);font-size:13.5px;">Couldn't load your orders right now.</p>`;
+      return;
+    }
+    if(!orders || orders.length === 0){
+      list.innerHTML = `<div class="empty-card"><p>You haven't ordered a service yet.</p></div>`;
+      return;
+    }
+    list.innerHTML = orders.map(o => `
+      <div class="order-item" style="cursor:pointer;" onclick="openOrderChat('${o.id}', '${o.service_key}', '${o.order_number}')">
+        <div class="order-top">
+          <div><div class="order-name">${SERVICES[o.service_key]?.name || o.service_key}</div><div class="order-sub">${o.order_number}</div></div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:13.5px;color:var(--ink-soft);">$${SERVICES[o.service_key]?.price ?? ''}</span>
+            <span class="status-pill ${o.status}">${o.status.replace('_',' ')}</span>
+          </div>
+        </div>
+        ${renderStepper(o.status)}
+        <div style="font-size:12.5px;color:var(--cobalt);font-weight:600;margin-top:8px;">Message ShopBrain about this order →</div>
+      </div>
+    `).join('');
+  }
+
+  async function openOrderChat(orderId, serviceKey, orderNumber){
+    const { data: messages } = await sb.from('service_order_messages').select('*').eq('order_id', orderId).order('created_at');
+    const modal = document.getElementById('modalContent');
+    modal.innerHTML = `
+      <button class="modal-close" onclick="closeModal()"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      <div class="modal-tag">Order</div>
+      <h3>${SERVICES[serviceKey]?.name || serviceKey}</h3>
+      <p style="color:var(--ink-soft);font-size:13px;margin-bottom:16px;">${orderNumber}</p>
+      <h4 style="font-size:14px;margin-bottom:8px;">Messages with ShopBrain</h4>
+      <div class="chat-thread" id="custOrderChatThread">
+        ${(messages || []).map(m => `<div class="chat-bubble ${m.sender === 'shopbrain' ? 'shopbrain' : 'customer'}">${(m.message||'').replace(/[&<>]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}</div>`).join('') || '<p style="color:var(--ink-soft);font-size:13px;">No messages yet. Ask a question about your order below.</p>'}
+      </div>
+      <div class="chat-input-row">
+        <input type="text" id="custOrderChatInput" placeholder="Ask a question about your order…">
+        <button class="btn btn-primary btn-sm" onclick="sendCustomerOrderMessage('${orderId}', '${serviceKey}', '${orderNumber}')">Send</button>
+      </div>
+    `;
+    document.getElementById('modalOverlay').classList.add('active');
+  }
+
+  async function sendCustomerOrderMessage(orderId, serviceKey, orderNumber){
+    const input = document.getElementById('custOrderChatInput');
+    const msg = input.value.trim();
+    if(!msg) return;
+    await sb.from('service_order_messages').insert({ order_id: orderId, sender: 'customer', message: msg });
+    await notifyAdmins(`${currentUser.storeName} messaged about order ${orderNumber}: "${msg.slice(0,60)}"`);
+    input.value = '';
+    openOrderChat(orderId, serviceKey, orderNumber);
+  }
+
+  async function openOrder(key){
+    const s = SERVICES[key];
+    selectedReceiptFile = null;
+    showInvoiceStep(key);
+  }
+
+  async function showInvoiceStep(key){
+    const s = SERVICES[key];
+    const modal = document.getElementById('modalContent');
+
+    const { data: paymentMethods } = await sb.from('payment_methods').select('*').eq('is_active', true).order('sort_order');
+
+    const orderNumberPreview = 'SB-' + Math.random().toString(36).slice(2,10).toUpperCase();
+
+    const paymentBlock = (paymentMethods && paymentMethods.length)
+      ? paymentMethods.map(pm => `
+          <div style="margin-bottom:12px;">
+            <div style="font-weight:600;font-size:13.5px;">${pm.label}</div>
+            <div style="font-size:13px;color:var(--ink-soft);white-space:pre-line;">${pm.details}</div>
+          </div>
+        `).join('')
+      : `<div style="font-size:13px;color:#B5431F;">Payment details haven't been set up yet. Please contact ShopBrain directly before paying.</div>`;
+
+    modal.innerHTML = `
+      <button class="modal-close" onclick="closeModal()"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      <div class="modal-tag">Invoice</div>
+      <h3>${s.name}</h3>
+      <div class="order-summary" style="margin-bottom:18px;">
+        <div><span>Reference</span><b>${orderNumberPreview}</b></div>
+        <div><span>Service</span><b>${s.name}</b></div>
+        <div><span>Amount due</span><b>$${s.price}</b></div>
+        <div><span>Payment type</span><b>One-time — no subscription</b></div>
+      </div>
+      <div class="field">
+        <label>How to pay</label>
+        <div style="background:var(--paper-dim);border-radius:8px;padding:14px 16px;">${paymentBlock}</div>
+      </div>
+      <p style="font-size:13px;color:var(--ink-soft);margin-bottom:20px;">Complete the payment above first — you'll need your receipt for the next step.</p>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-ghost" onclick="closeModal()" style="flex:none;">Not yet</button>
+        <button class="btn btn-orange" style="flex:1;" onclick="showOrderForm('${key}')">I've completed the payment →</button>
+      </div>
+    `;
+    document.getElementById('modalOverlay').classList.add('active');
+  }
+
+  function showOrderForm(key){
+    const s = SERVICES[key];
+    const modal = document.getElementById('modalContent');
+    modal.innerHTML = `
+      <button class="modal-close" onclick="closeModal()"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      <div class="modal-tag">Order service</div>
+      <h3>${s.name}</h3>
+      <div class="modal-price">$${s.price} · one-time payment</div>
+      <p style="color:var(--ink-soft);font-size:13.5px;margin-bottom:20px;">Now confirm your details and upload proof of the payment you just made.</p>
+      <form id="orderForm" onsubmit="submitOrder(event, '${key}')">
+        <div class="field"><label>Full Name</label><input type="text" id="ofName" value="${currentUser.storeName || ''}" required></div>
+        <div class="field"><label>Email Address</label><input type="text" id="ofEmail" value="${currentUser.email || ''}" required></div>
+        <div class="field"><label>Website URL</label><input type="url" id="ofWebsite" placeholder="https://yourstore.com" required></div>
+        <div class="field"><label>Additional information <span class="optional">(optional)</span></label><textarea id="ofNote" placeholder="Anything important about your store or request."></textarea></div>
+        <div class="field">
+          <label>Payment receipt</label>
+          <div class="file-drop" id="fileDrop" onclick="document.getElementById('receiptInput').click()">Click to upload your payment receipt</div>
+          <input type="file" id="receiptInput" accept="image/*,.pdf" style="display:none" onchange="fileSelected(this)">
+          <div class="field-required-note">Required to submit your order.</div>
+        </div>
+        <div class="field"><label>Transaction ID <span class="optional">(optional)</span></label><input type="text" id="ofTxn" placeholder="e.g. TXN123456"></div>
+        <label class="confirm-row"><input type="checkbox" id="ofConfirm" required> I confirm that the payment receipt is genuine.</label>
+        <div class="order-summary">
+          <div><span>Service</span><b>${s.name}</b></div>
+          <div><span>Price</span><b>$${s.price}</b></div>
+          <div><span>Payment</span><b>One-time</b></div>
+        </div>
+        <div style="display:flex;gap:10px;">
+          <button type="button" class="btn btn-ghost" style="flex:none;" onclick="showInvoiceStep('${key}')">Back</button>
+          <button type="submit" class="btn btn-orange" style="flex:1;" id="orderSubmitBtn">Submit Service Order →</button>
+        </div>
+        <div class="error-box" id="orderError"></div>
+      </form>
+    `;
+    document.getElementById('modalOverlay').classList.add('active');
+  }
+
+  function fileSelected(input){
+    const drop = document.getElementById('fileDrop');
+    if(input.files.length){
+      selectedReceiptFile = input.files[0];
+      drop.textContent = '✓ ' + input.files[0].name;
+      drop.classList.add('filled');
+    }
+  }
+
+  async function submitOrder(e, key){
+    e.preventDefault();
+    const s = SERVICES[key];
+    const errBox = document.getElementById('orderError');
+    errBox.classList.remove('show');
+
+    if(!selectedReceiptFile){
+      errBox.textContent = 'Please upload your payment receipt.';
+      errBox.classList.add('show');
+      return;
+    }
+    if(!document.getElementById('ofConfirm').checked){
+      errBox.textContent = 'Please confirm the payment receipt is genuine.';
+      errBox.classList.add('show');
+      return;
+    }
+
+    const btn = document.getElementById('orderSubmitBtn');
+    btn.disabled = true; btn.textContent = 'Submitting…';
+
+    const filePath = `${currentUser.id}/${Date.now()}_${selectedReceiptFile.name}`;
+    const { error: uploadErr } = await sb.storage.from('receipts').upload(filePath, selectedReceiptFile);
+    if(uploadErr){
+      errBox.textContent = 'Receipt upload failed: ' + uploadErr.message;
+      errBox.classList.add('show');
+      btn.disabled = false; btn.textContent = 'Submit Service Order →';
+      return;
+    }
+
+    const { data: order, error: insertErr } = await sb.from('service_orders').insert({
+      user_id: currentUser.id,
+      service_key: key,
+      full_name: document.getElementById('ofName').value.trim(),
+      email: document.getElementById('ofEmail').value.trim(),
+      website_url: document.getElementById('ofWebsite').value.trim(),
+      additional_info: document.getElementById('ofNote').value.trim() || null,
+      transaction_id: document.getElementById('ofTxn').value.trim() || null,
+      receipt_confirmed: true,
+      status: 'received'
+    }).select().single();
+
+    if(insertErr){
+      errBox.textContent = insertErr.message;
+      errBox.classList.add('show');
+      btn.disabled = false; btn.textContent = 'Submit Service Order →';
+      return;
+    }
+
+    await sb.from('payment_receipts').insert({ order_id: order.id, file_path: filePath });
+    await notifyAdmins(`${currentUser.storeName} placed a new order: ${s.name} (${order.order_number})`);
+
+    const modal = document.getElementById('modalContent');
+    modal.innerHTML = `
+      <button class="modal-close" onclick="closeModal()"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      <div class="modal-success">
+        <div class="check"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+        <h3>Order Received</h3>
+        <p style="color:var(--ink-soft);font-size:14px;margin-bottom:6px;">Order ID: ${order.order_number}</p>
+        <p style="color:var(--ink-soft);font-size:14px;margin-bottom:22px;">We've received your ${s.name} order. Our team will review your payment and get started.</p>
+        <button class="btn btn-primary btn-block" onclick="closeModal(); loadOrders(); loadOverview();">Done</button>
+      </div>
+    `;
+  }
+
+  function closeModal(){ document.getElementById('modalOverlay').classList.remove('active'); }
+  document.getElementById('modalOverlay').addEventListener('click', function(e){ if(e.target === this) closeModal(); });
+
+  // ---------- Settings ----------
+  function loadSettings(){
+    document.getElementById('setStoreNameInput').value = currentUser.storeName;
+    document.getElementById('setEmail').textContent = currentUser.email;
+    const aiCard = document.getElementById('setAiCard');
+    if(!currentAgent){
+      aiCard.innerHTML = `<p style="color:var(--ink-soft);font-size:13.5px;">No AI created yet.</p>`;
+    } else {
+      aiCard.innerHTML = `
+        <div class="settings-row"><span class="label">AI name</span><span class="value">${currentAgent.agent_name}</span></div>
+        <div class="settings-row"><span class="label">Status</span><span class="value">${currentAgent.status}</span></div>
+      `;
+    }
+  }
+
+  async function saveStoreName(){
+    const input = document.getElementById('setStoreNameInput');
+    const errBox = document.getElementById('settingsError');
+    const okBox = document.getElementById('settingsSuccess');
+    errBox.classList.remove('show');
+    okBox.classList.remove('show');
+
+    const newName = input.value.trim();
+    if(!newName){
+      errBox.textContent = 'Store name can\'t be empty.';
+      errBox.classList.add('show');
+      return;
+    }
+
+    const btn = document.getElementById('saveStoreNameBtn');
+    btn.disabled = true; btn.textContent = 'Saving…';
+
+    const { error } = await sb.from('stores').update({ full_name: newName }).eq('id', currentUser.id);
+
+    btn.disabled = false; btn.textContent = 'Save';
+
+    if(error){
+      errBox.textContent = error.message;
+      errBox.classList.add('show');
+      return;
+    }
+
+    // Refresh everywhere the store name is shown, without a page reload
+    currentUser.storeName = newName;
+    document.getElementById('storeNameChip').textContent = newName;
+    document.getElementById('avatarInitial').textContent = newName.charAt(0).toUpperCase();
+    document.getElementById('avatarInitialMobile').textContent = newName.charAt(0).toUpperCase();
+    document.getElementById('overviewGreeting').textContent = `Welcome, ${newName}`;
+
+    okBox.textContent = 'Saved.';
+    okBox.classList.add('show');
+    setTimeout(() => okBox.classList.remove('show'), 2000);
+  }
+
+  // ---------- Init ----------
+  async function init(){
+    const { data: { session } } = await sb.auth.getSession();
+    if(!session){ window.location.href = 'auth.html'; return; }
+    const user = session.user;
+
+    const { data: store } = await sb.from('stores').select('full_name, email, is_suspended').eq('id', user.id).single();
+
+    if(store?.is_suspended){
+      await sb.auth.signOut();
+      window.location.href = 'auth.html?suspended=1';
+      return;
+    }
+
+    const storeName = store?.full_name || user.user_metadata?.store_name || user.email;
+    currentUser = { id: user.id, storeName, email: store?.email || user.email };
+
+    document.getElementById('storeNameChip').textContent = storeName;
+    document.getElementById('avatarInitial').textContent = storeName.charAt(0).toUpperCase();
+    document.getElementById('avatarInitialMobile').textContent = storeName.charAt(0).toUpperCase();
+
+    const { data: agents } = await sb.from('ai_agents').select('*').eq('user_id', user.id).order('created_at', {ascending:false}).limit(1);
+    currentAgent = (agents && agents.length) ? agents[0] : null;
+
+    const { data: services } = await sb.from('services').select('*');
+    (services || []).forEach(s => SERVICES[s.key] = s);
+    renderServiceCards();
+
+    await loadOverview();
+    await loadAssistants();
+    loadConnect();
+    loadConversations();
+    await loadOrders();
+    loadSettings();
+    startNotifPolling();
+
+    // Deep-link support: account.html?view=services
+    const params = new URLSearchParams(window.location.search);
+    if(params.get('view')) showView(params.get('view'));
+  }
+
+  init();
+</script>
+
+<!-- Notifications panel -->
+<style>
+  #notifPanel{position:fixed;top:64px;right:16px;width:320px;max-width:calc(100vw - 32px);max-height:70vh;overflow-y:auto;background:#fff;border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,0.22);display:none;z-index:600;}
+  #notifPanel.open{display:block;}
+  .notif-item{padding:12px 16px;border-bottom:1px solid var(--line);font-size:13px;}
+  .notif-item:last-child{border-bottom:none;}
+  .notif-item.unread{background:var(--cobalt-dim);}
+  .notif-item .msg{color:var(--ink);}
+  .notif-item .time{color:var(--ink-soft);font-size:11px;margin-top:3px;}
+  .notif-empty{padding:20px;text-align:center;color:var(--ink-soft);font-size:13px;}
+</style>
+<div id="notifPanel"></div>
+
+<!-- Floating "Chat with ShopBrain" widget — available from any page in the dashboard -->
+<style>
+  #supportBubble{position:fixed;right:20px;bottom:20px;width:56px;height:56px;border-radius:50%;background:var(--cobalt);display:flex;align-items:center;justify-content:center;cursor:grab;box-shadow:0 6px 20px rgba(0,0,0,0.25);z-index:500;border:none;touch-action:none;}
+  #supportBubble svg{width:24px;height:24px;stroke:#fff;}
+  #supportPanel{position:fixed;right:20px;bottom:86px;width:320px;max-width:calc(100vw - 40px);height:420px;max-height:calc(100vh - 140px);background:#fff;border-radius:16px;box-shadow:0 12px 40px rgba(0,0,0,0.22);display:none;flex-direction:column;overflow:hidden;z-index:500;}
+  @media(max-width:900px){
+    #supportBubble{bottom:78px;}
+    #supportPanel{bottom:144px;max-height:calc(100vh - 200px);}
+  }
+  #supportPanel.open{display:flex;}
+  #supportHead{background:var(--cobalt);color:#fff;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;}
+  #supportHead .t{font-weight:700;font-size:14px;}
+  #supportHead .s{font-size:11px;opacity:0.85;}
+  #supportHead button{background:none;border:none;color:#fff;opacity:0.85;cursor:pointer;padding:4px;}
+  #supportThread{flex:1;overflow-y:auto;padding:12px;background:var(--paper);display:flex;flex-direction:column;gap:8px;}
+  #supportSetup{padding:14px;display:flex;flex-direction:column;gap:8px;}
+  #supportSetup textarea{border:1.5px solid var(--line);border-radius:8px;padding:9px 12px;font-size:13.5px;font-family:inherit;min-height:60px;resize:vertical;}
+  .svc-msg{max-width:82%;padding:9px 12px;border-radius:12px;font-size:13.5px;line-height:1.4;}
+  .svc-msg.visitor{background:var(--cobalt);color:#fff;align-self:flex-end;}
+  .svc-msg.admin{background:#fff;border:1px solid var(--line);align-self:flex-start;}
+  #supportFoot{border-top:1px solid var(--line);padding:10px;display:none;gap:8px;background:#fff;}
+  #supportFoot.show{display:flex;}
+  #supportFoot input{flex:1;border:1px solid var(--line);border-radius:20px;padding:9px 14px;font-size:13.5px;font-family:inherit;}
+</style>
+
+<button id="supportBubble" onclick="toggleSupportWidget()" aria-label="Chat with ShopBrain">
+  <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+</button>
+<div id="supportPanel">
+  <div id="supportHead">
+    <div><div class="t">ShopBrain Team</div><div class="s">● We're here to help</div></div>
+    <button onclick="toggleSupportWidget()"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+  </div>
+  <div id="supportThread"></div>
+  <div id="supportSetup">
+    <textarea id="supportFirstMsg" placeholder="How can we help?"></textarea>
+    <button class="btn btn-primary btn-sm" onclick="startSupportChat()">Send</button>
+  </div>
+  <div id="supportFoot">
+    <input type="text" id="supportInput" placeholder="Type a message…">
+    <button class="btn btn-primary btn-sm" onclick="sendSupportMessage()">Send</button>
+  </div>
+</div>
+
+</body>
+</html>
