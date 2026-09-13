@@ -1,0 +1,1396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — ShopBrain</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../sb-config.js"></script>
+<style>
+  :root{
+    --paper:#F7F7F4; --paper-dim:#EFEFEA; --ink:#14171C; --ink-soft:#4B5058; --line:#DDDCD5;
+    --cobalt:#2F5FFF; --cobalt-dim:#EAEFFF; --orange:#FF6B45; --orange-dim:#FFEDE6;
+    --mint:#1FAA80; --mint-dim:#E6F5EF; --red:#E5484D; --red-dim:#FBE4E4; --white:#FFFFFF;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:'Inter',sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased;}
+  h1,h2,h3{font-family:'Space Grotesk',sans-serif;font-weight:600;letter-spacing:-0.01em;line-height:1.15;margin:0;}
+  p{margin:0;}
+  a{color:inherit;text-decoration:none;}
+
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 16px;border-radius:8px;font-family:'Inter',sans-serif;font-weight:600;font-size:13.5px;cursor:pointer;border:1.5px solid transparent;transition:background .15s ease;}
+  .btn:disabled{opacity:0.6;cursor:default;}
+  .btn-primary{background:var(--cobalt);color:var(--white);}
+  .btn-ghost{background:transparent;color:var(--ink);border-color:var(--line);}
+  .btn-mint{background:var(--mint);color:var(--white);}
+  .btn-red{background:var(--red);color:var(--white);}
+  .btn-orange{background:var(--orange);color:var(--white);}
+  .btn-sm{padding:7px 12px;font-size:12.5px;}
+
+  .shell{display:flex;min-height:100vh;}
+  .sidebar{width:220px;flex:none;background:#14171C;color:#B8BBC2;display:flex;flex-direction:column;padding:20px 14px;position:sticky;top:0;height:100vh;}
+  .side-logo{display:flex;align-items:center;gap:9px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:17px;color:white;padding:8px 8px 6px;}
+  .side-tag{font-size:11px;color:#7C8090;padding:0 8px 20px;}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;font-size:13.5px;font-weight:600;color:#B8BBC2;cursor:pointer;margin-bottom:2px;}
+  .nav-item:hover{background:#20242D;color:white;}
+  .nav-item.active{background:var(--cobalt);color:white;}
+  .sidebar-footer{margin-top:auto;padding-top:14px;border-top:1px solid #2A2E36;}
+  .logout-row{padding:10px 12px;border-radius:8px;font-size:13px;font-weight:600;color:#B8BBC2;cursor:pointer;}
+  .logout-row:hover{background:#20242D;color:white;}
+
+  .main-col{flex:1;min-width:0;}
+  .topbar{display:none;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--line);background:var(--white);position:sticky;top:0;z-index:20;}
+  .mobile-burger{display:none;background:none;border:none;cursor:pointer;padding:6px;}
+  .mobile-burger span{display:block;width:20px;height:2px;background:var(--ink);margin:4px 0;}
+  .mobile-nav-menu{display:none;flex-direction:column;background:var(--white);border-bottom:1px solid var(--line);padding:8px 14px 14px;position:sticky;top:57px;z-index:19;}
+  .mobile-nav-menu.open{display:flex;}
+  .mobile-nav-menu .m-item{padding:12px 8px;font-size:14.5px;font-weight:600;color:var(--ink);border-bottom:1px solid var(--paper-dim);cursor:pointer;}
+  .mobile-nav-menu .m-item.active{color:var(--cobalt);}
+  .mobile-nav-menu .m-logout{padding:12px 8px;font-size:14px;font-weight:600;color:var(--red);cursor:pointer;}
+  .content{max-width:1080px;margin:0 auto;padding:36px 32px 100px;}
+  @media(max-width:900px){.sidebar{display:none;} .topbar{display:flex;} .mobile-burger{display:block;} .content{padding:22px 16px 80px;}}
+
+  .view{display:none;}
+  .view.active{display:block;}
+  .page-title{font-size:24px;margin-bottom:4px;}
+  .page-sub{color:var(--ink-soft);font-size:14px;margin-bottom:28px;}
+
+  .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:32px;}
+  @media(max-width:760px){.stat-grid{grid-template-columns:1fr 1fr;}}
+  .stat-card{border:1px solid var(--line);border-radius:12px;background:var(--white);padding:18px 20px;}
+  .stat-card .num{font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:700;}
+  .stat-card .label{font-size:12.5px;color:var(--ink-soft);margin-top:3px;}
+
+  table{width:100%;border-collapse:collapse;}
+  th{text-align:left;font-size:11.5px;text-transform:uppercase;letter-spacing:0.03em;color:var(--ink-soft);padding:10px 12px;border-bottom:1px solid var(--line);}
+  td{padding:12px;border-bottom:1px solid var(--line);font-size:13.5px;vertical-align:top;}
+  .table-wrap{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--white);overflow-x:auto;}
+  @media(max-width:760px){
+    table, thead, tbody, th, td, tr{display:block;}
+    thead{display:none;}
+    tr{border-bottom:1px solid var(--line);padding:12px;}
+    td{border:none;padding:5px 0;}
+    td::before{content:attr(data-label);font-weight:700;font-size:11px;color:var(--ink-soft);display:block;text-transform:uppercase;}
+  }
+
+  .status-pill{font-size:11px;font-weight:700;padding:4px 10px;border-radius:100px;text-transform:capitalize;}
+  .status-pill.received{background:var(--orange-dim);color:var(--orange);}
+  .status-pill.approved{background:var(--mint-dim);color:#0E7A5C;}
+  .status-pill.in_progress{background:var(--cobalt-dim);color:var(--cobalt);}
+  .status-pill.completed{background:var(--mint-dim);color:#0E7A5C;}
+  .status-pill.rejected{background:var(--red-dim);color:#A3392A;}
+
+  .card{border:1px solid var(--line);border-radius:14px;background:var(--white);padding:22px;margin-bottom:16px;}
+  .empty-hint{color:var(--ink-soft);font-size:13.5px;padding:24px;text-align:center;}
+
+  /* Order detail modal */
+  .modal-overlay{position:fixed;inset:0;background:rgba(20,23,28,0.5);display:none;align-items:flex-start;justify-content:center;padding:30px 16px;overflow-y:auto;z-index:100;}
+  .modal-overlay.active{display:flex;}
+  .modal{background:var(--white);border-radius:16px;max-width:560px;width:100%;padding:28px 26px;position:relative;}
+  .modal-close{position:absolute;top:18px;right:18px;background:none;border:none;cursor:pointer;}
+  .modal-close svg{width:16px;height:16px;stroke:var(--ink-soft);}
+  .detail-row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line);font-size:13.5px;gap:14px;}
+  .detail-row .k{color:var(--ink-soft);}
+  .detail-row .v{font-weight:600;text-align:right;word-break:break-word;}
+  .status-actions{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0;}
+  .chat-thread{max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;margin:14px 0;}
+  .chat-bubble{max-width:80%;padding:9px 12px;border-radius:10px;font-size:13px;}
+  .chat-bubble.customer{background:var(--paper-dim);align-self:flex-start;}
+  .chat-bubble.shopbrain{background:var(--cobalt);color:white;align-self:flex-end;}
+  .chat-input-row{display:flex;gap:8px;}
+  .chat-input-row input{flex:1;border:1.5px solid var(--line);border-radius:8px;padding:9px 12px;font-size:13.5px;}
+
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:12.5px;font-weight:600;margin-bottom:5px;}
+  .field input, .field textarea{width:100%;border:1.5px solid var(--line);border-radius:8px;padding:9px 12px;font-size:13.5px;font-family:'Inter',sans-serif;}
+  .field textarea{min-height:60px;resize:vertical;}
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <aside class="sidebar">
+    <div class="side-logo">🛡 ShopBrain</div>
+    <div class="side-tag">Admin Dashboard</div>
+    <div class="nav-item active" data-view="overview" onclick="showView('overview')">Overview</div>
+    <div class="nav-item" data-view="customers" onclick="showView('customers')">Businesses</div>
+    <div class="nav-item" data-view="agents" onclick="showView('agents')">AI Assistants</div>
+    <div class="nav-item" data-view="conversations" onclick="showView('conversations')">Conversations</div>
+    <div class="nav-item" data-view="sitechats" onclick="showView('sitechats')">Website Chats</div>
+    <div class="nav-item" data-view="orders" onclick="showView('orders')">Service Orders</div>
+    <div class="nav-item" data-view="services" onclick="showView('services')">Services</div>
+    <div class="nav-item" data-view="payments" onclick="showView('payments')">Payment Methods</div>
+    <div class="nav-item" data-view="audit" onclick="showView('audit')">Audit Log</div>
+    <div class="sidebar-footer">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:0 4px 10px;">
+        <span style="font-size:12px;color:#8A8F98;">Notifications</span>
+        <button id="notifBellDesktop" onclick="toggleNotifPanel()" style="position:relative;background:none;border:none;cursor:pointer;padding:4px;color:#fff;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <span id="notifBadgeDesktop" style="display:none;position:absolute;top:0;right:0;background:var(--orange, #FF6B45);color:#fff;font-size:10px;font-weight:700;border-radius:50%;width:15px;height:15px;align-items:center;justify-content:center;"></span>
+        </button>
+      </div>
+      <div class="logout-row" onclick="logout()">Log Out</div>
+    </div>
+  </aside>
+
+  <div class="main-col">
+    <div class="topbar">
+      <div class="side-logo" style="color:var(--ink);">🛡 ShopBrain Admin</div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button id="notifBellMobile" onclick="toggleNotifPanel()" style="position:relative;background:none;border:none;cursor:pointer;padding:6px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <span id="notifBadgeMobile" style="display:none;position:absolute;top:2px;right:2px;background:var(--orange, #FF6B45);color:#fff;font-size:10px;font-weight:700;border-radius:50%;width:16px;height:16px;align-items:center;justify-content:center;"></span>
+        </button>
+        <button class="mobile-burger" onclick="toggleMobileNav()" aria-label="Menu"><span></span><span></span><span></span></button>
+      </div>
+    </div>
+    <div class="mobile-nav-menu" id="mobileNavMenu">
+      <div class="m-item active" data-view="overview" onclick="showView('overview'); toggleMobileNav();">Overview</div>
+      <div class="m-item" data-view="customers" onclick="showView('customers'); toggleMobileNav();">Businesses</div>
+      <div class="m-item" data-view="agents" onclick="showView('agents'); toggleMobileNav();">AI Assistants</div>
+      <div class="m-item" data-view="conversations" onclick="showView('conversations'); toggleMobileNav();">Conversations</div>
+      <div class="m-item" data-view="sitechats" onclick="showView('sitechats'); toggleMobileNav();">Website Chats</div>
+      <div class="m-item" data-view="orders" onclick="showView('orders'); toggleMobileNav();">Service Orders</div>
+      <div class="m-item" data-view="services" onclick="showView('services'); toggleMobileNav();">Services</div>
+      <div class="m-item" data-view="payments" onclick="showView('payments'); toggleMobileNav();">Payment Methods</div>
+      <div class="m-item" data-view="audit" onclick="showView('audit'); toggleMobileNav();">Audit Log</div>
+      <div class="m-logout" onclick="logout()">Log Out</div>
+    </div>
+    <div class="content">
+
+      <!-- OVERVIEW -->
+      <div class="view active" id="view-overview">
+        <h1 class="page-title">Overview</h1>
+        <p class="page-sub">A snapshot of your ShopBrain business.</p>
+        <div class="stat-grid">
+          <div class="stat-card"><div class="num" id="statCustomers">—</div><div class="label">Customers</div></div>
+          <div class="stat-card"><div class="num" id="statAgents">—</div><div class="label">AI Assistants</div></div>
+          <div class="stat-card"><div class="num" id="statConversations">—</div><div class="label">Conversations</div></div>
+          <div class="stat-card"><div class="num" id="statOrders">—</div><div class="label">Total Orders</div></div>
+          <div class="stat-card"><div class="num" id="statPending">—</div><div class="label">Pending Orders</div></div>
+        </div>
+        <h2 style="font-size:16.5px;margin-bottom:12px;">Recent orders</h2>
+        <div class="table-wrap" id="recentOrdersTable"><div class="empty-hint">Loading…</div></div>
+      </div>
+
+      <!-- BUSINESSES -->
+      <div class="view" id="view-customers">
+        <h1 class="page-title">Businesses</h1>
+        <p class="page-sub">Everyone with a ShopBrain account.</p>
+        <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+          <input type="text" id="bizSearch" placeholder="Search by name or email…" oninput="renderBusinessesTable()" style="flex:1;min-width:200px;border:1.5px solid var(--line);border-radius:8px;padding:9px 13px;font-size:13.5px;">
+          <select id="bizFilter" onchange="renderBusinessesTable()" style="border:1.5px solid var(--line);border-radius:8px;padding:9px 13px;font-size:13.5px;">
+            <option value="all">All</option>
+            <option value="active">Active</option>
+            <option value="suspended">Suspended</option>
+          </select>
+        </div>
+        <div class="table-wrap" id="customersTable"><div class="empty-hint">Loading…</div></div>
+      </div>
+
+      <!-- AI ASSISTANTS -->
+      <div class="view" id="view-agents">
+        <h1 class="page-title">AI Assistants</h1>
+        <p class="page-sub">Every AI agent created across all customers.</p>
+        <div class="table-wrap" id="agentsTable"><div class="empty-hint">Loading…</div></div>
+      </div>
+
+      <!-- CONVERSATIONS -->
+      <div class="view" id="view-conversations">
+        <h1 class="page-title">Conversations</h1>
+        <p class="page-sub">Monitor AI conversations across every business.</p>
+        <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+          <input type="text" id="convSearch" placeholder="Search by business or agent…" oninput="renderConversationsTable()" style="flex:1;min-width:200px;border:1.5px solid var(--line);border-radius:8px;padding:9px 13px;font-size:13.5px;">
+          <select id="convFilter" onchange="renderConversationsTable()" style="border:1.5px solid var(--line);border-radius:8px;padding:9px 13px;font-size:13.5px;">
+            <option value="all">All</option>
+            <option value="open">Open</option>
+            <option value="closed">Closed</option>
+          </select>
+        </div>
+        <div class="table-wrap" id="conversationsTable"><div class="empty-hint">Loading…</div></div>
+      </div>
+
+      <!-- WEBSITE CHATS -->
+      <div class="view" id="view-sitechats">
+        <h1 class="page-title">Website Chats</h1>
+        <p class="page-sub">Visitors messaging you directly from the main site — before they've even signed up.</p>
+        <div class="table-wrap" id="sitechatsTable"><div class="empty-hint">Loading…</div></div>
+      </div>
+
+      <!-- SERVICE ORDERS -->
+      <div class="view" id="view-orders">
+        <h1 class="page-title">Service Orders</h1>
+        <p class="page-sub">Review payments and manage order status.</p>
+        <div class="table-wrap" id="ordersTable"><div class="empty-hint">Loading…</div></div>
+      </div>
+
+      <!-- SERVICES -->
+      <div class="view" id="view-services">
+        <h1 class="page-title">Services</h1>
+        <p class="page-sub">Edit, activate/deactivate, duplicate, or add what customers can order.</p>
+        <button class="btn btn-primary btn-sm" style="margin-bottom:16px;" onclick="createService()">+ Add Service</button>
+        <div id="servicesList"><div class="empty-hint">Loading…</div></div>
+      </div>
+
+      <!-- PAYMENT METHODS -->
+      <div class="view" id="view-payments">
+        <h1 class="page-title">Payment Methods</h1>
+        <p class="page-sub">What customers see when ordering a service.</p>
+        <div class="card">
+          <div class="field"><label>Method type</label>
+            <select id="pmType" style="width:100%;border:1.5px solid var(--line);border-radius:8px;padding:9px 12px;font-size:13.5px;">
+              <option value="bank_transfer">Bank Transfer</option>
+              <option value="mobile_money">Mobile Money</option>
+              <option value="payment_link">Payment Link</option>
+            </select>
+          </div>
+          <div class="field"><label>Label (shown to customer)</label><input type="text" id="pmLabel" placeholder="e.g. Bank Transfer"></div>
+          <div class="field"><label>Details</label><textarea id="pmDetails" placeholder="Account name, number, bank — or a payment link URL"></textarea></div>
+          <button class="btn btn-primary btn-sm" onclick="addPaymentMethod()">+ Add Payment Method</button>
+        </div>
+        <div id="paymentMethodsList"></div>
+      </div>
+
+      <!-- AUDIT LOG -->
+      <div class="view" id="view-audit">
+        <h1 class="page-title">Audit Log</h1>
+        <p class="page-sub">A record of important admin actions.</p>
+        <div class="table-wrap" id="auditTable"><div class="empty-hint">Loading…</div></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<style>
+  #notifPanel{position:fixed;top:64px;right:16px;width:320px;max-width:calc(100vw - 32px);max-height:70vh;overflow-y:auto;background:#fff;border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,0.22);display:none;z-index:600;}
+  #notifPanel.open{display:block;}
+  .notif-item{padding:12px 16px;border-bottom:1px solid var(--line);font-size:13px;}
+  .notif-item:last-child{border-bottom:none;}
+  .notif-item.unread{background:var(--cobalt-dim);}
+  .notif-item .msg{color:var(--ink);}
+  .notif-item .time{color:var(--ink-soft);font-size:11px;margin-top:3px;}
+  .notif-empty{padding:20px;text-align:center;color:var(--ink-soft);font-size:13px;}
+</style>
+<div id="notifPanel"></div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modalContent"></div>
+</div>
+
+<script>
+  let SERVICES = {};
+
+  function showView(name){
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById('view-' + name).classList.add('active');
+    document.querySelectorAll('.nav-item, .m-item').forEach(el => el.classList.toggle('active', el.dataset.view === name));
+    window.scrollTo({top:0});
+  }
+
+  function toggleMobileNav(){
+    document.getElementById('mobileNavMenu').classList.toggle('open');
+  }
+
+  async function logout(){
+    await sb.auth.signOut();
+    window.location.href = 'login.html';
+  }
+
+  function closeModal(){ document.getElementById('modalOverlay').classList.remove('active'); }
+
+  // ===== Overview =====
+  async function loadOverview(){
+    const [{ count: customerCount }, { count: agentCount }, { count: orderCount }, { count: convCount }, { data: pendingOrders }, { data: recent }] = await Promise.all([
+      sb.from('stores').select('id', {count:'exact', head:true}),
+      sb.from('ai_agents').select('id', {count:'exact', head:true}),
+      sb.from('service_orders').select('id', {count:'exact', head:true}),
+      sb.from('conversations').select('id', {count:'exact', head:true}),
+      sb.from('service_orders').select('id').eq('status', 'received'),
+      sb.from('service_orders').select('*').order('created_at', {ascending:false}).limit(5)
+    ]);
+    document.getElementById('statCustomers').textContent = customerCount ?? 0;
+    document.getElementById('statAgents').textContent = agentCount ?? 0;
+    document.getElementById('statOrders').textContent = orderCount ?? 0;
+    document.getElementById('statPending').textContent = (pendingOrders || []).length;
+    if(document.getElementById('statConversations')) document.getElementById('statConversations').textContent = convCount ?? 0;
+
+    const table = document.getElementById('recentOrdersTable');
+    if(!recent || recent.length === 0){
+      table.innerHTML = `<div class="empty-hint">No orders yet.</div>`;
+    } else {
+      table.innerHTML = renderOrdersTable(recent);
+    }
+  }
+
+  // ===== Businesses =====
+  async function logAudit(action, target_type, target_id, details){
+    const { data: { session } } = await sb.auth.getSession();
+    await sb.from('audit_logs').insert({
+      admin_id: session?.user?.id,
+      action, target_type, target_id: String(target_id), details: details || null
+    });
+  }
+
+  async function loadCustomers(){
+    const { data, error } = await sb.from('stores').select('*').order('created_at', {ascending:false});
+    window.__allBusinesses = data || [];
+    if(error){
+      document.getElementById('customersTable').innerHTML = `<div class="empty-hint">Couldn't load businesses.</div>`;
+      return;
+    }
+    renderBusinessesTable();
+  }
+
+  function renderBusinessesTable(){
+    const search = (document.getElementById('bizSearch')?.value || '').toLowerCase();
+    const filter = document.getElementById('bizFilter')?.value || 'all';
+    let rows = window.__allBusinesses || [];
+
+    if(search){
+      rows = rows.filter(c => c.full_name.toLowerCase().includes(search) || c.email.toLowerCase().includes(search));
+    }
+    if(filter === 'active') rows = rows.filter(c => !c.is_suspended);
+    if(filter === 'suspended') rows = rows.filter(c => c.is_suspended);
+
+    const table = document.getElementById('customersTable');
+    if(rows.length === 0){
+      table.innerHTML = `<div class="empty-hint">No businesses match.</div>`;
+      return;
+    }
+    table.innerHTML = `
+      <table>
+        <thead><tr><th>Business</th><th>Email</th><th>Status</th><th>Joined</th><th></th></tr></thead>
+        <tbody>
+          ${rows.map(c => `
+            <tr>
+              <td data-label="Business">${c.full_name}</td>
+              <td data-label="Email">${c.email}</td>
+              <td data-label="Status"><span class="status-pill ${c.is_suspended ? 'rejected' : 'approved'}">${c.is_suspended ? 'Suspended' : 'Active'}</span></td>
+              <td data-label="Joined">${new Date(c.created_at).toLocaleDateString()}</td>
+              <td data-label=""><button class="btn btn-ghost btn-sm" onclick="openBusinessDetail('${c.id}')">View</button></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>`;
+  }
+
+  // ===== Customer Tools (tap a name anywhere) =====
+  async function openCustomerTools(userId){
+    if(!userId){ alert('No customer linked to this record.'); return; }
+    const modal = document.getElementById('modalContent');
+    modal.innerHTML = `
+      <button class="modal-close" onclick="closeModal()"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      <h3 style="margin-bottom:18px;">Customer Tools</h3>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <button class="btn btn-ghost" onclick="openBusinessDetail('${userId}')">View Full Business Profile</button>
+        <button class="btn btn-ghost" onclick="openCustomerAgentKnowledge('${userId}')">View AI's Full Knowledge</button>
+        <button class="btn btn-ghost" onclick="openNoteForm('${userId}')">Add Private Note</button>
+      </div>
+    `;
+    document.getElementById('modalOverlay').classList.add('active');
+  }
+
+  async function openCustomerAgentKnowledge(userId){
+    const { data: agents } = await sb.from('ai_agents').select('id').eq('user_id', userId).limit(1);
+    if(!agents || agents.length === 0){ alert('This customer has no AI agent yet.'); return; }
+    if(!window.__allAgents || !window.__allAgents.find(a => a.id === agents[0].id)){
+      // ensure openAgentKnowledge can find it even if AI Assistants tab hasn't loaded
+      const { data: fullAgent } = await sb.from('ai_agents').select('*').eq('id', agents[0].id).single();
+      window.__allAgents = (window.__allAgents || []).concat([fullAgent]);
+    }
+    openAgentKnowledge(agents[0].id);
+  }
+
+  async function openNoteForm(storeId){
+    const { data: notes } = await sb.from('admin_notes').select('*').eq('store_id', storeId).order('created_at', {ascending:false});
+    const modal = document.getElementById('modalContent');
+    modal.innerHTML = `
+      <button class="modal-close" onclick="closeModal()"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      <h3 style="margin-bottom:14px;">Private Notes</h3>
+      <div class="field"><textarea id="newNoteText" placeholder="Write a private note only admins can see…"></textarea></div>
+      <button class="btn btn-primary btn-sm" onclick="saveNote('${storeId}')">Save Note</button>
+      <div style="margin-top:18px;display:flex;flex-direction:column;gap:10px;" id="notesList">
+        ${(notes && notes.length) ? notes.map(n => `
+          <div class="card" style="margin-bottom:0;padding:14px 16px;">
+            <div style="font-size:13px;">${n.note}</div>
+            <div style="font-size:11px;color:var(--ink-soft);margin-top:6px;">${new Date(n.created_at).toLocaleString()}</div>
+          </div>
+        `).join('') : '<p style="color:var(--ink-soft);font-size:13px;">No notes yet.</p>'}
+      </div>
+    `;
+    document.getElementById('modalOverlay').classList.add('active');
+  }
+
+  async function saveNote(storeId){
+    const text = document.getElementById('newNoteText').value.trim();
+    if(!text) return;
+    const { data: { session } } = await sb.auth.getSession();
+    await sb.from('admin_notes').insert({ store_id: storeId, admin_id: session.user.id, note: text });
+    await logAudit('add_note', 'store', storeId, text.slice(0,80));
+    openNoteForm(storeId);
+  }
+
+  async function openBusinessDetail(storeId){
+    const biz = (window.__allBusinesses || []).find(c => c.id === storeId);
+    if(!biz) return;
+
+    const [{ data: agents }, { data: orders }, { data: notes }] = await Promise.all([
+      sb.from('ai_agents').select('*').eq('user_id', storeId),
+      sb.from('service_orders').select('*').eq('user_id', storeId).order('created_at', {ascending:false}),
+      sb.from('admin_notes').select('*').eq('store_id', storeId).order('created_at', {ascending:false})
+    ]);
+
+    const agent = agents && agents.length ? agents[0] : null;
+    let knowledgeCount = 0;
+    if(agent){
+      const [{ count: prodCount }, { count: faqCount }] = await Promise.all([
+        sb.from('products').select('id', {count:'exact', head:true}).eq('agent_id', agent.id),
+        sb.from('faqs').select('id', {count:'exact', head:true}).eq('agent_id', agent.id)
+      ]);
+      knowledgeCount = (prodCount||0) + (faqCount||0);
+    }
+
+    const totalPaid = (orders || []).filter(o => o.status === 'completed').length;
+
+    const modal = document.getElementById('modalContent');
+    modal.innerHTML = `
+      <button class="modal-close" onclick="closeModal()"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      <h3 style="margin-bottom:4px;">${biz.full_name}</h3>
+      <p style="color:var(--ink-soft);font-size:13px;margin-bottom:18px;">${biz.email}</p>
+
+      <div class="detail-row"><span class="k">Account status</span><span class="v"><span class="status-pill ${biz.is_suspended ? 'rejected' : 'approved'}">${biz.is_suspended ? 'Suspended' : 'Active'}</span></span></div>
+      <div class="detail-row"><span class="k">Joined</span><span class="v">${new Date(biz.created_at).toLocaleDateString()}</span></div>
+      <div class="detail-row"><span class="k">AI Agent</span><span class="v">${agent ? agent.agent_name : '— none created —'}</span></div>
+      <div class="detail-row"><span class="k">Agent status</span><span class="v">${agent ? agent.status : '—'}</span></div>
+      <div class="detail-row"><span class="k">Knowledge items</span><span class="v">${knowledgeCount}</span></div>
+      <div class="detail-row"><span class="k">Total orders</span><span class="v">${(orders||[]).length} (${totalPaid} completed)</span></div>
+
+      <div class="status-actions">
+        ${biz.is_suspended
+          ? `<button class="btn btn-mint btn-sm" onclick="toggleSuspend('${biz.id}', false)">Activate Account</button>`
+          : `<button class="btn btn-red btn-sm" onclick="toggleSuspend('${biz.id}', true)">Suspend Account</button>`}
+        ${agent ? (agent.status === 'disabled'
+          ? `<button class="btn btn-mint btn-sm" onclick="toggleAgent('${agent.id}', 'active')">Enable AI Agent</button>`
+          : `<button class="btn btn-ghost btn-sm" onclick="toggleAgent('${agent.id}', 'disabled')">Disable AI Agent</button>`) : ''}
+        ${agent ? `<button class="btn btn-primary btn-sm" onclick="openAgentKnowledge('${agent.id}')">Manage Knowledge</button>` : ''}
+      </div>
+
+      <h4 style="font-size:14px;margin:18px 0 8px;">Service orders</h4>
+      ${(orders && orders.length) ? `
+        <table>
+          <thead><tr><th>Order</th><th>Service</th><th>Status</th></tr></thead>
+          <tbody>
+            ${orders.map(o => `<tr><td data-label="Order">${o.order_number}</td><td data-label="Service">${SERVICES[o.service_key]?.name || o.service_key}</td><td data-label="Status"><span class="status-pill ${o.status}">${o.status.replace('_',' ')}</span></td></tr>`).join('')}
+          </tbody>
+        </table>
+      ` : `<p style="color:var(--ink-soft);font-size:13px;">No service orders yet.</p>`}
+
+      <h4 style="font-size:14px;margin:18px 0 8px;">Private Notes</h4>
+      ${(notes && notes.length) ? notes.map(n => `
+        <div class="card" style="margin-bottom:8px;padding:12px 14px;">
+          <div style="font-size:13px;">${n.note}</div>
+          <div style="font-size:11px;color:var(--ink-soft);margin-top:5px;">${new Date(n.created_at).toLocaleString()}</div>
+        </div>
+      `).join('') : '<p style="color:var(--ink-soft);font-size:13px;margin-bottom:10px;">No notes yet.</p>'}
+      <button class="btn btn-ghost btn-sm" onclick="openNoteForm('${storeId}')">+ Add Note</button>
+    `;
+    document.getElementById('modalOverlay').classList.add('active');
+  }
+
+  async function toggleSuspend(storeId, suspend){
+    if(!confirm(suspend ? 'Suspend this business account?' : 'Reactivate this business account?')) return;
+    await sb.from('stores').update({ is_suspended: suspend }).eq('id', storeId);
+    await logAudit(suspend ? 'suspend_account' : 'activate_account', 'store', storeId);
+    await notifyCustomer(storeId, suspend ? 'Your ShopBrain account has been suspended.' : 'Your ShopBrain account has been reactivated.');
+    closeModal();
+    loadCustomers();
+  }
+
+  async function toggleAgent(agentId, newStatus){
+    if(!confirm(newStatus === 'disabled' ? 'Disable this AI agent?' : 'Enable this AI agent?')) return;
+    const { data: agent } = await sb.from('ai_agents').select('user_id').eq('id', agentId).maybeSingle();
+    await sb.from('ai_agents').update({ status: newStatus }).eq('id', agentId);
+    await logAudit(newStatus === 'disabled' ? 'disable_agent' : 'enable_agent', 'ai_agent', agentId);
+    if(agent?.user_id) await notifyCustomer(agent.user_id, newStatus === 'disabled' ? 'Your AI agent has been disabled.' : 'Your AI agent has been re-enabled.');
+    closeModal();
+    loadAgents();
+  }
+
+  // ===== AI Assistants =====
+  async function loadAgents(){
+    const { data, error } = await sb.from('ai_agents').select('*').order('created_at', {ascending:false});
+    window.__allAgents = data || [];
+    const table = document.getElementById('agentsTable');
+    if(error || !data || data.length === 0){
+      table.innerHTML = `<div class="empty-hint">No AI assistants created yet.</div>`;
+      return;
+    }
+    table.innerHTML = `
+      <table>
+        <thead><tr><th>Agent name</th><th>Store</th><th>Status</th><th>Created</th><th></th></tr></thead>
+        <tbody>
+          ${data.map(a => `
+            <tr>
+              <td data-label="Agent name">${a.agent_name}</td>
+              <td data-label="Store">${a.store_name || '—'}</td>
+              <td data-label="Status">${a.status}</td>
+              <td data-label="Created">${new Date(a.created_at).toLocaleDateString()}</td>
+              <td data-label=""><button class="btn btn-ghost btn-sm" onclick="openAgentKnowledge('${a.id}')">Manage Knowledge</button></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>`;
+  }
+
+  async function openAgentKnowledge(agentId, prefillUrl){
+    const agent = (window.__allAgents || []).find(a => a.id === agentId);
+    if(!agent) return;
+
+    const [{ data: business }, { data: products }, { data: faqs }, { data: policiesRows }, { data: custom }, { data: settings }, { data: widget }] = await Promise.all([
+      sb.from('business_information').select('*').eq('agent_id', agentId).maybeSingle(),
+      sb.from('products').select('*').eq('agent_id', agentId).order('created_at'),
+      sb.from('faqs').select('*').eq('agent_id', agentId).order('created_at'),
+      sb.from('policies').select('*').eq('agent_id', agentId),
+      sb.from('custom_knowledge').select('*').eq('agent_id', agentId).order('created_at'),
+      sb.from('ai_settings').select('*').eq('agent_id', agentId).maybeSingle(),
+      sb.from('widget_settings').select('*').eq('agent_id', agentId).maybeSingle()
+    ]);
+
+    const POLICY_TYPES = ['delivery','returns','payments','warranty','cancellation'];
+    const policyMap = {};
+    (policiesRows||[]).forEach(p => policyMap[p.policy_type] = p.content || '');
+
+    const b = business || {};
+    const s = settings || {};
+    const w = widget || {};
+    const r = s.restrictions || { no_invent_info:true, no_invent_prices:true, no_false_availability:true, no_refund_promises:true, stay_within_knowledge:true, escalate_complex:true };
+
+    const modal = document.getElementById('modalContent');
+    modal.innerHTML = `
+      <button class="modal-close" onclick="closeModal()"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      <h3 style="margin-bottom:4px;">${agent.agent_name}</h3>
+      <p style="color:var(--ink-soft);font-size:13px;margin-bottom:18px;">Status: ${agent.status} · Created ${new Date(agent.created_at).toLocaleDateString()} · Editing on their behalf</p>
+
+      <div class="card" style="background:var(--cobalt-dim);border:none;margin-bottom:22px;">
+        <h4 style="font-size:13.5px;margin-bottom:8px;">Crawl their website</h4>
+        <p style="font-size:12.5px;color:var(--ink-soft);margin-bottom:10px;">Fetches their site and auto-fills what it can find below. Never overwrites anything already filled in — only adds new products/FAQs and fills blank fields.</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <input type="text" id="ak_crawl_url" placeholder="https://theirstore.com" value="${(prefillUrl||'').replace(/"/g,'&quot;')}" style="flex:1;min-width:180px;border:1.5px solid var(--line);border-radius:8px;padding:9px 13px;font-size:13.5px;">
+          <button class="btn btn-primary btn-sm" id="ak_crawl_btn" onclick="crawlWebsite('${agentId}')">Crawl Now</button>
+        </div>
+        <div id="ak_crawl_status" style="font-size:12.5px;margin-top:8px;"></div>
+      </div>
+
+      <div class="card" style="margin-bottom:22px;">
+        <h4 style="font-size:13.5px;margin-bottom:4px;">Widget appearance <span style="font-weight:400;color:var(--ink-soft);">(Standard+ setup)</span></h4>
+        <p style="font-size:12.5px;color:var(--ink-soft);margin-bottom:10px;">Customize how their chat widget looks and greets customers — part of Standard and Premium setup.</p>
+        <div class="field">
+          <label>AI avatar photo</label>
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;">
+            <img id="ak_widget_avatar_preview" src="${w.avatar_url || ''}" style="width:48px;height:48px;border-radius:50%;object-fit:cover;background:var(--paper-dim);display:${w.avatar_url ? 'block':'none'};">
+            <input type="file" id="ak_widget_avatar_file" accept="image/*" style="flex:1;font-size:12.5px;">
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="uploadAgentAvatar('${agentId}')" id="ak_avatar_upload_btn">Upload Photo</button>
+          ${w.avatar_url ? `<button class="btn btn-ghost btn-sm" style="color:#B5431F;" onclick="removeAgentAvatar('${agentId}')">Remove Photo</button>` : ''}
+        </div>
+        <div class="field"><label>Welcome message</label><input type="text" id="ak_widget_welcome" value="${(w.welcome_message||'Hi! 👋 How can I help you today?').replace(/"/g,'&quot;')}"></div>
+        <div class="field"><label>Position</label>
+          <select id="ak_widget_position">
+            <option value="bottom-right" ${(w.position||'bottom-right')==='bottom-right'?'selected':''}>Bottom right</option>
+            <option value="bottom-left" ${w.position==='bottom-left'?'selected':''}>Bottom left</option>
+          </select>
+        </div>
+        <div class="field"><label>Theme color</label><input type="color" id="ak_widget_color" value="${w.theme_color||'#2F5FFF'}" style="height:42px;width:80px;padding:2px;"></div>
+        <button class="btn btn-primary btn-sm" onclick="adminSaveWidgetSettings('${agentId}')">Save Widget Appearance</button>
+      </div>
+
+      <h4 style="font-size:13.5px;margin-bottom:8px;">Business Information</h4>
+      <div class="field"><label>Business name</label><input type="text" id="ak_biz_name" value="${(b.business_name||'').replace(/"/g,'&quot;')}"></div>
+      <div class="field"><label>What they sell</label><input type="text" id="ak_biz_sells" value="${(b.sells||'').replace(/"/g,'&quot;')}"></div>
+      <div class="field"><label>Description</label><textarea id="ak_biz_desc">${b.description||''}</textarea></div>
+      <div class="field"><label>Target customers</label><input type="text" id="ak_biz_target" value="${(b.target_customers||'').replace(/"/g,'&quot;')}"></div>
+      <div class="field"><label>Location</label><input type="text" id="ak_biz_location" value="${(b.location||'').replace(/"/g,'&quot;')}"></div>
+      <div class="field"><label>Opening hours</label><input type="text" id="ak_biz_hours" value="${(b.opening_hours||'').replace(/"/g,'&quot;')}"></div>
+      <div class="field"><label>Contact info</label><input type="text" id="ak_biz_contact" value="${(b.contact_info||'').replace(/"/g,'&quot;')}"></div>
+      <button class="btn btn-primary btn-sm" onclick="adminSaveBusinessInfo('${agentId}')">Save Business Info</button>
+
+      <h4 style="font-size:13.5px;margin:22px 0 8px;">Products (${(products||[]).length})</h4>
+      <div id="ak_products_list">
+        ${(products||[]).map(p => `
+          <div class="card" style="margin-bottom:10px;">
+            <div class="field"><label>Name</label><input type="text" id="ak_prod_name_${p.id}" value="${(p.name||'').replace(/"/g,'&quot;')}"></div>
+            <div class="field"><label>Price</label><input type="text" id="ak_prod_price_${p.id}" value="${(p.price||'').replace(/"/g,'&quot;')}"></div>
+            <div class="field"><label>Description</label><textarea id="ak_prod_desc_${p.id}">${p.description||''}</textarea></div>
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-primary btn-sm" onclick="adminSaveProduct('${agentId}', '${p.id}')">Save</button>
+              <button class="btn btn-ghost btn-sm" style="color:#B5431F;" onclick="adminDeleteProduct('${agentId}', '${p.id}')">Delete</button>
+            </div>
+          </div>
+        `).join('') || '<p style="color:var(--ink-soft);font-size:13px;">None added.</p>'}
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="adminAddProduct('${agentId}')">+ Add Product</button>
+
+      <h4 style="font-size:13.5px;margin:22px 0 8px;">FAQs (${(faqs||[]).length})</h4>
+      <div id="ak_faqs_list">
+        ${(faqs||[]).map(f => `
+          <div class="card" style="margin-bottom:10px;">
+            <div class="field"><label>Question</label><input type="text" id="ak_faq_q_${f.id}" value="${(f.question||'').replace(/"/g,'&quot;')}"></div>
+            <div class="field"><label>Answer</label><textarea id="ak_faq_a_${f.id}">${f.answer||''}</textarea></div>
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-primary btn-sm" onclick="adminSaveFaq('${agentId}', '${f.id}')">Save</button>
+              <button class="btn btn-ghost btn-sm" style="color:#B5431F;" onclick="adminDeleteFaq('${agentId}', '${f.id}')">Delete</button>
+            </div>
+          </div>
+        `).join('') || '<p style="color:var(--ink-soft);font-size:13px;">None added.</p>'}
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="adminAddFaq('${agentId}')">+ Add FAQ</button>
+
+      <h4 style="font-size:13.5px;margin:22px 0 8px;">Policies</h4>
+      ${POLICY_TYPES.map(t => `
+        <div class="field"><label style="text-transform:capitalize;">${t}</label><textarea id="ak_policy_${t}">${policyMap[t]||''}</textarea></div>
+      `).join('')}
+      <button class="btn btn-primary btn-sm" onclick="adminSavePolicies('${agentId}')">Save Policies</button>
+
+      <h4 style="font-size:13.5px;margin:22px 0 8px;">Custom Knowledge (${(custom||[]).length})</h4>
+      <div id="ak_custom_list">
+        ${(custom||[]).map(c => `
+          <div class="card" style="margin-bottom:10px;">
+            <textarea id="ak_custom_${c.id}">${c.content||''}</textarea>
+            <div style="display:flex;gap:8px;margin-top:8px;">
+              <button class="btn btn-ghost btn-sm" style="color:#B5431F;" onclick="adminDeleteCustom('${agentId}', '${c.id}')">Delete</button>
+            </div>
+          </div>
+        `).join('') || '<p style="color:var(--ink-soft);font-size:13px;">None added.</p>'}
+      </div>
+      <div class="field"><label>Add new entry</label><textarea id="ak_custom_new" placeholder="Anything else the AI should know…"></textarea></div>
+      <button class="btn btn-ghost btn-sm" onclick="adminAddCustom('${agentId}')">+ Add Custom Knowledge</button>
+
+      <h4 style="font-size:13.5px;margin:22px 0 8px;">AI Instructions & Restrictions</h4>
+      <div class="field"><label>Tone</label>
+        <select id="ak_tone">
+          ${['friendly','professional','helpful','casual'].map(v=>`<option value="${v}" ${s.tone===v?'selected':''}>${v}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field"><label>Response length</label>
+        <select id="ak_length">
+          ${['short','balanced','detailed'].map(v=>`<option value="${v}" ${s.response_length===v?'selected':''}>${v}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field"><label>Custom instructions</label><textarea id="ak_custom_instructions">${s.custom_instructions||''}</textarea></div>
+      ${Object.keys(r).map(k => `
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:8px;">
+          <input type="checkbox" id="ak_restrict_${k}" ${r[k] ? 'checked' : ''}> ${k.replace(/_/g,' ')}
+        </label>
+      `).join('')}
+      <button class="btn btn-primary btn-sm" onclick="adminSaveAiSettings('${agentId}')">Save AI Instructions</button>
+
+      <div class="status-actions" style="margin-top:22px;">
+        ${agent.status === 'disabled'
+          ? `<button class="btn btn-mint btn-sm" onclick="toggleAgent('${agent.id}', 'active')">Enable AI Agent</button>`
+          : `<button class="btn btn-ghost btn-sm" onclick="toggleAgent('${agent.id}', 'disabled')">Disable AI Agent</button>`}
+      </div>
+    `;
+    document.getElementById('modalOverlay').classList.add('active');
+  }
+
+  async function crawlWebsite(agentId){
+    const url = document.getElementById('ak_crawl_url').value.trim();
+    const btn = document.getElementById('ak_crawl_btn');
+    const statusEl = document.getElementById('ak_crawl_status');
+    if(!url){ statusEl.textContent = 'Enter a website URL first.'; statusEl.style.color = '#B5431F'; return; }
+
+    btn.disabled = true; btn.textContent = 'Crawling…';
+    statusEl.style.color = 'var(--ink-soft)';
+    statusEl.textContent = 'Fetching their site and reading through it — this can take up to a minute.';
+
+    const { data: { session } } = await sb.auth.getSession();
+
+    try {
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/scrape-website`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({ agent_id: agentId, website_url: url })
+      });
+      const data = await res.json();
+      if(!res.ok || data.error){
+        statusEl.style.color = '#B5431F';
+        statusEl.textContent = data.error || 'Crawl failed — try again.';
+        btn.disabled = false; btn.textContent = 'Crawl Now';
+        return;
+      }
+      await logAudit('admin_crawled_website', 'ai_agent', agentId, `${data.pages_crawled.length} pages · ${data.products_added} products · ${data.faqs_added} FAQs`);
+      alert(`Done — read ${data.pages_crawled.length} page(s).\n\nAdded ${data.products_added} product(s), ${data.faqs_added} FAQ(s)${data.policies_filled.length ? `, filled in ${data.policies_filled.join(', ')} policy` : ''}.\n\nReview everything below and edit anything that needs fixing.`);
+      openAgentKnowledge(agentId);
+    } catch (e) {
+      statusEl.style.color = '#B5431F';
+      statusEl.textContent = 'Network error — try again.';
+      btn.disabled = false; btn.textContent = 'Crawl Now';
+    }
+  }
+
+  function knowledgeSaveFailed(error){
+    alert("Save failed: " + error.message + "\n\nIf this mentions permissions/policy, you likely haven't run admin-knowledge-write-schema.sql in Supabase yet — that grants admin write access to these tables.");
+  }
+
+  async function uploadAgentAvatar(agentId){
+    const fileInput = document.getElementById('ak_widget_avatar_file');
+    const file = fileInput.files[0];
+    if(!file){ alert('Choose an image first.'); return; }
+    if(file.size > 2 * 1024 * 1024){ alert('Please choose an image under 2MB.'); return; }
+
+    const btn = document.getElementById('ak_avatar_upload_btn');
+    btn.disabled = true; btn.textContent = 'Uploading…';
+
+    const ext = file.name.split('.').pop();
+    const path = `${agentId}/avatar.${ext}`;
+    const { error: uploadError } = await sb.storage.from('agent-avatars').upload(path, file, { upsert: true });
+    if(uploadError){
+      alert("Upload failed: " + uploadError.message + "\n\nIf this mentions permissions/policy, run agent-avatars-schema.sql in Supabase first.");
+      btn.disabled = false; btn.textContent = 'Upload Photo';
+      return;
+    }
+    const { data: { publicUrl } } = sb.storage.from('agent-avatars').getPublicUrl(path);
+    const { error: saveError } = await sb.from('widget_settings').update({ avatar_url: publicUrl + '?t=' + Date.now(), updated_at: new Date().toISOString() }).eq('agent_id', agentId);
+    if(saveError){ alert("Saved the image but failed to link it: " + saveError.message); btn.disabled = false; btn.textContent = 'Upload Photo'; return; }
+    await logAudit('admin_upload_agent_avatar', 'ai_agent', agentId);
+    openAgentKnowledge(agentId);
+  }
+
+  async function removeAgentAvatar(agentId){
+    if(!confirm('Remove this AI\'s photo?')) return;
+    await sb.from('widget_settings').update({ avatar_url: null, updated_at: new Date().toISOString() }).eq('agent_id', agentId);
+    await logAudit('admin_remove_agent_avatar', 'ai_agent', agentId);
+    openAgentKnowledge(agentId);
+  }
+
+  async function adminSaveWidgetSettings(agentId){
+    const { error } = await sb.from('widget_settings').update({
+      welcome_message: document.getElementById('ak_widget_welcome').value.trim(),
+      position: document.getElementById('ak_widget_position').value,
+      theme_color: document.getElementById('ak_widget_color').value,
+      updated_at: new Date().toISOString()
+    }).eq('agent_id', agentId);
+    if(error){
+      alert("Save failed: " + error.message + "\n\nIf this mentions permissions/policy, run admin-widget-settings-schema.sql in Supabase — that grants admin write access to widget appearance.");
+      return;
+    }
+    await logAudit('admin_edit_widget_settings', 'ai_agent', agentId);
+    alert('Widget appearance saved — changes apply next time their chat widget loads.');
+    openAgentKnowledge(agentId);
+  }
+
+  async function adminSaveBusinessInfo(agentId){
+    const payload = {
+      agent_id: agentId,
+      business_name: document.getElementById('ak_biz_name').value.trim(),
+      sells: document.getElementById('ak_biz_sells').value.trim(),
+      description: document.getElementById('ak_biz_desc').value.trim(),
+      target_customers: document.getElementById('ak_biz_target').value.trim(),
+      location: document.getElementById('ak_biz_location').value.trim(),
+      opening_hours: document.getElementById('ak_biz_hours').value.trim(),
+      contact_info: document.getElementById('ak_biz_contact').value.trim(),
+      updated_at: new Date().toISOString()
+    };
+    const { error } = await sb.from('business_information').upsert(payload, { onConflict: 'agent_id' });
+    if(error){ knowledgeSaveFailed(error); return; }
+    await logAudit('admin_edit_business_info', 'ai_agent', agentId);
+    openAgentKnowledge(agentId);
+  }
+
+  async function adminSaveProduct(agentId, productId){
+    const { error } = await sb.from('products').update({
+      name: document.getElementById(`ak_prod_name_${productId}`).value.trim(),
+      price: document.getElementById(`ak_prod_price_${productId}`).value.trim(),
+      description: document.getElementById(`ak_prod_desc_${productId}`).value.trim()
+    }).eq('id', productId);
+    if(error){ knowledgeSaveFailed(error); return; }
+    await logAudit('admin_edit_product', 'ai_agent', agentId);
+    openAgentKnowledge(agentId);
+  }
+
+  async function adminAddProduct(agentId){
+    const { error } = await sb.from('products').insert({ agent_id: agentId, name: 'New product', price: '', description: '' });
+    if(error){ knowledgeSaveFailed(error); return; }
+    await logAudit('admin_add_product', 'ai_agent', agentId);
+    openAgentKnowledge(agentId);
+  }
+
+  async function adminDeleteProduct(agentId, productId){
+    if(!confirm('Delete this product?')) return;
+    const { error } = await sb.from('products').delete().eq('id', productId);
+    if(error){ knowledgeSaveFailed(error); return; }
+    await logAudit('admin_delete_product', 'ai_agent', agentId);
+    openAgentKnowledge(agentId);
+  }
+
+  async function adminSaveFaq(agentId, faqId){
+    const { error } = await sb.from('faqs').update({
+      question: document.getElementById(`ak_faq_q_${faqId}`).value.trim(),
+      answer: document.getElementById(`ak_faq_a_${faqId}`).value.trim()
+    }).eq('id', faqId);
+    if(error){ knowledgeSaveFailed(error); return; }
+    await logAudit('admin_edit_faq', 'ai_agent', agentId);
+    openAgentKnowledge(agentId);
+  }
+
+  async function adminAddFaq(agentId){
+    const { error } = await sb.from('faqs').insert({ agent_id: agentId, question: 'New question', answer: 'New answer' });
+    if(error){ knowledgeSaveFailed(error); return; }
+    await logAudit('admin_add_faq', 'ai_agent', agentId);
+    openAgentKnowledge(agentId);
+  }
+
+  async function adminDeleteFaq(agentId, faqId){
+    if(!confirm('Delete this FAQ?')) return;
+    const { error } = await sb.from('faqs').delete().eq('id', faqId);
+    if(error){ knowledgeSaveFailed(error); return; }
+    await logAudit('admin_delete_faq', 'ai_agent', agentId);
+    openAgentKnowledge(agentId);
+  }
+
+  async function adminSavePolicies(agentId){
+    const types = ['delivery','returns','payments','warranty','cancellation'];
+    const rows = types.map(t => ({ agent_id: agentId, policy_type: t, content: document.getElementById(`ak_policy_${t}`).value.trim(), updated_at: new Date().toISOString() }));
+    const { error } = await sb.from('policies').upsert(rows, { onConflict: 'agent_id,policy_type' });
+    if(error){ knowledgeSaveFailed(error); return; }
+    await logAudit('admin_edit_policies', 'ai_agent', agentId);
+    openAgentKnowledge(agentId);
+  }
+
+  async function adminAddCustom(agentId){
+    const content = document.getElementById('ak_custom_new').value.trim();
+    if(!content) return;
+    const { error } = await sb.from('custom_knowledge').insert({ agent_id: agentId, content });
+    if(error){ knowledgeSaveFailed(error); return; }
+    await logAudit('admin_add_custom_knowledge', 'ai_agent', agentId);
+    openAgentKnowledge(agentId);
+  }
+
+  async function adminDeleteCustom(agentId, id){
+    if(!confirm('Delete this entry?')) return;
+    const { error } = await sb.from('custom_knowledge').delete().eq('id', id);
+    if(error){ knowledgeSaveFailed(error); return; }
+    await logAudit('admin_delete_custom_knowledge', 'ai_agent', agentId);
+    openAgentKnowledge(agentId);
+  }
+
+  async function adminSaveAiSettings(agentId){
+    const restrictions = {};
+    ['no_invent_info','no_invent_prices','no_false_availability','no_refund_promises','stay_within_knowledge','escalate_complex'].forEach(k => {
+      restrictions[k] = document.getElementById(`ak_restrict_${k}`).checked;
+    });
+    const { error } = await sb.from('ai_settings').upsert({
+      agent_id: agentId,
+      tone: document.getElementById('ak_tone').value,
+      response_length: document.getElementById('ak_length').value,
+      custom_instructions: document.getElementById('ak_custom_instructions').value.trim(),
+      restrictions,
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'agent_id' });
+    if(error){ knowledgeSaveFailed(error); return; }
+    await logAudit('admin_edit_ai_settings', 'ai_agent', agentId);
+    openAgentKnowledge(agentId);
+  }
+
+  // ===== Service Orders =====
+  function renderOrdersTable(orders){
+    return `
+      <table>
+        <thead><tr><th>Order</th><th>Customer</th><th>Service</th><th>Price</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+          ${orders.map(o => `
+            <tr>
+              <td data-label="Order">${o.order_number}</td>
+              <td data-label="Customer"><a href="#" onclick="openCustomerTools('${o.user_id}'); return false;" style="color:var(--cobalt);font-weight:600;">${o.full_name}</a></td>
+              <td data-label="Service">${SERVICES[o.service_key]?.name || o.service_key}</td>
+              <td data-label="Price">$${SERVICES[o.service_key]?.price ?? ''}</td>
+              <td data-label="Status"><span class="status-pill ${o.status}">${o.status.replace('_',' ')}</span></td>
+              <td data-label=""><button class="btn btn-ghost btn-sm" onclick="openOrderDetail('${o.id}')">View</button></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>`;
+  }
+
+  // ---------- Conversations ----------
+  async function loadConversations(){
+    const { data: convos, error } = await sb.from('conversations').select('*').order('last_message_at', {ascending:false}).limit(300);
+    window.__allConversations = convos || [];
+
+    if(!error && convos && convos.length){
+      const ids = convos.map(c => c.id);
+      const { data: msgCounts } = await sb.from('messages').select('conversation_id').in('conversation_id', ids);
+      const counts = {};
+      (msgCounts || []).forEach(m => counts[m.conversation_id] = (counts[m.conversation_id]||0) + 1);
+      window.__conversationMsgCounts = counts;
+    } else {
+      window.__conversationMsgCounts = {};
+    }
+    renderConversationsTable();
+  }
+
+  function renderConversationsTable(){
+    const table = document.getElementById('conversationsTable');
+    const search = (document.getElementById('convSearch')?.value || '').toLowerCase();
+    const filter = document.getElementById('convFilter')?.value || 'all';
+    let convos = window.__allConversations || [];
+
+    convos = convos.map(c => {
+      const agent = (window.__allAgents || []).find(a => a.id === c.agent_id);
+      return { ...c, agentName: agent?.agent_name || 'Unknown agent', storeName: agent?.store_name || '' };
+    });
+
+    if(filter !== 'all') convos = convos.filter(c => c.status === filter);
+    if(search) convos = convos.filter(c =>
+      c.agentName.toLowerCase().includes(search) ||
+      (c.storeName||'').toLowerCase().includes(search) ||
+      (c.customer_identifier||'').toLowerCase().includes(search)
+    );
+
+    if(!convos.length){
+      table.innerHTML = `<div class="empty-hint">No conversations yet. They'll appear here once any business's AI widget is live and customers start chatting.</div>`;
+      return;
+    }
+
+    table.innerHTML = `
+      <table>
+        <thead><tr><th>Business / Agent</th><th>Customer</th><th>Messages</th><th>Status</th><th>Last activity</th><th></th></tr></thead>
+        <tbody>
+          ${convos.map(c => `
+            <tr>
+              <td data-label="Business / Agent">${c.storeName ? c.storeName + ' · ' : ''}${c.agentName}</td>
+              <td data-label="Customer">${c.customer_identifier || 'Anonymous'}</td>
+              <td data-label="Messages">${window.__conversationMsgCounts[c.id] || 0}</td>
+              <td data-label="Status"><span class="status-pill ${c.status==='open' ? 'approved' : 'rejected'}">${c.status}</span></td>
+              <td data-label="Last activity">${new Date(c.last_message_at).toLocaleString()}</td>
+              <td data-label=""><button class="btn btn-ghost btn-sm" onclick="openConversationThread('${c.id}')">View</button></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>`;
+  }
+
+  async function openConversationThread(id){
+    const { data: msgs } = await sb.from('messages').select('*').eq('conversation_id', id).order('created_at', {ascending:true});
+    const modal = document.getElementById('modalContent');
+    modal.innerHTML = `
+      <button class="modal-close" onclick="closeModal()"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      <div class="modal-tag">Conversation</div>
+      <h3>Full chat history</h3>
+      <div style="display:flex;flex-direction:column;gap:10px;max-height:55vh;overflow-y:auto;margin-top:16px;">
+        ${(msgs||[]).map(m => `<div class="chat-bubble ${m.sender==='customer'?'customer':'shopbrain'}">${(m.content||'').replace(/[&<>]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}</div>`).join('') || '<p style="color:var(--ink-soft);font-size:13.5px;">No messages found.</p>'}
+      </div>
+    `;
+    document.getElementById('modalOverlay').classList.add('active');
+  }
+
+  // ---------- Website Chats ----------
+  async function loadSiteChats(){
+    const { data: chats } = await sb.from('site_visitor_chats').select('*').order('last_message_at', {ascending:false}).limit(200);
+    const table = document.getElementById('sitechatsTable');
+    if(!chats || !chats.length){
+      table.innerHTML = `<div class="empty-hint">No one's messaged from the main site yet.</div>`;
+      return;
+    }
+    table.innerHTML = `
+      <table>
+        <thead><tr><th>Visitor</th><th>Status</th><th>Last activity</th><th></th></tr></thead>
+        <tbody>
+          ${chats.map(c => `
+            <tr>
+              <td data-label="Visitor">${c.visitor_name || 'Anonymous visitor'}${c.visitor_email ? ' · ' + c.visitor_email : ''}${c.user_id ? ' <span style="color:var(--cobalt);font-weight:600;">· customer</span>' : ''}</td>
+              <td data-label="Status"><span class="status-pill ${c.status === 'open' ? 'approved' : 'rejected'}">${c.status}</span></td>
+              <td data-label="Last activity">${new Date(c.last_message_at).toLocaleString()}</td>
+              <td data-label=""><button class="btn btn-ghost btn-sm" onclick="openSiteChatThread('${c.id}')">View</button></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>`;
+  }
+
+  async function openSiteChatThread(chatId){
+    const { data: chat } = await sb.from('site_visitor_chats').select('*').eq('id', chatId).single();
+    const { data: msgs } = await sb.from('site_visitor_messages').select('*').eq('chat_id', chatId).order('created_at');
+    const modal = document.getElementById('modalContent');
+    modal.innerHTML = `
+      <button class="modal-close" onclick="closeModal()"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      <div class="modal-tag">Website Chat</div>
+      <h3>${chat?.visitor_name || 'Anonymous visitor'}</h3>
+      <p style="color:var(--ink-soft);font-size:13px;margin-bottom:6px;">${chat?.visitor_email || 'No email given'}</p>
+      <div class="chat-thread" id="siteChatThread" style="max-height:300px;">
+        ${(msgs||[]).map(m => `<div class="chat-bubble ${m.sender === 'admin' ? 'shopbrain' : 'customer'}">${(m.message||'').replace(/[&<>]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}</div>`).join('') || '<p style="color:var(--ink-soft);font-size:13px;">No messages yet.</p>'}
+      </div>
+      <div class="chat-input-row">
+        <input type="text" id="siteChatInput" placeholder="Reply to this visitor…">
+        <button class="btn btn-primary btn-sm" onclick="sendSiteChatReply('${chatId}')">Send</button>
+      </div>
+      <div class="status-actions" style="margin-top:16px;">
+        <button class="btn btn-ghost btn-sm" onclick="toggleSiteChatStatus('${chatId}', '${chat?.status === 'open' ? 'closed' : 'open'}')">${chat?.status === 'open' ? 'Mark Closed' : 'Reopen'}</button>
+      </div>
+    `;
+    document.getElementById('modalOverlay').classList.add('active');
+  }
+
+  async function sendSiteChatReply(chatId){
+    const input = document.getElementById('siteChatInput');
+    const msg = input.value.trim();
+    if(!msg) return;
+    const { error } = await sb.from('site_visitor_messages').insert({ chat_id: chatId, sender: 'admin', message: msg });
+    if(error){ alert('Send failed: ' + error.message); return; }
+    await sb.from('site_visitor_chats').update({ last_message_at: new Date().toISOString() }).eq('id', chatId);
+    await logAudit('admin_replied_site_chat', 'site_visitor_chat', chatId);
+    const { data: chat } = await sb.from('site_visitor_chats').select('user_id').eq('id', chatId).maybeSingle();
+    if(chat?.user_id) await notifyCustomer(chat.user_id, `ShopBrain replied: "${msg.slice(0,60)}"`);
+    openSiteChatThread(chatId);
+    loadSiteChats();
+  }
+
+  async function toggleSiteChatStatus(chatId, newStatus){
+    await sb.from('site_visitor_chats').update({ status: newStatus }).eq('id', chatId);
+    await logAudit(newStatus === 'closed' ? 'admin_closed_site_chat' : 'admin_reopened_site_chat', 'site_visitor_chat', chatId);
+    openSiteChatThread(chatId);
+    loadSiteChats();
+  }
+
+  async function loadOrders(){
+    const { data, error } = await sb.from('service_orders').select('*').order('created_at', {ascending:false});
+    const table = document.getElementById('ordersTable');
+    if(error || !data || data.length === 0){
+      table.innerHTML = `<div class="empty-hint">No orders yet.</div>`;
+      return;
+    }
+    window.__allOrders = data;
+    table.innerHTML = renderOrdersTable(data);
+  }
+
+  async function openOrderDetail(orderId){
+    const order = (window.__allOrders || []).find(o => o.id === orderId);
+    if(!order) return;
+
+    const { data: receipts } = await sb.from('payment_receipts').select('*').eq('order_id', orderId);
+    let receiptLink = 'No receipt on file';
+    if(receipts && receipts.length){
+      const { data: signed } = await sb.storage.from('receipts').createSignedUrl(receipts[0].file_path, 300);
+      if(signed?.signedUrl) receiptLink = `<a href="${signed.signedUrl}" target="_blank" style="color:var(--cobalt);font-weight:600;">View Receipt →</a>`;
+    }
+
+    const { data: messages } = await sb.from('service_order_messages').select('*').eq('order_id', orderId).order('created_at');
+
+    const modal = document.getElementById('modalContent');
+    modal.innerHTML = `
+      <button class="modal-close" onclick="closeModal()"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      <h3 style="margin-bottom:4px;">${order.order_number}</h3>
+      <p style="color:var(--ink-soft);font-size:13px;margin-bottom:18px;">${SERVICES[order.service_key]?.name || order.service_key} · $${SERVICES[order.service_key]?.price ?? ''}</p>
+
+      <div class="detail-row"><span class="k">Customer</span><span class="v"><a href="#" onclick="openCustomerTools('${order.user_id}'); return false;" style="color:var(--cobalt);">${order.full_name}</a></span></div>
+      <div class="detail-row"><span class="k">Email</span><span class="v">${order.email}</span></div>
+      <div class="detail-row"><span class="k">Website</span><span class="v">${order.website_url}</span></div>
+      <div class="detail-row"><span class="k">Transaction ID</span><span class="v">${order.transaction_id || '—'}</span></div>
+      <div class="detail-row"><span class="k">Additional info</span><span class="v">${order.additional_info || '—'}</span></div>
+      <div class="detail-row"><span class="k">Receipt</span><span class="v">${receiptLink}</span></div>
+      <div class="detail-row"><span class="k">Ordered</span><span class="v">${new Date(order.created_at).toLocaleString()}</span></div>
+
+      <div class="status-actions">
+        <button class="btn btn-primary btn-sm" onclick="openOrderAgentKnowledge('${order.user_id}', '${(order.website_url||'').replace(/'/g,"\\'")}')">Work on their AI Setup →</button>
+      </div>
+      <div class="status-actions">
+        <button class="btn btn-mint btn-sm" onclick="setOrderStatus('${order.id}','approved')">Approve</button>
+        <button class="btn btn-primary btn-sm" onclick="setOrderStatus('${order.id}','in_progress')">In Progress</button>
+        <button class="btn btn-mint btn-sm" onclick="setOrderStatus('${order.id}','completed')">Completed</button>
+        <button class="btn btn-red btn-sm" onclick="setOrderStatus('${order.id}','rejected')">Reject</button>
+      </div>
+
+      <h4 style="font-size:14px;margin-bottom:8px;">Chat with customer</h4>
+      <div class="chat-thread" id="orderChatThread">
+        ${(messages || []).map(m => `<div class="chat-bubble ${m.sender === 'shopbrain' ? 'shopbrain' : 'customer'}">${m.message}</div>`).join('') || '<p style="color:var(--ink-soft);font-size:13px;">No messages yet.</p>'}
+      </div>
+      <div class="chat-input-row">
+        <input type="text" id="orderChatInput" placeholder="Reply to customer…">
+        <button class="btn btn-primary btn-sm" onclick="sendOrderMessage('${order.id}')">Send</button>
+      </div>
+    `;
+    document.getElementById('modalOverlay').classList.add('active');
+  }
+
+  async function openOrderAgentKnowledge(userId, websiteUrl){
+    const { data: agent } = await sb.from('ai_agents').select('id, agent_name, status, created_at').eq('user_id', userId).limit(1).maybeSingle();
+    if(!agent){
+      alert("This customer hasn't created an AI agent yet — nothing to set up until they do.");
+      return;
+    }
+    if(!window.__allAgents) window.__allAgents = [];
+    if(!window.__allAgents.find(a => a.id === agent.id)) window.__allAgents.push(agent);
+    openAgentKnowledge(agent.id, websiteUrl || '');
+  }
+
+  async function setOrderStatus(orderId, status){
+    const { data: order } = await sb.from('service_orders').select('user_id, order_number').eq('id', orderId).maybeSingle();
+    await sb.from('service_orders').update({ status }).eq('id', orderId);
+    await sb.from('service_order_status_history').insert({ order_id: orderId, status, changed_by: 'admin' });
+    await logAudit('change_order_status', 'service_order', orderId, `New status: ${status}`);
+    if(order?.user_id) await notifyCustomer(order.user_id, `Order ${order.order_number || ''} is now: ${status.replace('_',' ')}`);
+    closeModal();
+    loadOrders();
+    loadOverview();
+  }
+
+  async function sendOrderMessage(orderId){
+    const input = document.getElementById('orderChatInput');
+    const msg = input.value.trim();
+    if(!msg) return;
+    await sb.from('service_order_messages').insert({ order_id: orderId, sender: 'shopbrain', message: msg });
+    const { data: order } = await sb.from('service_orders').select('user_id, order_number').eq('id', orderId).maybeSingle();
+    if(order?.user_id) await notifyCustomer(order.user_id, `ShopBrain replied about order ${order.order_number || ''}: "${msg.slice(0,60)}"`);
+    input.value = '';
+    openOrderDetail(orderId);
+  }
+
+  // ===== Services =====
+  async function loadServices(){
+    const { data } = await sb.from('services').select('*').order('sort_order');
+    window.__allServices = data || [];
+    (data || []).forEach(s => SERVICES[s.key] = s);
+    renderServicesList();
+  }
+
+  function renderServicesList(){
+    const list = document.getElementById('servicesList');
+    const data = window.__allServices || [];
+    if(!data.length){
+      list.innerHTML = `<div class="empty-hint">No services yet. Tap "+ Add Service" to create one.</div>`;
+      return;
+    }
+    list.innerHTML = data.map(s => `
+      <div class="card" style="${s.is_active === false ? 'opacity:0.55;' : ''}">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <span class="status-pill ${s.is_active === false ? 'rejected' : 'approved'}">${s.is_active === false ? 'Inactive' : 'Active'}</span>
+          <span style="font-size:12px;color:var(--ink-soft);">key: ${s.key}</span>
+        </div>
+        <div class="field"><label>Name</label><input type="text" value="${s.name}" id="svc_name_${s.key}"></div>
+        <div class="field"><label>Price (USD)</label><input type="text" value="${s.price}" id="svc_price_${s.key}"></div>
+        <div class="field"><label>Description</label><textarea id="svc_desc_${s.key}">${s.description || ''}</textarea></div>
+        <div class="field"><label>Features (one per line)</label><textarea id="svc_features_${s.key}" rows="4">${(s.features || []).join('\n')}</textarea></div>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13.5px;margin-bottom:14px;">
+          <input type="checkbox" id="svc_popular_${s.key}" ${s.is_popular ? 'checked' : ''}> Mark as "Most Popular"
+        </label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-primary btn-sm" onclick="saveService('${s.key}')">Save</button>
+          <button class="btn btn-ghost btn-sm" onclick="toggleServiceActive('${s.key}', ${s.is_active === false})">${s.is_active === false ? 'Activate' : 'Deactivate'}</button>
+          <button class="btn btn-ghost btn-sm" onclick="duplicateService('${s.key}')">Duplicate</button>
+          <button class="btn btn-ghost btn-sm" style="color:#B5431F;" onclick="deleteService('${s.key}')">Delete</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  async function saveService(key){
+    const name = document.getElementById(`svc_name_${key}`).value.trim();
+    const price = parseFloat(document.getElementById(`svc_price_${key}`).value);
+    const description = document.getElementById(`svc_desc_${key}`).value.trim();
+    const features = document.getElementById(`svc_features_${key}`).value.split('\n').map(f=>f.trim()).filter(Boolean);
+    const is_popular = document.getElementById(`svc_popular_${key}`).checked;
+    await sb.from('services').update({ name, price, description, features, is_popular }).eq('key', key);
+    await logAudit('Edited service', 'service', key);
+    loadServices();
+  }
+
+  async function toggleServiceActive(key, activate){
+    await sb.from('services').update({ is_active: activate }).eq('key', key);
+    await logAudit(activate ? 'Activated service' : 'Deactivated service', 'service', key);
+    loadServices();
+  }
+
+  async function duplicateService(key){
+    const original = (window.__allServices || []).find(s => s.key === key);
+    if(!original) return;
+    const newKey = original.key + '_copy_' + Math.random().toString(36).slice(2,6);
+    await sb.from('services').insert({
+      key: newKey, name: original.name + ' (Copy)', price: original.price,
+      description: original.description, features: original.features,
+      is_popular: false, is_active: false, sort_order: (original.sort_order || 0) + 1
+    });
+    await logAudit('Duplicated service', 'service', key);
+    loadServices();
+  }
+
+  async function deleteService(key){
+    if(!confirm('Delete this service permanently? This cannot be undone. Existing orders for it will keep their history.')) return;
+    await sb.from('services').delete().eq('key', key);
+    await logAudit('Deleted service', 'service', key);
+    loadServices();
+  }
+
+  function createService(){
+    const key = prompt('Short unique ID for this service (letters/numbers only, e.g. "express_setup"):');
+    if(!key) return;
+    const cleanKey = key.trim().toLowerCase().replace(/[^a-z0-9_]/g, '_');
+    (async () => {
+      const { error } = await sb.from('services').insert({
+        key: cleanKey, name: 'New Service', price: 0, description: '', features: [], is_popular: false, is_active: false,
+        sort_order: (window.__allServices || []).length + 1
+      });
+      if(error){ alert(error.message.includes('duplicate') ? 'That ID is already used by another service.' : error.message); return; }
+      await logAudit('Created service', 'service', cleanKey);
+      loadServices();
+    })();
+  }
+
+  // ===== Payment Methods =====
+  async function loadPaymentMethods(){
+    const { data } = await sb.from('payment_methods').select('*').order('sort_order');
+    const list = document.getElementById('paymentMethodsList');
+    if(!data || data.length === 0){
+      list.innerHTML = `<div class="empty-hint">No payment methods added yet.</div>`;
+      return;
+    }
+    list.innerHTML = data.map(pm => `
+      <div class="card" style="display:flex;justify-content:space-between;align-items:flex-start;gap:14px;">
+        <div>
+          <div style="font-weight:600;font-size:14px;">${pm.label} ${pm.is_active ? '' : '<span style="color:var(--ink-soft);font-weight:400;">(inactive)</span>'}</div>
+          <div style="font-size:13px;color:var(--ink-soft);white-space:pre-line;margin-top:4px;">${pm.details}</div>
+        </div>
+        <div style="display:flex;gap:8px;flex:none;">
+          <button class="btn btn-ghost btn-sm" onclick="togglePaymentMethod('${pm.id}', ${!pm.is_active})">${pm.is_active ? 'Deactivate' : 'Activate'}</button>
+          <button class="btn btn-red btn-sm" onclick="deletePaymentMethod('${pm.id}')">Delete</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  async function addPaymentMethod(){
+    const method_type = document.getElementById('pmType').value;
+    const label = document.getElementById('pmLabel').value.trim();
+    const details = document.getElementById('pmDetails').value.trim();
+    if(!label || !details) return;
+    await sb.from('payment_methods').insert({ method_type, label, details });
+    document.getElementById('pmLabel').value = '';
+    document.getElementById('pmDetails').value = '';
+    loadPaymentMethods();
+  }
+
+  async function togglePaymentMethod(id, newState){
+    await sb.from('payment_methods').update({ is_active: newState }).eq('id', id);
+    loadPaymentMethods();
+  }
+
+  async function deletePaymentMethod(id){
+    await sb.from('payment_methods').delete().eq('id', id);
+    loadPaymentMethods();
+  }
+
+  // ===== Audit Log =====
+  async function loadAuditLog(){
+    const { data, error } = await sb.from('audit_logs').select('*').order('created_at', {ascending:false}).limit(100);
+    const table = document.getElementById('auditTable');
+    if(error || !data || data.length === 0){
+      table.innerHTML = `<div class="empty-hint">No admin actions logged yet.</div>`;
+      return;
+    }
+    table.innerHTML = `
+      <table>
+        <thead><tr><th>When</th><th>Action</th><th>Target</th><th>Details</th></tr></thead>
+        <tbody>
+          ${data.map(a => `
+            <tr>
+              <td data-label="When">${new Date(a.created_at).toLocaleString()}</td>
+              <td data-label="Action">${a.action.replace(/_/g,' ')}</td>
+              <td data-label="Target">${a.target_type} · ${a.target_id.slice(0,8)}</td>
+              <td data-label="Details">${a.details || '—'}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>`;
+  }
+
+  document.getElementById('modalOverlay').addEventListener('click', function(e){ if(e.target === this) closeModal(); });
+
+  // ---------- Notifications ----------
+  let currentAdminId = null;
+  let notifPollTimer = null;
+
+  async function notifyCustomer(userId, message){
+    const { error } = await sb.from('notifications').insert({ user_id: userId, type: 'customer_alert', message });
+    if(error) console.error('notifyCustomer failed:', error.message);
+  }
+
+  function timeAgo(dateStr){
+    const diff = (Date.now() - new Date(dateStr).getTime()) / 1000;
+    if(diff < 60) return 'just now';
+    if(diff < 3600) return Math.floor(diff/60) + 'm ago';
+    if(diff < 86400) return Math.floor(diff/3600) + 'h ago';
+    return Math.floor(diff/86400) + 'd ago';
+  }
+
+  async function refreshNotifBadge(){
+    if(!currentAdminId) return;
+    const { count } = await sb.from('notifications').select('id', {count:'exact', head:true}).eq('user_id', currentAdminId).eq('is_read', false);
+    ['notifBadgeMobile','notifBadgeDesktop'].forEach(id => {
+      const el = document.getElementById(id);
+      if(!el) return;
+      if(count && count > 0){ el.textContent = count > 9 ? '9+' : count; el.style.display = 'flex'; }
+      else { el.style.display = 'none'; }
+    });
+  }
+
+  async function toggleNotifPanel(){
+    const panel = document.getElementById('notifPanel');
+    const open = panel.classList.toggle('open');
+    if(!open) return;
+
+    const { data: notifs } = await sb.from('notifications').select('*').eq('user_id', currentAdminId).order('created_at', {ascending:false}).limit(30);
+    panel.innerHTML = (notifs && notifs.length)
+      ? notifs.map(n => `<div class="notif-item ${n.is_read ? '' : 'unread'}"><div class="msg">${(n.message||'').replace(/[&<>]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}</div><div class="time">${timeAgo(n.created_at)}</div></div>`).join('')
+      : '<div class="notif-empty">No notifications yet.</div>';
+
+    const unreadIds = (notifs || []).filter(n => !n.is_read).map(n => n.id);
+    if(unreadIds.length){
+      await sb.from('notifications').update({ is_read: true }).in('id', unreadIds);
+      refreshNotifBadge();
+    }
+  }
+
+  document.addEventListener('click', (e) => {
+    const panel = document.getElementById('notifPanel');
+    if(!panel || !panel.classList.contains('open')) return;
+    if(!panel.contains(e.target) && !e.target.closest('#notifBellMobile') && !e.target.closest('#notifBellDesktop')){
+      panel.classList.remove('open');
+    }
+  });
+
+  function startNotifPolling(){
+    clearInterval(notifPollTimer);
+    refreshNotifBadge();
+    notifPollTimer = setInterval(refreshNotifBadge, 20000);
+  }
+
+  // ===== Init =====
+  (async () => {
+    const { data: { session } } = await sb.auth.getSession();
+    if(!session){ window.location.href = 'login.html'; return; }
+
+    const { data: adminRow } = await sb.from('admins').select('id').eq('id', session.user.id).maybeSingle();
+    if(!adminRow){ window.location.href = 'login.html'; return; }
+    currentAdminId = session.user.id;
+
+    await loadServices();
+    await loadOverview();
+    await loadCustomers();
+    await loadAgents();
+    await loadConversations();
+    await loadSiteChats();
+    await loadOrders();
+    await loadPaymentMethods();
+    await loadAuditLog();
+    startNotifPolling();
+  })();
+</script>
+
+</body>
+</html>
