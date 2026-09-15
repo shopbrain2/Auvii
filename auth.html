@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Log In or Sign Up — Auvii</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="sb-config.js"></script>
+<style>
+  :root{
+    --paper:#F7F7F4;
+    --paper-dim:#EFEFEA;
+    --ink:#14171C;
+    --ink-soft:#4B5058;
+    --line:#DDDCD5;
+    --cobalt:#2F5FFF;
+    --cobalt-dim:#EAEFFF;
+    --orange:#FF6B45;
+    --mint:#1FAA80;
+    --mint-dim:#E6F5EF;
+    --white:#FFFFFF;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;background:var(--paper);color:var(--ink);
+    font-family:'Inter',sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.display{font-family:'Space Grotesk',sans-serif;font-weight:600;letter-spacing:-0.01em;line-height:1.15;margin:0;}
+  p{margin:0;}
+  a{color:inherit;text-decoration:none;}
+
+  .top{padding:22px 24px;}
+  .logo{display:flex;align-items:center;gap:9px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:19px;}
+  .logo-mark{width:26px;height:26px;border-radius:7px;background:var(--cobalt);position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;flex:none;}
+
+  .shell{
+    min-height:calc(100vh - 72px);
+    display:grid;grid-template-columns:1fr 1fr;
+  }
+  @media(max-width:900px){.shell{grid-template-columns:1fr;}}
+
+  /* Left: form panel */
+  .panel{
+    display:flex;align-items:center;justify-content:center;
+    padding:40px 24px 60px;
+  }
+  .panel-inner{width:100%;max-width:400px;}
+
+  .mode-switch{
+    display:flex;background:var(--paper-dim);border-radius:9px;padding:4px;margin-bottom:32px;
+  }
+  .mode-btn{
+    flex:1;text-align:center;padding:9px 0;border-radius:6px;
+    font-size:14px;font-weight:600;color:var(--ink-soft);cursor:pointer;
+    border:none;background:none;font-family:'Inter',sans-serif;
+    transition:background .15s ease, color .15s ease;
+  }
+  .mode-btn.active{background:var(--white);color:var(--ink);box-shadow:0 1px 0 var(--line);}
+
+  .panel h1{font-size:27px;margin-bottom:8px;}
+  .panel .lead{color:var(--ink-soft);font-size:14.5px;margin-bottom:28px;}
+
+  .field{margin-bottom:16px;}
+  .field label{display:block;font-size:13.5px;font-weight:600;margin-bottom:7px;}
+  .field input{
+    width:100%;border:1.5px solid var(--line);border-radius:8px;
+    padding:11px 13px;font-family:'Inter',sans-serif;font-size:14.5px;color:var(--ink);
+    background:var(--white);
+  }
+  .field input:focus{outline:none;border-color:var(--cobalt);}
+  .field-hint{font-size:12px;color:var(--ink-soft);margin-top:6px;}
+
+  .row-between{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;font-size:13.5px;}
+  .checkbox-row{display:flex;align-items:center;gap:8px;color:var(--ink-soft);}
+  .checkbox-row input{width:15px;height:15px;accent-color:var(--cobalt);}
+  .forgot-link{color:var(--cobalt);font-weight:600;}
+  .forgot-link:hover{text-decoration:underline;}
+
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    width:100%;padding:13px 22px;border-radius:8px;
+    font-family:'Inter',sans-serif;font-weight:600;font-size:15px;
+    cursor:pointer;border:1.5px solid transparent;
+    transition:background .15s ease, transform .15s ease;
+  }
+  .btn:active{transform:scale(0.98);}
+  .btn-primary{background:var(--cobalt);color:var(--white);}
+  .btn-primary:hover{background:#2450DE;}
+
+  .divider{display:flex;align-items:center;gap:14px;margin:24px 0;color:var(--ink-soft);font-size:13px;}
+  .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--line);}
+
+  .btn-social{
+    width:100%;display:flex;align-items:center;justify-content:center;gap:10px;
+    padding:11px 18px;border:1.5px solid var(--line);border-radius:8px;
+    font-size:14.5px;font-weight:600;color:var(--ink);cursor:pointer;background:var(--white);
+    margin-bottom:12px;transition:border-color .15s ease;
+  }
+  .btn-social:hover{border-color:var(--ink);}
+  .btn-social svg{width:18px;height:18px;flex:none;}
+
+  .switch-line{text-align:center;font-size:14px;color:var(--ink-soft);margin-top:26px;}
+  .switch-line a{color:var(--cobalt);font-weight:600;cursor:pointer;}
+  .switch-line a:hover{text-decoration:underline;}
+
+  .terms-note{font-size:12px;color:var(--ink-soft);margin-top:18px;text-align:center;line-height:1.6;}
+  .terms-note a{color:var(--ink);text-decoration:underline;}
+
+  .form-error{
+    background:var(--orange-dim,#FFEDE6);color:#B5431F;border:1px solid rgba(255,107,69,0.35);
+    border-radius:8px;padding:11px 14px;font-size:13.5px;margin-bottom:16px;display:none;
+  }
+  .form-error.show{display:block;}
+  .btn[disabled]{opacity:0.6;cursor:default;}
+
+  /* Right: brand panel */
+  .brand-panel{
+    background:var(--ink);color:var(--white);
+    display:flex;flex-direction:column;justify-content:center;
+    padding:60px;position:relative;overflow:hidden;
+  }
+  @media(max-width:900px){.brand-panel{display:none;}}
+  .brand-panel .eyebrow{
+    display:inline-flex;align-items:center;gap:7px;
+    background:rgba(31,170,128,0.15);color:#3FD9A6;
+    padding:6px 13px;border-radius:100px;font-size:13px;font-weight:600;
+    margin-bottom:24px;width:fit-content;
+  }
+  .brand-panel .eyebrow::before{content:'';width:6px;height:6px;border-radius:50%;background:#3FD9A6;}
+  .brand-panel h2{font-size:32px;color:var(--white);max-width:380px;margin-bottom:16px;}
+  .brand-panel p{color:#B8BBC2;font-size:15.5px;max-width:360px;margin-bottom:36px;}
+
+  .mini-chat{
+    background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);
+    border-radius:14px;padding:18px;max-width:340px;
+  }
+  .mini-bubble{padding:10px 13px;border-radius:10px;font-size:13.5px;margin-bottom:10px;max-width:85%;}
+  .mini-bubble.bot{background:rgba(255,255,255,0.08);color:#E4E5E8;border-bottom-left-radius:3px;}
+  .mini-bubble.user{background:var(--cobalt);color:var(--white);margin-left:auto;border-bottom-right-radius:3px;}
+
+  .stat-row{display:flex;gap:28px;margin-top:36px;}
+  .stat .num{font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:700;color:var(--white);}
+  .stat .label{font-size:12.5px;color:#9A9DA5;}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <a href="index.html" class="logo"><span class="logo-mark"><svg viewBox="0 0 24 24" style="width:68%;height:68%;"><path d="M5 5h14a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-8.5l-3.8 3.6v-3.6H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z" fill="#fff"/><line x1="9" y1="10.6" x2="15" y2="10.6" stroke="#2F5FFF" stroke-width="1" stroke-linecap="round"/><line x1="9" y1="10.6" x2="12" y2="8" stroke="#2F5FFF" stroke-width="1" stroke-linecap="round"/><line x1="15" y1="10.6" x2="12" y2="8" stroke="#2F5FFF" stroke-width="1" stroke-linecap="round"/><circle cx="9" cy="10.6" r="1.15" fill="#2F5FFF"/><circle cx="15" cy="10.6" r="1.15" fill="#2F5FFF"/><circle cx="12" cy="8" r="1.15" fill="#2F5FFF"/></svg></span>Auvii</a>
+</div>
+
+<div class="shell">
+  <div class="panel">
+    <div class="panel-inner">
+
+      <div class="mode-switch">
+        <button class="mode-btn active" id="btnLogin" onclick="setMode('login')">Log In</button>
+        <button class="mode-btn" id="btnSignup" onclick="setMode('signup')">Sign Up</button>
+      </div>
+
+      <!-- LOGIN FORM -->
+      <div id="loginView">
+        <h1>Welcome back</h1>
+        <p class="lead">Log in to manage your AI agent and orders.</p>
+
+        <button class="btn-social" type="button" onclick="googleAuth()">
+          <svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.9 32.4 29.4 35 24 35c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.3 0 6.3 1.2 8.6 3.2l6-6C34.9 3 29.7 1 24 1 11.8 1 2 10.8 2 23s9.8 22 22 22 22-9.8 22-22c0-1.5-.2-2.7-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.6 15.9 18.9 13 24 13c3.3 0 6.3 1.2 8.6 3.2l6-6C34.9 6 29.7 4 24 4c-7.7 0-14.4 4.3-17.7 10.7z"/><path fill="#4CAF50" d="M24 44c5.6 0 10.7-1.9 14.6-5.2l-6.7-5.5C29.7 35 26.9 36 24 36c-5.4 0-9.9-3.6-11.4-8.5l-6.6 5.1C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-1 2.9-3 5.3-5.7 6.9l6.7 5.5C39.9 37.5 44 31.3 44 23c0-1.5-.2-2.7-.4-3.5z"/></svg>
+          Continue with Google
+        </button>
+
+        <div class="divider">or</div>
+
+        <div class="form-error" id="loginError"></div>
+        <form id="loginForm" onsubmit="handleLogin(event)">
+          <div class="field">
+            <label>Email address</label>
+            <input type="email" id="loginEmail" placeholder="you@yourstore.com" required>
+          </div>
+          <div class="field">
+            <label>Password</label>
+            <input type="password" id="loginPassword" placeholder="Enter your password" required>
+          </div>
+          <div class="row-between">
+            <label class="checkbox-row"><input type="checkbox">Keep me logged in</label>
+            <a class="forgot-link" onclick="forgotPassword()">Forgot password?</a>
+          </div>
+          <button type="submit" class="btn btn-primary" id="loginBtn">Log In</button>
+        </form>
+
+        <p class="switch-line">Don't have an account? <a onclick="setMode('signup')">Sign up free</a></p>
+      </div>
+
+      <!-- SIGNUP FORM -->
+      <div id="signupView" style="display:none;">
+        <h1>Create your account</h1>
+        <p class="lead">Free to sign up. Your AI agent is free to create and use.</p>
+
+        <button class="btn-social" type="button" onclick="googleAuth()">
+          <svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.9 32.4 29.4 35 24 35c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.3 0 6.3 1.2 8.6 3.2l6-6C34.9 3 29.7 1 24 1 11.8 1 2 10.8 2 23s9.8 22 22 22 22-9.8 22-22c0-1.5-.2-2.7-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.6 15.9 18.9 13 24 13c3.3 0 6.3 1.2 8.6 3.2l6-6C34.9 6 29.7 4 24 4c-7.7 0-14.4 4.3-17.7 10.7z"/><path fill="#4CAF50" d="M24 44c5.6 0 10.7-1.9 14.6-5.2l-6.7-5.5C29.7 35 26.9 36 24 36c-5.4 0-9.9-3.6-11.4-8.5l-6.6 5.1C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-1 2.9-3 5.3-5.7 6.9l6.7 5.5C39.9 37.5 44 31.3 44 23c0-1.5-.2-2.7-.4-3.5z"/></svg>
+          Continue with Google
+        </button>
+
+        <div class="divider">or</div>
+
+        <div class="form-error" id="signupError"></div>
+        <form id="signupForm" onsubmit="handleSignup(event)">
+          <div class="field">
+            <label>Store or business name</label>
+            <input type="text" id="signupStore" placeholder="e.g. John's Store" required>
+          </div>
+          <div class="field">
+            <label>Email address</label>
+            <input type="email" id="signupEmail" placeholder="you@yourstore.com" required>
+          </div>
+          <div class="field">
+            <label>Password</label>
+            <input type="password" id="signupPassword" placeholder="At least 8 characters" minlength="8" required>
+            <div class="field-hint">Use 8+ characters. You'll use this to log in next time.</div>
+          </div>
+          <button type="submit" class="btn btn-primary" id="signupBtn">Create Account — Free</button>
+        </form>
+
+        <p class="terms-note">By signing up you agree to Auvii's <a>Terms</a> and <a>Privacy Policy</a>. No card required, no subscription.</p>
+        <p class="switch-line">Already have an account? <a onclick="setMode('login')">Log in</a></p>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="brand-panel">
+    <div class="eyebrow">Free forever · No subscription</div>
+    <h2>One account. A free AI assistant for your store.</h2>
+    <p>Sign up once, then create, train and connect your AI agent — or order a one-time setup service whenever you want extra help.</p>
+
+    <div class="mini-chat">
+      <div class="mini-bubble bot">Hi! How can I help you today?</div>
+      <div class="mini-bubble user">Is the blue hoodie in stock in medium?</div>
+      <div class="mini-bubble bot">Yes, medium is in stock — want the link to check out?</div>
+    </div>
+
+    <div class="stat-row">
+      <div class="stat"><div class="num">$0</div><div class="label">to create your AI</div></div>
+      <div class="stat"><div class="num">24/7</div><div class="label">customer coverage</div></div>
+      <div class="stat"><div class="num">0</div><div class="label">recurring charges</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function setMode(mode){
+    const isLogin = mode === 'login';
+    document.getElementById('loginView').style.display = isLogin ? 'block' : 'none';
+    document.getElementById('signupView').style.display = isLogin ? 'none' : 'block';
+    document.getElementById('btnLogin').classList.toggle('active', isLogin);
+    document.getElementById('btnSignup').classList.toggle('active', !isLogin);
+  }
+
+  function showError(id, message){
+    const el = document.getElementById(id);
+    el.textContent = message;
+    el.classList.add('show');
+  }
+  function hideError(id){
+    document.getElementById(id).classList.remove('show');
+  }
+
+  async function handleLogin(e){
+    e.preventDefault();
+    hideError('loginError');
+    const btn = document.getElementById('loginBtn');
+    btn.disabled = true; btn.textContent = 'Logging in…';
+
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+
+    const { data, error } = await sb.auth.signInWithPassword({ email, password });
+
+    if(error){
+      showError('loginError', error.message);
+      btn.disabled = false; btn.textContent = 'Log In';
+      return;
+    }
+
+    const { data: store } = await sb.from('stores').select('is_suspended').eq('id', data.user.id).single();
+    if(store?.is_suspended){
+      await sb.auth.signOut();
+      showError('loginError', 'This account has been suspended. Contact Auvii support for help.');
+      btn.disabled = false; btn.textContent = 'Log In';
+      return;
+    }
+
+    window.location.href = 'account.html';
+  }
+
+  async function handleSignup(e){
+    e.preventDefault();
+    hideError('signupError');
+    const btn = document.getElementById('signupBtn');
+    btn.disabled = true; btn.textContent = 'Creating account…';
+
+    const storeName = document.getElementById('signupStore').value.trim();
+    const email = document.getElementById('signupEmail').value.trim();
+    const password = document.getElementById('signupPassword').value;
+
+    const { data, error } = await sb.auth.signUp({
+      email, password,
+      options: { data: { store_name: storeName } }
+    });
+
+    if(error){
+      showError('signupError', error.message);
+      btn.disabled = false; btn.textContent = 'Create Account — Free';
+      return;
+    }
+
+    // Notify admins of the new signup regardless of whether email confirmation is pending.
+    const { data: admins } = await sb.from('admins').select('id');
+    if(admins && admins.length){
+      await sb.from('notifications').insert(admins.map(a => ({ user_id: a.id, type: 'admin_alert', message: `New business signed up: ${storeName || email}` })));
+    }
+
+    // If email confirmation is required, there's no active session yet.
+    if(!data.session){
+      showError('signupError', 'Account created — check your email to confirm it, then log in.');
+      document.getElementById('signupError').style.background = 'var(--mint-dim)';
+      document.getElementById('signupError').style.color = '#0E7A5C';
+      document.getElementById('signupError').style.borderColor = 'rgba(31,170,128,0.35)';
+      btn.disabled = false; btn.textContent = 'Create Account — Free';
+      return;
+    }
+    window.location.href = 'account.html';
+  }
+
+  async function googleAuth(){
+    await sb.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.origin + window.location.pathname.replace('auth.html','account.html') }
+    });
+  }
+
+  async function forgotPassword(){
+    const email = document.getElementById('loginEmail').value.trim();
+    if(!email){
+      showError('loginError', 'Enter your email above first, then tap "Forgot password?" again.');
+      return;
+    }
+    const { error } = await sb.auth.resetPasswordForEmail(email);
+    if(error){ showError('loginError', error.message); return; }
+    showError('loginError', 'Password reset email sent — check your inbox.');
+  }
+
+  // Support ?mode=signup in the URL, e.g. index.html links here with a param
+  const params = new URLSearchParams(window.location.search);
+  if(params.get('mode') === 'signup') setMode('signup');
+  if(params.get('suspended') === '1') showError('loginError', 'This account has been suspended. Contact Auvii support for help.');
+
+  // If already logged in, skip straight to the account page
+  (async () => {
+    const { data } = await sb.auth.getSession();
+    if(data.session) window.location.href = 'account.html';
+  })();
+</script>
+
+</body>
+</html>
