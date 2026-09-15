@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Widget Preview — Auvii</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin:0; background:#F4F5F7; color:#1C1C1E; }
+  .wrap { max-width:560px; margin:0 auto; padding:28px 20px 120px; }
+  h1 { font-size:20px; margin-bottom:6px; }
+  p { color:#5A5A60; font-size:14px; line-height:1.5; }
+  .mock-site { background:#fff; border-radius:14px; padding:26px 20px; margin-top:22px; box-shadow:0 2px 10px rgba(0,0,0,0.06); }
+  .mock-site h2 { font-size:16px; margin:0 0 8px; }
+  .mock-site .line { height:10px; background:#EEE; border-radius:5px; margin-bottom:10px; }
+  .mock-site .line.short { width:60%; }
+  #noAgent { display:none; background:#FFF3EC; color:#B5431F; padding:14px 16px; border-radius:10px; font-size:13.5px; margin-top:18px; }
+  #widgetStatus { background:#EFEFEA; color:#4B5058; padding:12px 16px; border-radius:10px; font-size:13px; margin-top:14px; font-family:monospace; white-space:pre-wrap; }
+  #widgetStatus.error { background:#FFF3EC; color:#B5431F; }
+  #widgetStatus.ok { background:#E4F5EC; color:#1A7A4C; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Widget Preview</h1>
+    <p>This page simulates a customer's website with your Auvii widget installed. Tap the chat bubble in the corner to test it exactly as your customers will see it.</p>
+    <div id="noAgent">No agent ID given. Open this page as <code>widget-preview.html?agent=YOUR_AGENT_ID</code>, or use the "Preview" button from your Connect Website page.</div>
+    <div id="widgetStatus">Checking widget…</div>
+    <div class="mock-site">
+      <h2>Example Store</h2>
+      <div class="line"></div>
+      <div class="line"></div>
+      <div class="line short"></div>
+    </div>
+  </div>
+  <script>
+    function setStatus(text, kind){
+      const el = document.getElementById('widgetStatus');
+      el.textContent = text;
+      el.className = kind || '';
+    }
+
+    window.addEventListener('error', function(e){
+      setStatus('JS error while running the widget:\n' + e.message + '\n(' + e.filename + ':' + e.lineno + ')', 'error');
+    });
+
+    const params = new URLSearchParams(window.location.search);
+    const agentId = params.get('agent');
+    if(agentId){
+      setStatus('Agent ID found: ' + agentId + '\nLoading sb-chat.js…');
+      const s = document.createElement('script');
+      s.src = 'https://shopbrain2.github.io/shopbrain/sb-chat.js';
+      s.setAttribute('data-agent', agentId);
+      s.onload = function(){
+        setStatus('sb-chat.js loaded and ran with no errors.\nWaiting to see if a bubble appeared…');
+        setTimeout(function(){
+          const root = document.getElementById('shopbrain-widget-root');
+          if(root){
+            setStatus('SUCCESS — widget rendered. If you still don\'t see a bubble visually, it may be positioned off-screen or covered by something.', 'ok');
+          } else {
+            setStatus('sb-chat.js ran with no errors, but built nothing. This means the "init" call to chat_ai returned an error or empty response — check the agent is Active and the account isn\'t suspended (this is the same silent-fail behavior that protects real customer sites, but it hides the reason here).', 'error');
+          }
+        }, 3000);
+      };
+      s.onerror = function(){
+        setStatus('FAILED to load sb-chat.js — the file could not be fetched at all (network error, blocked, or wrong URL).', 'error');
+      };
+      document.body.appendChild(s);
+    } else {
+      document.getElementById('noAgent').style.display = 'block';
+      setStatus('No agent ID in the URL — nothing to test.', 'error');
+    }
+  </script>
+</body>
+</html>
