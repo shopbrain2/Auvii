@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Training Center — Auvii</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="sb-config.js"></script>
+<style>
+  :root{
+    --paper:#F7F7F4; --paper-dim:#EFEFEA; --ink:#14171C; --ink-soft:#4B5058; --line:#DDDCD5;
+    --cobalt:#2F5FFF; --cobalt-dim:#EAEFFF; --orange:#FF6B45; --orange-dim:#FFEDE6;
+    --mint:#1FAA80; --mint-dim:#E6F5EF; --white:#FFFFFF;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:'Inter',sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased;}
+  h1,h2,h3{font-family:'Space Grotesk',sans-serif;font-weight:600;letter-spacing:-0.01em;line-height:1.15;margin:0;}
+  p{margin:0;}
+  a{color:inherit;text-decoration:none;}
+
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 18px;border-radius:8px;font-family:'Inter',sans-serif;font-weight:600;font-size:14px;cursor:pointer;border:1.5px solid transparent;transition:background .15s ease, transform .15s ease, border-color .15s ease;}
+  .btn:active{transform:scale(0.98);}
+  .btn:disabled{opacity:0.6;cursor:default;}
+  .btn-primary{background:var(--cobalt);color:var(--white);}
+  .btn-primary:hover{background:#2450DE;}
+  .btn-ghost{background:transparent;color:var(--ink);border-color:var(--line);}
+  .btn-ghost:hover{border-color:var(--ink);}
+  .btn-orange{background:var(--orange);color:var(--white);}
+  .btn-orange:hover{background:#E85A34;}
+  .btn-sm{padding:8px 14px;font-size:13px;}
+  .btn-block{width:100%;}
+
+  header{padding:16px 0;border-bottom:1px solid var(--line);background:var(--white);position:sticky;top:0;z-index:20;}
+  .header-inner{display:flex;align-items:center;justify-content:space-between;max-width:1080px;margin:0 auto;padding:0 24px;}
+  .logo{display:flex;align-items:center;gap:9px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:18px;}
+  .logo-mark{width:24px;height:24px;border-radius:6px;background:var(--cobalt);position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;flex:none;}
+
+  .layout{max-width:1080px;margin:0 auto;padding:28px 24px 100px;display:grid;grid-template-columns:220px 1fr;gap:32px;}
+  @media(max-width:860px){.layout{grid-template-columns:1fr;padding:20px 16px 100px;}}
+
+  .subnav{display:flex;flex-direction:column;gap:2px;position:sticky;top:74px;align-self:start;}
+  @media(max-width:860px){
+    .subnav{position:static;flex-direction:row;overflow-x:auto;gap:8px;padding-bottom:10px;margin-bottom:8px;border-bottom:1px solid var(--line);}
+    .subnav::-webkit-scrollbar{display:none;}
+  }
+  .subnav-item{padding:9px 12px;border-radius:8px;font-size:13.5px;font-weight:600;color:var(--ink-soft);cursor:pointer;white-space:nowrap;}
+  .subnav-item:hover{background:var(--paper-dim);color:var(--ink);}
+  .subnav-item.active{background:var(--cobalt-dim);color:var(--cobalt);}
+
+  .panel{display:none;}
+  .panel.active{display:block;}
+  .panel-title{font-size:23px;margin-bottom:6px;}
+  .panel-sub{color:var(--ink-soft);font-size:14px;margin-bottom:26px;}
+
+  .card{border:1px solid var(--line);border-radius:14px;background:var(--white);padding:22px;margin-bottom:18px;}
+  .field{margin-bottom:16px;}
+  .field label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;}
+  .field label .optional{font-weight:400;color:var(--ink-soft);}
+  .field input,.field textarea,.field select{width:100%;border:1.5px solid var(--line);border-radius:8px;padding:10px 12px;font-family:'Inter',sans-serif;font-size:14px;color:var(--ink);background:var(--paper);}
+  .field textarea{resize:vertical;min-height:64px;}
+  .field input:focus,.field textarea:focus,.field select:focus{outline:none;border-color:var(--cobalt);}
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media(max-width:600px){.field-row{grid-template-columns:1fr;}}
+
+  /* Knowledge overview */
+  .readiness-card{background:var(--white);border:1px solid var(--line);border-radius:16px;padding:26px;margin-bottom:24px;}
+  .readiness-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;}
+  .readiness-pct{font-family:'Space Grotesk',sans-serif;font-size:30px;font-weight:700;color:var(--cobalt);}
+  .readiness-track{height:8px;background:var(--paper-dim);border-radius:8px;overflow:hidden;margin-bottom:10px;}
+  .readiness-fill{height:100%;background:var(--cobalt);border-radius:8px;transition:width .4s ease;}
+  .readiness-note{font-size:12.5px;color:var(--ink-soft);}
+
+  .source-row{display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid var(--line);}
+  .source-row:last-child{border-bottom:none;}
+  .source-name{font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px;}
+  .source-dot{width:9px;height:9px;border-radius:50%;}
+  .source-dot.ready{background:var(--mint);}
+  .source-dot.missing{background:var(--line);}
+  .source-status{font-size:12.5px;color:var(--ink-soft);}
+  .source-row.locked{opacity:0.85;}
+  .lock-badge{font-size:12px;color:var(--ink-soft);}
+
+  /* Products / FAQs / custom knowledge lists */
+  .list-item{border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:10px;background:var(--white);}
+  .list-item-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}
+  .list-item h4{font-size:14.5px;margin-bottom:4px;}
+  .list-item .meta{font-size:12.5px;color:var(--ink-soft);}
+  .list-item .del-btn{background:none;border:none;color:var(--ink-soft);cursor:pointer;font-size:12.5px;font-weight:600;flex:none;}
+  .list-item .del-btn:hover{color:#B5431F;}
+  .empty-hint{color:var(--ink-soft);font-size:13.5px;padding:18px 0;text-align:center;border:1.5px dashed var(--line);border-radius:12px;}
+
+  .product-board{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;}
+  .board-card{border:1px solid var(--line);border-radius:14px;background:var(--white);overflow:hidden;}
+  .board-card-img{width:100%;height:140px;background:var(--paper-dim);display:flex;align-items:center;justify-content:center;overflow:hidden;}
+  .board-card-img img{width:100%;height:100%;object-fit:cover;}
+  .board-card-img svg{width:34px;height:34px;stroke:#C4C4C4;}
+  .board-card-body{padding:14px;}
+  .board-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:4px;}
+  .board-card-top h4{font-size:14px;line-height:1.3;}
+  .board-card-desc{font-size:12px;color:var(--ink-soft);margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+  .board-card-meta{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+  .board-price{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;}
+  .board-avail{font-size:10.5px;font-weight:600;padding:3px 8px;border-radius:10px;}
+  .board-avail.in-stock{background:var(--mint-dim);color:#0E7A5C;}
+  .board-avail.out-of-stock{background:var(--orange-dim);color:#B5431F;}
+  .board-avail.preorder{background:var(--cobalt-dim);color:var(--cobalt);}
+  .board-card-tags{display:flex;gap:6px;flex-wrap:wrap;}
+  .board-tag{font-size:10.5px;color:var(--ink-soft);background:var(--paper-dim);padding:3px 8px;border-radius:8px;}
+  @media(max-width:500px){.product-board{grid-template-columns:repeat(2,1fr);}}
+
+  .add-toggle{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;color:var(--cobalt);cursor:pointer;margin-bottom:16px;}
+  .add-form{display:none;}
+  .add-form.open{display:block;}
+
+  /* Option pills for restrictions/instructions */
+  .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--line);gap:14px;}
+  .toggle-row:last-child{border-bottom:none;}
+  .toggle-row .t-label{font-size:13.5px;font-weight:600;}
+  .toggle-row .t-desc{font-size:12px;color:var(--ink-soft);margin-top:2px;}
+  .switch{position:relative;width:40px;height:22px;flex:none;}
+  .switch input{opacity:0;width:0;height:0;}
+  .slider{position:absolute;inset:0;background:var(--line);border-radius:22px;cursor:pointer;transition:.2s;}
+  .slider::before{content:'';position:absolute;width:16px;height:16px;left:3px;top:3px;background:white;border-radius:50%;transition:.2s;}
+  input:checked + .slider{background:var(--cobalt);}
+  input:checked + .slider::before{transform:translateX(18px);}
+
+  .pill-row{display:flex;gap:8px;flex-wrap:wrap;}
+  .pill{border:1.5px solid var(--line);border-radius:8px;padding:9px 15px;font-size:13.5px;font-weight:600;color:var(--ink-soft);cursor:pointer;background:var(--white);}
+  .pill.selected{border-color:var(--cobalt);background:var(--cobalt-dim);color:var(--cobalt);}
+
+  /* Test AI chat */
+  .chat-mock{background:var(--white);border:1px solid var(--line);border-radius:14px;overflow:hidden;}
+  .chat-body{padding:18px;display:flex;flex-direction:column;gap:11px;min-height:280px;max-height:420px;overflow-y:auto;}
+  .bubble{max-width:80%;padding:10px 13px;border-radius:11px;font-size:14px;line-height:1.45;}
+  .bubble.bot{background:var(--paper-dim);border-bottom-left-radius:3px;align-self:flex-start;}
+  .bubble.user{background:var(--cobalt);color:var(--white);border-bottom-right-radius:3px;align-self:flex-end;}
+  .bubble-actions{display:flex;gap:10px;margin-top:6px;align-self:flex-start;}
+  .bubble-actions button{background:none;border:none;font-size:11.5px;color:var(--ink-soft);cursor:pointer;font-weight:600;}
+  .bubble-actions button:hover{color:var(--ink);}
+  .chat-input-row{display:flex;gap:9px;padding:14px 16px;border-top:1px solid var(--line);}
+  .chat-input-row input{flex:1;border:1.5px solid var(--line);border-radius:8px;padding:10px 13px;font-size:13.5px;font-family:'Inter',sans-serif;}
+  .chat-input-row input:focus{outline:none;border-color:var(--cobalt);}
+  .chat-input-row button{background:var(--cobalt);border:none;border-radius:8px;width:38px;height:38px;flex:none;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+  .chat-toolbar{display:flex;justify-content:flex-end;gap:10px;margin-bottom:12px;}
+
+  /* Services inside training center */
+  .services-banner{background:var(--ink);color:var(--white);border-radius:16px;padding:26px;margin-bottom:22px;}
+  .services-banner h3{color:var(--white);font-size:18px;margin-bottom:6px;}
+  .services-banner p{color:#B8BBC2;font-size:13.5px;margin-bottom:16px;}
+  .service-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;}
+  @media(max-width:600px){.service-grid{grid-template-columns:1fr;}}
+  .service-card{border:1px solid var(--line);border-radius:14px;background:var(--white);padding:20px;position:relative;}
+  .service-card.popular{border-color:var(--orange);}
+  .pc-badge{position:absolute;top:-9px;right:14px;background:var(--orange);color:white;font-size:10px;font-weight:700;padding:3px 9px;border-radius:100px;}
+  .service-card h4{font-size:15px;margin-bottom:5px;}
+  .service-card .price{font-family:'Space Grotesk',sans-serif;font-size:19px;font-weight:700;margin-bottom:8px;}
+  .service-card p.desc{font-size:12.5px;color:var(--ink-soft);margin-bottom:12px;}
+  .no-sub-note{font-size:12px;color:var(--ink-soft);margin-top:4px;}
+
+  .save-row{display:flex;justify-content:flex-end;gap:10px;margin-top:4px;}
+  .toast{font-size:12.5px;color:#0E7A5C;font-weight:600;display:none;align-items:center;gap:6px;}
+  .toast.show{display:flex;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <a href="account.html" class="logo"><span class="logo-mark"><svg viewBox="0 0 24 24" style="width:68%;height:68%;"><path d="M5 5h14a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-8.5l-3.8 3.6v-3.6H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z" fill="#fff"/><line x1="9" y1="10.6" x2="15" y2="10.6" stroke="#2F5FFF" stroke-width="1" stroke-linecap="round"/><line x1="9" y1="10.6" x2="12" y2="8" stroke="#2F5FFF" stroke-width="1" stroke-linecap="round"/><line x1="15" y1="10.6" x2="12" y2="8" stroke="#2F5FFF" stroke-width="1" stroke-linecap="round"/><circle cx="9" cy="10.6" r="1.15" fill="#2F5FFF"/><circle cx="15" cy="10.6" r="1.15" fill="#2F5FFF"/><circle cx="12" cy="8" r="1.15" fill="#2F5FFF"/></svg></span>Auvii</a>
+    <a href="account.html" class="btn btn-ghost btn-sm">← Back to Dashboard</a>
+  </div>
+</header>
+
+<div class="layout">
+  <nav class="subnav" id="subnav">
+    <div class="subnav-item active" data-panel="overview" onclick="showPanel('overview')">Overview</div>
+    <div class="subnav-item" data-panel="business" onclick="showPanel('business')">Business Info</div>
+    <div class="subnav-item" data-panel="crawler" onclick="showPanel('crawler')">Website Crawler</div>
+    <div class="subnav-item" data-panel="products" onclick="showPanel('products')">Products</div>
+    <div class="subnav-item" data-panel="faqs" onclick="showPanel('faqs')">FAQs</div>
+    <div class="subnav-item" data-panel="policies" onclick="showPanel('policies')">Policies</div>
+    <div class="subnav-item" data-panel="custom" onclick="showPanel('custom')">Custom Knowledge</div>
+    <div class="subnav-item" data-panel="instructions" onclick="showPanel('instructions')">AI Instructions</div>
+    <div class="subnav-item" data-panel="sales" onclick="showPanel('sales')">Sales Assistant</div>
+    <div class="subnav-item" data-panel="test" onclick="showPanel('test')">Test Your AI</div>
+    <div class="subnav-item" data-panel="services" onclick="showPanel('services')">Auvii Services</div>
+  </nav>
+
+  <main>
+    <!-- OVERVIEW -->
+    <section class="panel active" id="panel-overview">
+      <h1 class="panel-title">Training Center</h1>
+      <p class="panel-sub">Teach your AI everything it needs to know about your business.</p>
+
+      <div class="readiness-card">
+        <div class="readiness-top">
+          <div>
+            <div style="font-size:13px;color:var(--ink-soft);font-weight:600;">AI Knowledge</div>
+          </div>
+          <div class="readiness-pct" id="readinessPct">—%</div>
+        </div>
+        <div class="readiness-track"><div class="readiness-fill" id="readinessFill" style="width:0%;"></div></div>
+        <div class="readiness-note" id="readinessNote">This shows how complete your AI's knowledge base is — it's a readiness indicator, not an accuracy score.</div>
+      </div>
+
+      <div class="card" id="sourcesCard">
+        <div class="source-row"><div class="source-name"><span class="source-dot" id="dot-business"></span>Business Information</div><div class="source-status" id="status-business">—</div></div>
+        <div class="source-row"><div class="source-name"><span class="source-dot" id="dot-products"></span>Products</div><div class="source-status" id="status-products">—</div></div>
+        <div class="source-row"><div class="source-name"><span class="source-dot" id="dot-faqs"></span>FAQs</div><div class="source-status" id="status-faqs">—</div></div>
+        <div class="source-row"><div class="source-name"><span class="source-dot" id="dot-policies"></span>Policies</div><div class="source-status" id="status-policies">—</div></div>
+        <div class="source-row"><div class="source-name"><span class="source-dot" id="dot-custom"></span>Custom Knowledge</div><div class="source-status" id="status-custom">—</div></div>
+        <div class="source-row"><div class="source-name"><span class="source-dot" id="dot-instructions"></span>AI Instructions</div><div class="source-status" id="status-instructions">—</div></div>
+        <div class="source-row locked">
+          <div class="source-name">🔒 Website Knowledge</div>
+          <a href="account.html?view=services" class="btn btn-orange btn-sm">Get Professional Training →</a>
+        </div>
+      </div>
+      <p style="font-size:12.5px;color:var(--ink-soft);">Automatically training your AI using your website is a Auvii professional service — free AI creation never crawls your site.</p>
+    </section>
+
+    <!-- BUSINESS INFO -->
+    <section class="panel" id="panel-business">
+      <h1 class="panel-title">Business Information</h1>
+      <p class="panel-sub">The basics your AI needs to represent your store accurately.</p>
+      <div class="card">
+        <div class="field"><label>Business name</label><input type="text" id="biName"></div>
+        <div class="field"><label>Business description</label><textarea id="biDescription"></textarea></div>
+        <div class="field"><label>What does your store sell?</label><input type="text" id="biSells"></div>
+        <div class="field"><label>Target customers</label><input type="text" id="biTarget" placeholder="e.g. Young professionals, gift shoppers"></div>
+        <div class="field-row">
+          <div class="field"><label>Business location</label><input type="text" id="biLocation"></div>
+          <div class="field"><label>Opening hours</label><input type="text" id="biHours" placeholder="e.g. Mon–Sat, 9am–6pm"></div>
+        </div>
+        <div class="field"><label>Contact information</label><input type="text" id="biContact" placeholder="Phone, email or WhatsApp"></div>
+        <div class="save-row">
+          <span class="toast" id="biToast">✓ Saved</span>
+          <button class="btn btn-primary btn-sm" onclick="saveBusinessInfo()" id="biSaveBtn">Save</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- WEBSITE CRAWLER -->
+    <section class="panel" id="panel-crawler">
+      <h1 class="panel-title">Website Crawler</h1>
+      <p class="panel-sub">Point your AI at your website and it'll read through it, filling in what it can find below.</p>
+      <div class="card" style="background:var(--cobalt-dim);border:none;">
+        <p style="font-size:12.5px;color:var(--ink-soft);margin-bottom:12px;">Reads one page per click to stay within free AI limits. Never overwrites anything already filled in — only adds new products/FAQs and fills blank fields. Keep tapping "Crawl Now" with the same URL to work through more of your site.</p>
+        <div class="field"><label>Your website URL</label><input type="text" id="crawlerUrl" placeholder="https://yourstore.com"></div>
+        <button class="btn btn-primary btn-sm" id="crawlerBtn" onclick="runSelfServeCrawl()">Crawl Now</button>
+        <div id="crawlerStatus" style="font-size:12.5px;margin-top:10px;"></div>
+      </div>
+    </section>
+
+    <!-- PRODUCTS -->
+    <section class="panel" id="panel-products">
+      <h1 class="panel-title">Products</h1>
+      <p class="panel-sub">Manage products manually, import a file, or sync directly from Shopify.</p>
+
+      <div id="shopifyGate">
+        <div class="card" style="background:var(--cobalt-dim,#EAEFFF);border:none;margin-bottom:20px;" id="shopifyCard">
+          <h3 style="font-size:15px;margin-bottom:6px;">Connect Shopify</h3>
+          <p style="font-size:13px;color:var(--ink-soft);margin-bottom:14px;">Sync your real product catalog straight from Shopify — no manual entry, no risk of the AI misreading anything.</p>
+          <div id="shopifyConnectForm">
+            <div class="field"><label>Shop domain</label><input type="text" id="shopifyDomain" placeholder="mystore.myshopify.com"></div>
+            <div class="field">
+              <label>Storefront API access token</label>
+              <input type="text" id="shopifyToken" placeholder="shpat_... or your Storefront token">
+              <p style="font-size:11.5px;color:var(--ink-soft);margin-top:4px;">Generate this in Shopify Admin → Settings → Apps and sales channels → Develop apps → create an app → enable Storefront API → install → copy the Storefront API access token.</p>
+            </div>
+            <button class="btn btn-primary btn-sm" id="shopifyConnectBtn" onclick="connectShopify()">Connect & Sync Products</button>
+          </div>
+          <div id="shopifyConnectedState" style="display:none;">
+            <p style="font-size:13.5px;margin-bottom:4px;">Connected to <b id="shopifyDomainLabel"></b></p>
+            <p style="font-size:12px;color:var(--ink-soft);margin-bottom:12px;">Last synced: <span id="shopifyLastSync">—</span></p>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <button class="btn btn-primary btn-sm" onclick="syncShopify()" id="shopifySyncBtn">Sync Now</button>
+              <button class="btn btn-ghost btn-sm" style="color:#B5431F;" onclick="disconnectShopify()">Disconnect</button>
+            </div>
+          </div>
+          <div id="shopifyStatus" style="font-size:12.5px;margin-top:10px;"></div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;">
+        <button class="btn btn-primary btn-sm" onclick="toggleAddProduct()">+ Add Product</button>
+        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('csvInput').click()">Import Product File</button>
+        <input type="file" id="csvInput" accept=".csv" style="display:none" onchange="importProductsCSV(this)">
+      </div>
+      <p style="font-size:12px;color:var(--ink-soft);margin-top:-14px;margin-bottom:16px;">CSV columns: name, description, price, category, availability, product_url, additional_info</p>
+
+      <div class="card add-form" id="addProductForm">
+        <div class="field-row">
+          <div class="field"><label>Product name</label><input type="text" id="pName"></div>
+          <div class="field"><label>Price</label><input type="text" id="pPrice" placeholder="e.g. $49.99"></div>
+        </div>
+        <div class="field"><label>Description</label><textarea id="pDescription"></textarea></div>
+        <div class="field-row">
+          <div class="field"><label>Category</label><input type="text" id="pCategory"></div>
+          <div class="field"><label>Availability</label>
+            <select id="pAvailability"><option value="in_stock">In stock</option><option value="out_of_stock">Out of stock</option><option value="preorder">Preorder</option></select>
+          </div>
+        </div>
+        <div class="field"><label>Product URL <span class="optional">(optional)</span></label><input type="url" id="pUrl"></div>
+        <div class="field-row">
+          <div class="field"><label>Image URL <span class="optional">(optional)</span></label><input type="url" id="pImageUrl" placeholder="https://..."></div>
+          <div class="field"><label>Rating <span class="optional">(optional, 0–5)</span></label><input type="number" id="pRating" min="0" max="5" step="0.1"></div>
+        </div>
+        <div class="field"><label>Additional information <span class="optional">(optional)</span></label><textarea id="pExtra"></textarea></div>
+        <div class="save-row">
+          <button class="btn btn-ghost btn-sm" onclick="toggleAddProduct()">Cancel</button>
+          <button class="btn btn-primary btn-sm" onclick="saveProduct()">Save Product</button>
+        </div>
+      </div>
+
+      <div id="productsList"></div>
+    </section>
+
+    <!-- FAQS -->
+    <section class="panel" id="panel-faqs">
+      <h1 class="panel-title">FAQs</h1>
+      <p class="panel-sub">Common questions your customers ask, and the answers your AI should give.</p>
+      <button class="btn btn-primary btn-sm" onclick="toggleAddFaq()" style="margin-bottom:20px;">+ Add FAQ</button>
+
+      <div class="card add-form" id="addFaqForm">
+        <div class="field"><label>Question</label><input type="text" id="faqQ" placeholder="e.g. Do you deliver nationwide?"></div>
+        <div class="field"><label>Answer</label><textarea id="faqA" placeholder="e.g. Yes, we deliver nationwide."></textarea></div>
+        <div class="save-row">
+          <button class="btn btn-ghost btn-sm" onclick="toggleAddFaq()">Cancel</button>
+          <button class="btn btn-primary btn-sm" onclick="saveFaq()">Save FAQ</button>
+        </div>
+      </div>
+
+      <div id="faqsList"></div>
+    </section>
+
+    <!-- POLICIES -->
+    <section class="panel" id="panel-policies">
+      <h1 class="panel-title">Store Policies</h1>
+      <p class="panel-sub">Clear policies help your AI answer confidently instead of guessing.</p>
+      <div class="card">
+        <div class="field"><label>Delivery</label><textarea id="polDelivery" placeholder="Delivery times and locations."></textarea></div>
+        <div class="field"><label>Returns &amp; Refunds</label><textarea id="polReturns" placeholder="Return conditions."></textarea></div>
+        <div class="field"><label>Payments</label><textarea id="polPayments" placeholder="Accepted payment methods."></textarea></div>
+        <div class="field"><label>Warranty</label><textarea id="polWarranty" placeholder="Warranty information."></textarea></div>
+        <div class="field"><label>Cancellation</label><textarea id="polCancellation" placeholder="Order cancellation rules."></textarea></div>
+        <div class="save-row">
+          <span class="toast" id="polToast">✓ Saved</span>
+          <button class="btn btn-primary btn-sm" onclick="savePolicies()">Save Policies</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- CUSTOM KNOWLEDGE -->
+    <section class="panel" id="panel-custom">
+      <h1 class="panel-title">Custom Knowledge</h1>
+      <p class="panel-sub">Anything else your AI should know that doesn't fit elsewhere.</p>
+      <button class="btn btn-primary btn-sm" onclick="toggleAddCustom()" style="margin-bottom:20px;">+ Add Knowledge</button>
+
+      <div class="card add-form" id="addCustomForm">
+        <div class="field"><label>Knowledge entry</label><textarea id="customContent" placeholder="e.g. VIP customers receive free delivery."></textarea></div>
+        <div class="save-row">
+          <button class="btn btn-ghost btn-sm" onclick="toggleAddCustom()">Cancel</button>
+          <button class="btn btn-primary btn-sm" onclick="saveCustomKnowledge()">Save</button>
+        </div>
+      </div>
+
+      <div id="customList"></div>
+    </section>
+
+    <!-- AI INSTRUCTIONS -->
+    <section class="panel" id="panel-instructions">
+      <h1 class="panel-title">AI Instructions</h1>
+      <p class="panel-sub">Control your AI's behaviour, tone and safety rules.</p>
+
+      <div class="card">
+        <div class="field"><label>Tone</label>
+          <div class="pill-row" id="toneRow">
+            <div class="pill" data-value="friendly" onclick="selectPill('toneRow','tone','friendly')">Friendly</div>
+            <div class="pill" data-value="professional" onclick="selectPill('toneRow','tone','professional')">Professional</div>
+            <div class="pill" data-value="casual" onclick="selectPill('toneRow','tone','casual')">Casual</div>
+            <div class="pill" data-value="helpful" onclick="selectPill('toneRow','tone','helpful')">Helpful</div>
+          </div>
+        </div>
+        <div class="field"><label>Response length</label>
+          <div class="pill-row" id="lengthRow">
+            <div class="pill" data-value="short" onclick="selectPill('lengthRow','response_length','short')">Short</div>
+            <div class="pill" data-value="balanced" onclick="selectPill('lengthRow','response_length','balanced')">Balanced</div>
+            <div class="pill" data-value="detailed" onclick="selectPill('lengthRow','response_length','detailed')">Detailed</div>
+          </div>
+        </div>
+        <div class="field"><label>Custom instructions</label><textarea id="customInstructions" placeholder="e.g. Be friendly. Don't invent product prices. Recommend products based on customer requirements."></textarea></div>
+        <div class="save-row">
+          <span class="toast" id="instrToast">✓ Saved</span>
+          <button class="btn btn-primary btn-sm" onclick="saveInstructions()">Save Instructions</button>
+        </div>
+      </div>
+
+      <h2 style="font-size:16.5px;margin:28px 0 14px;">AI Restrictions</h2>
+      <div class="card">
+        <div class="toggle-row">
+          <div><div class="t-label">Don't invent product information</div></div>
+          <label class="switch"><input type="checkbox" id="r_no_invent_info"><span class="slider"></span></label>
+        </div>
+        <div class="toggle-row">
+          <div><div class="t-label">Don't invent prices</div></div>
+          <label class="switch"><input type="checkbox" id="r_no_invent_prices"><span class="slider"></span></label>
+        </div>
+        <div class="toggle-row">
+          <div><div class="t-label">Don't claim unavailable products are available</div></div>
+          <label class="switch"><input type="checkbox" id="r_no_false_availability"><span class="slider"></span></label>
+        </div>
+        <div class="toggle-row">
+          <div><div class="t-label">Don't make promises about refunds</div></div>
+          <label class="switch"><input type="checkbox" id="r_no_refund_promises"><span class="slider"></span></label>
+        </div>
+        <div class="toggle-row">
+          <div><div class="t-label">Don't provide information outside the AI's knowledge</div></div>
+          <label class="switch"><input type="checkbox" id="r_stay_within_knowledge"><span class="slider"></span></label>
+        </div>
+        <div class="toggle-row">
+          <div><div class="t-label">Escalate complex questions to a human</div></div>
+          <label class="switch"><input type="checkbox" id="r_escalate_complex"><span class="slider"></span></label>
+        </div>
+        <div class="save-row" style="margin-top:6px;">
+          <span class="toast" id="restrToast">✓ Saved</span>
+          <button class="btn btn-primary btn-sm" onclick="saveRestrictions()">Save Restrictions</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- SALES ASSISTANT -->
+    <section class="panel" id="panel-sales">
+      <h1 class="panel-title">AI Sales Assistant</h1>
+      <p class="panel-sub">Turn conversations into product discoveries and purchases.</p>
+      <div id="salesUpgradeBanner"></div>
+
+      <div class="card">
+        <div class="toggle-row">
+          <div><div class="t-label">Enable Sales Assistant</div><div class="t-desc">Your AI will actively recommend and compare products, not just answer questions.</div></div>
+          <label class="switch"><input type="checkbox" id="saEnabled"><span class="slider"></span></label>
+        </div>
+      </div>
+
+      <h2 style="font-size:16.5px;margin:24px 0 14px;">Sales Behavior</h2>
+      <div class="card">
+        <div class="field"><label>Sales tone</label>
+          <div class="pill-row" id="saToneRow">
+            <div class="pill" data-value="friendly" onclick="selectSalesPill('saToneRow','sales_tone','friendly')">Friendly</div>
+            <div class="pill" data-value="professional" onclick="selectSalesPill('saToneRow','sales_tone','professional')">Professional</div>
+            <div class="pill" data-value="casual" onclick="selectSalesPill('saToneRow','sales_tone','casual')">Casual</div>
+          </div>
+        </div>
+        <div class="field"><label>Recommendation behavior</label>
+          <div class="pill-row" id="saStyleRow">
+            <div class="pill" data-value="conservative" onclick="selectSalesPill('saStyleRow','recommendation_style','conservative')">Conservative</div>
+            <div class="pill" data-value="balanced" onclick="selectSalesPill('saStyleRow','recommendation_style','balanced')">Balanced</div>
+            <div class="pill" data-value="sales_focused" onclick="selectSalesPill('saStyleRow','recommendation_style','sales_focused')">More Sales-Focused</div>
+          </div>
+        </div>
+        <div class="field"><label>Max products shown per recommendation</label>
+          <select id="saMaxProducts"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select>
+        </div>
+        <div class="toggle-row">
+          <div><div class="t-label">Allow upselling</div><div class="t-desc">Suggest a higher-tier option when it genuinely fits better.</div></div>
+          <label class="switch"><input type="checkbox" id="saUpsell"><span class="slider"></span></label>
+        </div>
+        <div class="toggle-row">
+          <div><div class="t-label">Allow cross-selling</div><div class="t-desc">Suggest complementary products alongside what the customer wants.</div></div>
+          <label class="switch"><input type="checkbox" id="saCrossSell"><span class="slider"></span></label>
+        </div>
+      </div>
+
+      <h2 style="font-size:16.5px;margin:24px 0 14px;">Custom Instructions & Rules</h2>
+      <div class="card">
+        <div class="field"><label>Custom sales instructions <span class="optional">(optional)</span></label><textarea id="saInstructions" placeholder="e.g. Always mention our 30-day return policy when recommending electronics."></textarea></div>
+        <div class="field"><label>Hard rules the AI must never break <span class="optional">(optional)</span></label><textarea id="saRules" placeholder="e.g. Never pressure customers. Never invent discounts. Never make delivery promises."></textarea></div>
+        <div class="save-row">
+          <span class="toast" id="saToast">✓ Saved</span>
+          <button class="btn btn-primary btn-sm" onclick="saveSalesSettings()">Save Sales Assistant Settings</button>
+        </div>
+      </div>
+
+      <div class="card" style="background:var(--paper-dim);border:none;">
+        <h4 style="font-size:13.5px;margin-bottom:6px;">📊 Analytics</h4>
+        <p style="font-size:12.5px;color:var(--ink-soft);">Recommendation and click tracking is already running in the background. A full analytics view (most-recommended products, click-through rates, etc.) is coming in a future update.</p>
+      </div>
+    </section>
+
+    <!-- TEST AI -->
+    <section class="panel" id="panel-test">
+      <h1 class="panel-title">Test Your AI</h1>
+      <p class="panel-sub">Ask questions the way a customer would, based on your AI's current knowledge.</p>
+
+      <div class="chat-toolbar">
+        <button class="btn btn-ghost btn-sm" onclick="clearTestChat()">Clear conversation</button>
+      </div>
+      <div class="chat-mock">
+        <div class="chat-body" id="testChatBody"></div>
+        <div class="chat-input-row">
+          <input type="text" id="testInput" placeholder="Ask another question…" onkeydown="if(event.key==='Enter'){event.preventDefault(); askTestFromInput();}">
+          <button type="button" onclick="askTestFromInput()"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.4" width="15" height="15"><path d="M4 12h16M14 6l6 6-6 6"/></svg></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- SERVICES INSIDE TRAINING CENTER -->
+    <section class="panel" id="panel-services">
+      <div class="services-banner">
+        <h3>🚀 Let Auvii Train Your AI</h3>
+        <p>Don't want to manually build your AI's knowledge base? Our team can handle it for you.</p>
+        <a href="account.html?view=services" class="btn btn-orange btn-sm">View Plans →</a>
+      </div>
+      <div class="service-grid" id="tcServiceGrid"><p style="color:var(--ink-soft);font-size:13.5px;">Loading…</p></div>
+      <p class="no-sub-note">Every plan above bills monthly. Cancel anytime — no long-term contracts.</p>
+    </section>
+
+  </main>
+</div>
+
+<script>
+  let currentUser = null;
+  let agent = null;
+  let currentUserPlanTier = 'free';
+  const PLAN_ORDER = { free: 0, basic: 1, standard: 2, premium: 3 };
+
+  async function loadCurrentUserPlanTier(){
+    const { data: { session } } = await sb.auth.getSession();
+    if(!session) return;
+    const { data: sub } = await sb.from('subscriptions').select('plan_key, status').eq('user_id', session.user.id).maybeSingle();
+    currentUserPlanTier = (sub && sub.status === 'active' && sub.plan_key) ? sub.plan_key : 'free';
+  }
+
+  function hasPlanAtLeast(requiredTier){
+    return (PLAN_ORDER[currentUserPlanTier] ?? 0) >= (PLAN_ORDER[requiredTier] ?? 0);
+  }
+
+  function upgradePrompt(featureName, requiredTierLabel){
+    return `<div class="card" style="background:var(--orange-dim);border:none;text-align:center;">
+      <p style="font-size:13.5px;margin-bottom:12px;">🔒 <b>${featureName}</b> needs the <b>${requiredTierLabel}</b> plan or higher.</p>
+      <a href="account.html?view=services" class="btn btn-orange btn-sm">Upgrade Plan →</a>
+    </div>`;
+  }
+  let restrictions = {};
+
+  function showPanel(name){
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('panel-' + name).classList.add('active');
+    document.querySelectorAll('.subnav-item').forEach(el => el.classList.toggle('active', el.dataset.panel === name));
+    window.scrollTo({top:0});
+  }
+
+  function showToast(id){
+    const el = document.getElementById(id);
+    el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), 2000);
+  }
+
+  // ===== Business Information =====
+  async function loadBusinessInfo(){
+    const { data } = await sb.from('business_information').select('*').eq('agent_id', agent.id).single();
+    if(data){
+      document.getElementById('biName').value = data.business_name || '';
+      document.getElementById('biDescription').value = data.description || '';
+      document.getElementById('biSells').value = data.sells || '';
+      document.getElementById('biTarget').value = data.target_customers || '';
+      document.getElementById('biLocation').value = data.location || '';
+      document.getElementById('biHours').value = data.opening_hours || '';
+      document.getElementById('biContact').value = data.contact_info || '';
+    }
+  }
+
+  async function saveBusinessInfo(){
+    const btn = document.getElementById('biSaveBtn');
+    btn.disabled = true;
+    const payload = {
+      agent_id: agent.id,
+      business_name: document.getElementById('biName').value.trim() || null,
+      description: document.getElementById('biDescription').value.trim() || null,
+      sells: document.getElementById('biSells').value.trim() || null,
+      target_customers: document.getElementById('biTarget').value.trim() || null,
+      location: document.getElementById('biLocation').value.trim() || null,
+      opening_hours: document.getElementById('biHours').value.trim() || null,
+      contact_info: document.getElementById('biContact').value.trim() || null,
+      updated_at: new Date().toISOString()
+    };
+    await sb.from('business_information').upsert(payload, { onConflict: 'agent_id' });
+    btn.disabled = false;
+    showToast('biToast');
+    refreshReadiness();
+  }
+
+  // ===== Shopify (Basic plan and up) =====
+  async function loadShopifyConnection(){
+    const gate = document.getElementById('shopifyGate');
+    if(!hasPlanAtLeast('basic')){
+      gate.innerHTML = upgradePrompt('Shopify Integration', 'Basic');
+      return;
+    }
+    // Restore the real card markup in case it was previously replaced by the upgrade prompt.
+    if(!document.getElementById('shopifyCard')){
+      location.reload(); // simplest safe reset if the gate was previously locked this session
+      return;
+    }
+    const { data: conn } = await sb.from('shopify_connections').select('*').eq('agent_id', agent.id).maybeSingle();
+    if(conn){
+      document.getElementById('shopifyConnectForm').style.display = 'none';
+      document.getElementById('shopifyConnectedState').style.display = 'block';
+      document.getElementById('shopifyDomainLabel').textContent = conn.shop_domain;
+      document.getElementById('shopifyLastSync').textContent = conn.last_synced_at ? new Date(conn.last_synced_at).toLocaleString() : 'Never';
+    } else {
+      document.getElementById('shopifyConnectForm').style.display = 'block';
+      document.getElementById('shopifyConnectedState').style.display = 'none';
+    }
+  }
+
+  function cleanShopDomain(input){
+    return input.trim().replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+  }
+
+  async function fetchShopifyStorefrontProducts(domain, token){
+    const query = `{ products(first: 100) { edges { node { title description onlineStoreUrl priceRange { minVariantPrice { amount } } images(first: 1) { edges { node { url } } } } } } }`;
+    const res = await fetch(`https://${domain}/api/2024-01/graphql.json`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Shopify-Storefront-Access-Token': token },
+      body: JSON.stringify({ query })
+    });
+    if(!res.ok){
+      const text = await res.text();
+      throw new Error(`Shopify returned an error (${res.status}). Check the domain and token are correct. ${text.slice(0,150)}`);
+    }
+    const data = await res.json();
+    if(data.errors){ throw new Error(data.errors.map(e=>e.message).join(', ')); }
+    return (data.data?.products?.edges || []).map(e => ({
+      name: e.node.title,
+      description: e.node.description || '',
+      price: e.node.priceRange?.minVariantPrice?.amount ? `$${e.node.priceRange.minVariantPrice.amount}` : '',
+      product_url: e.node.onlineStoreUrl || null,
+      image_url: e.node.images?.edges?.[0]?.node?.url || null
+    }));
+  }
+
+  async function connectShopify(){
+    if(!hasPlanAtLeast('basic')) return;
+    const domain = cleanShopDomain(document.getElementById('shopifyDomain').value);
+    const token = document.getElementById('shopifyToken').value.trim();
+    const statusEl = document.getElementById('shopifyStatus');
+    if(!domain || !token){ statusEl.textContent = 'Enter both the shop domain and access token.'; statusEl.style.color = '#B5431F'; return; }
+
+    const btn = document.getElementById('shopifyConnectBtn');
+    btn.disabled = true; btn.textContent = 'Connecting…';
+    statusEl.style.color = 'var(--ink-soft)';
+    statusEl.textContent = 'Fetching your products from Shopify…';
+
+    try {
+      const products = await fetchShopifyStorefrontProducts(domain, token);
+      await sb.from('shopify_connections').upsert({ agent_id: agent.id, shop_domain: domain, access_token: token, last_synced_at: new Date().toISOString() }, { onConflict: 'agent_id' });
+
+      const { data: existing } = await sb.from('products').select('name').eq('agent_id', agent.id);
+      const existingNames = new Set((existing||[]).map(p => (p.name||'').toLowerCase().trim()));
+      const newProducts = products.filter(p => p.name && !existingNames.has(p.name.toLowerCase().trim()))
+        .map(p => ({ agent_id: agent.id, name: p.name, price: p.price, description: p.description, product_url: p.product_url, image_url: p.image_url, additional_info: 'Synced from Shopify' }));
+
+      if(newProducts.length) await sb.from('products').insert(newProducts);
+
+      statusEl.style.color = '#1A7A4C';
+      statusEl.textContent = `Connected — imported ${newProducts.length} product(s) out of ${products.length} found (existing ones were skipped, nothing duplicated).`;
+      loadShopifyConnection();
+      loadProducts();
+      refreshReadiness();
+    } catch (e) {
+      statusEl.style.color = '#B5431F';
+      statusEl.textContent = e.message;
+    }
+    btn.disabled = false; btn.textContent = 'Connect & Sync Products';
+  }
+
+  async function syncShopify(){
+    if(!hasPlanAtLeast('basic')) return;
+    const { data: conn } = await sb.from('shopify_connections').select('*').eq('agent_id', agent.id).maybeSingle();
+    if(!conn) return;
+    const statusEl = document.getElementById('shopifyStatus');
+    const btn = document.getElementById('shopifySyncBtn');
+    btn.disabled = true; btn.textContent = 'Syncing…';
+    statusEl.style.color = 'var(--ink-soft)';
+    statusEl.textContent = 'Checking for new or updated products…';
+
+    try {
+      const products = await fetchShopifyStorefrontProducts(conn.shop_domain, conn.access_token);
+      const { data: existing } = await sb.from('products').select('name').eq('agent_id', agent.id);
+      const existingNames = new Set((existing||[]).map(p => (p.name||'').toLowerCase().trim()));
+      const newProducts = products.filter(p => p.name && !existingNames.has(p.name.toLowerCase().trim()))
+        .map(p => ({ agent_id: agent.id, name: p.name, price: p.price, description: p.description, product_url: p.product_url, image_url: p.image_url, additional_info: 'Synced from Shopify' }));
+
+      if(newProducts.length) await sb.from('products').insert(newProducts);
+      await sb.from('shopify_connections').update({ last_synced_at: new Date().toISOString() }).eq('agent_id', agent.id);
+
+      statusEl.style.color = '#1A7A4C';
+      statusEl.textContent = `Sync complete — added ${newProducts.length} new product(s).`;
+      loadShopifyConnection();
+      loadProducts();
+      refreshReadiness();
+    } catch (e) {
+      statusEl.style.color = '#B5431F';
+      statusEl.textContent = e.message;
+    }
+    btn.disabled = false; btn.textContent = 'Sync Now';
+  }
+
+  async function disconnectShopify(){
+    if(!confirm('Disconnect Shopify? Products already imported will stay — this only stops future syncing.')) return;
+    await sb.from('shopify_connections').delete().eq('agent_id', agent.id);
+    loadShopifyConnection();
+  }
+
+  // ===== Website Crawler (self-serve) =====
+  async function runSelfServeCrawl(){
+    const url = document.getElementById('crawlerUrl').value.trim();
+    const btn = document.getElementById('crawlerBtn');
+    const statusEl = document.getElementById('crawlerStatus');
+    if(!url){ statusEl.textContent = 'Enter your website URL first.'; statusEl.style.color = '#B5431F'; return; }
+
+    btn.disabled = true; btn.textContent = 'Crawling…';
+    statusEl.style.color = 'var(--ink-soft)';
+    statusEl.textContent = 'Reading a page and extracting what it can find…';
+
+    const { data: { session } } = await sb.auth.getSession();
+
+    try {
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/scrape-website`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${session.access_token}` },
+        body: JSON.stringify({ agent_id: agent.id, website_url: url })
+      });
+      const data = await res.json();
+      if(!res.ok || data.error){
+        statusEl.style.color = '#B5431F';
+        statusEl.textContent = (data.error || 'Crawl failed — try again.') + (data.details ? ' — ' + data.details.slice(0,200) : '');
+        btn.disabled = false; btn.textContent = 'Crawl Now';
+        return;
+      }
+      if(data.done && data.message){
+        statusEl.style.color = '#1A7A4C';
+        statusEl.textContent = data.message;
+        btn.disabled = false; btn.textContent = 'Crawl Now';
+        return;
+      }
+      statusEl.style.color = '#1A7A4C';
+      statusEl.textContent = `Read: ${data.page_processed} — added ${data.products_added} product(s), ${data.faqs_added} FAQ(s).` +
+        (data.done ? ` Crawl complete (${data.pages_processed_total} page(s) total).` : ` ${data.pages_remaining} page(s) left — tap "Crawl Now" again to continue.`);
+      await loadBusinessInfo();
+      await loadProducts();
+      await loadFaqs();
+      await refreshReadiness();
+    } catch (e) {
+      statusEl.style.color = '#B5431F';
+      statusEl.textContent = 'Network error — try again.';
+    }
+    btn.disabled = false; btn.textContent = 'Crawl Now';
+  }
+
+  // ===== Products =====
+  function toggleAddProduct(){ document.getElementById('addProductForm').classList.toggle('open'); }
+
+  async function loadProducts(){
+    const { data } = await sb.from('products').select('*').eq('agent_id', agent.id).order('created_at', {ascending:false});
+    window.__products = data || [];
+    const list = document.getElementById('productsList');
+    if(!data || data.length === 0){
+      list.innerHTML = `<div class="empty-hint">No products yet — add one manually or import a file.</div>`;
+      return;
+    }
+    const availClass = (a) => a === 'out_of_stock' ? 'out-of-stock' : a === 'preorder' ? 'preorder' : 'in-stock';
+    const availLabel = (a) => a === 'out_of_stock' ? 'Out of stock' : a === 'preorder' ? 'Preorder' : 'In stock';
+
+    list.innerHTML = `<div class="product-board">` + data.map(p => `
+      <div class="board-card">
+        <div class="board-card-img">${p.image_url ? `<img src="${p.image_url}" alt="">` : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>`}</div>
+        <div class="board-card-body">
+          <div class="board-card-top">
+            <h4>${p.name}</h4>
+            <button class="del-btn" onclick="deleteRow('products','${p.id}', loadProducts)">Delete</button>
+          </div>
+          ${p.description ? `<p class="board-card-desc">${p.description}</p>` : ''}
+          <div class="board-card-meta">
+            <span class="board-price">${p.price || ''}</span>
+            <span class="board-avail ${availClass(p.availability)}">${availLabel(p.availability)}</span>
+          </div>
+          ${p.category || p.rating ? `<div class="board-card-tags">${p.category ? `<span class="board-tag">${p.category}</span>` : ''}${p.rating ? `<span class="board-tag">★ ${p.rating}</span>` : ''}</div>` : ''}
+        </div>
+      </div>
+    `).join('') + `</div>`;
+  }
+
+  async function saveProduct(){
+    const name = document.getElementById('pName').value.trim();
+    if(!name) return;
+    await sb.from('products').insert({
+      agent_id: agent.id,
+      name,
+      description: document.getElementById('pDescription').value.trim() || null,
+      price: document.getElementById('pPrice').value.trim() || null,
+      category: document.getElementById('pCategory').value.trim() || null,
+      availability: document.getElementById('pAvailability').value,
+      product_url: document.getElementById('pUrl').value.trim() || null,
+      image_url: document.getElementById('pImageUrl').value.trim() || null,
+      rating: document.getElementById('pRating').value ? parseFloat(document.getElementById('pRating').value) : null,
+      additional_info: document.getElementById('pExtra').value.trim() || null
+    });
+    ['pName','pDescription','pPrice','pCategory','pUrl','pImageUrl','pRating','pExtra'].forEach(id => document.getElementById(id).value = '');
+    toggleAddProduct();
+    loadProducts();
+    refreshReadiness();
+  }
+
+  function importProductsCSV(input){
+    const file = input.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const lines = e.target.result.split('\n').map(l => l.trim()).filter(Boolean);
+      if(lines.length < 2){ alert('CSV needs a header row plus at least one product.'); return; }
+      const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+      const rows = lines.slice(1).map(line => {
+        const cells = line.split(',').map(c => c.trim());
+        const obj = { agent_id: agent.id };
+        headers.forEach((h, i) => {
+          if(['name','description','price','category','availability','product_url','additional_info'].includes(h)){
+            obj[h] = cells[i] || null;
+          }
+        });
+        if(!obj.name) return null;
+        if(!obj.availability) obj.availability = 'in_stock';
+        return obj;
+      }).filter(Boolean);
+      if(rows.length === 0){ alert('No valid rows found — make sure there\'s a "name" column.'); return; }
+      const { error } = await sb.from('products').insert(rows);
+      if(error){ alert('Import failed: ' + error.message); return; }
+      loadProducts();
+      refreshReadiness();
+    };
+    reader.readAsText(file);
+  }
+
+  // ===== FAQs =====
+  function toggleAddFaq(){ document.getElementById('addFaqForm').classList.toggle('open'); }
+
+  async function loadFaqs(){
+    const { data } = await sb.from('faqs').select('*').eq('agent_id', agent.id).order('created_at', {ascending:false});
+    window.__faqs = data || [];
+    const list = document.getElementById('faqsList');
+    if(!data || data.length === 0){
+      list.innerHTML = `<div class="empty-hint">No FAQs yet.</div>`;
+      return;
+    }
+    list.innerHTML = data.map(f => `
+      <div class="list-item">
+        <div class="list-item-top">
+          <div><h4>${f.question}</h4><div class="meta">${f.answer}</div></div>
+          <button class="del-btn" onclick="deleteRow('faqs','${f.id}', loadFaqs)">Delete</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  async function saveFaq(){
+    const q = document.getElementById('faqQ').value.trim();
+    const a = document.getElementById('faqA').value.trim();
+    if(!q || !a) return;
+    await sb.from('faqs').insert({ agent_id: agent.id, question: q, answer: a });
+    document.getElementById('faqQ').value = '';
+    document.getElementById('faqA').value = '';
+    toggleAddFaq();
+    loadFaqs();
+    refreshReadiness();
+  }
+
+  // ===== Policies =====
+  async function loadPolicies(){
+    const { data } = await sb.from('policies').select('*').eq('agent_id', agent.id);
+    window.__policies = {};
+    (data || []).forEach(p => window.__policies[p.policy_type] = p.content);
+    document.getElementById('polDelivery').value = window.__policies.delivery || '';
+    document.getElementById('polReturns').value = window.__policies.returns || '';
+    document.getElementById('polPayments').value = window.__policies.payments || '';
+    document.getElementById('polWarranty').value = window.__policies.warranty || '';
+    document.getElementById('polCancellation').value = window.__policies.cancellation || '';
+  }
+
+  async function savePolicies(){
+    const entries = [
+      ['delivery', document.getElementById('polDelivery').value.trim()],
+      ['returns', document.getElementById('polReturns').value.trim()],
+      ['payments', document.getElementById('polPayments').value.trim()],
+      ['warranty', document.getElementById('polWarranty').value.trim()],
+      ['cancellation', document.getElementById('polCancellation').value.trim()]
+    ];
+    const rows = entries.map(([type, content]) => ({ agent_id: agent.id, policy_type: type, content: content || null, updated_at: new Date().toISOString() }));
+    await sb.from('policies').upsert(rows, { onConflict: 'agent_id,policy_type' });
+    await loadPolicies();
+    showToast('polToast');
+    refreshReadiness();
+  }
+
+  // ===== Custom Knowledge =====
+  function toggleAddCustom(){ document.getElementById('addCustomForm').classList.toggle('open'); }
+
+  async function loadCustomKnowledge(){
+    const { data } = await sb.from('custom_knowledge').select('*').eq('agent_id', agent.id).order('created_at', {ascending:false});
+    window.__custom = data || [];
+    const list = document.getElementById('customList');
+    if(!data || data.length === 0){
+      list.innerHTML = `<div class="empty-hint">No custom knowledge added yet.</div>`;
+      return;
+    }
+    list.innerHTML = data.map(c => `
+      <div class="list-item">
+        <div class="list-item-top">
+          <div><p style="font-size:14px;">${c.content}</p></div>
+          <button class="del-btn" onclick="deleteRow('custom_knowledge','${c.id}', loadCustomKnowledge)">Delete</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  async function saveCustomKnowledge(){
+    const content = document.getElementById('customContent').value.trim();
+    if(!content) return;
+    await sb.from('custom_knowledge').insert({ agent_id: agent.id, content });
+    document.getElementById('customContent').value = '';
+    toggleAddCustom();
+    loadCustomKnowledge();
+    refreshReadiness();
+  }
+
+  // ===== Generic delete =====
+  async function deleteRow(table, id, reload){
+    await sb.from(table).delete().eq('id', id);
+    reload();
+    refreshReadiness();
+  }
+
+  // ===== AI Instructions & Restrictions =====
+  let settingsState = { tone: 'friendly', response_length: 'balanced' };
+
+  function selectPill(rowId, key, value){
+    settingsState[key] = value;
+    document.querySelectorAll(`#${rowId} .pill`).forEach(el => el.classList.toggle('selected', el.dataset.value === value));
+  }
+
+  async function loadInstructions(){
+    const { data } = await sb.from('ai_settings').select('*').eq('agent_id', agent.id).single();
+    if(data){
+      settingsState.tone = data.tone || 'friendly';
+      settingsState.response_length = data.response_length || 'balanced';
+      document.getElementById('customInstructions').value = data.custom_instructions || '';
+      restrictions = data.restrictions || {};
+      Object.keys(restrictions).forEach(key => {
+        const el = document.getElementById('r_' + key);
+        if(el) el.checked = !!restrictions[key];
+      });
+    }
+    selectPill('toneRow', 'tone', settingsState.tone);
+    selectPill('lengthRow', 'response_length', settingsState.response_length);
+  }
+
+  async function saveInstructions(){
+    await sb.from('ai_settings').update({
+      tone: settingsState.tone,
+      response_length: settingsState.response_length,
+      custom_instructions: document.getElementById('customInstructions').value.trim() || null,
+      updated_at: new Date().toISOString()
+    }).eq('agent_id', agent.id);
+    showToast('instrToast');
+    refreshReadiness();
+  }
+
+  async function saveRestrictions(){
+    const keys = ['no_invent_info','no_invent_prices','no_false_availability','no_refund_promises','stay_within_knowledge','escalate_complex'];
+    const newRestrictions = {};
+    keys.forEach(k => newRestrictions[k] = document.getElementById('r_' + k).checked);
+    await sb.from('ai_settings').update({ restrictions: newRestrictions, updated_at: new Date().toISOString() }).eq('agent_id', agent.id);
+    restrictions = newRestrictions;
+    showToast('restrToast');
+  }
+
+  // ===== Sales Assistant =====
+  let salesSettingsState = { sales_tone: 'friendly', recommendation_style: 'balanced' };
+
+  function selectSalesPill(rowId, key, value){
+    salesSettingsState[key] = value;
+    document.querySelectorAll(`#${rowId} .pill`).forEach(el => el.classList.toggle('selected', el.dataset.value === value));
+  }
+
+  async function loadSalesSettings(){
+    const { data } = await sb.from('sales_assistant_settings').select('*').eq('agent_id', agent.id).maybeSingle();
+    document.getElementById('saEnabled').checked = data?.enabled ?? false;
+    document.getElementById('saUpsell').checked = data?.allow_upsell ?? true;
+    document.getElementById('saCrossSell').checked = data?.allow_cross_sell ?? true;
+    document.getElementById('saMaxProducts').value = data?.max_products_shown || 3;
+    document.getElementById('saInstructions').value = data?.custom_sales_instructions || '';
+    document.getElementById('saRules').value = data?.sales_rules || '';
+    salesSettingsState.sales_tone = data?.sales_tone || 'friendly';
+    salesSettingsState.recommendation_style = data?.recommendation_style || 'balanced';
+    selectSalesPill('saToneRow', 'sales_tone', salesSettingsState.sales_tone);
+    selectSalesPill('saStyleRow', 'recommendation_style', salesSettingsState.recommendation_style);
+
+    const banner = document.getElementById('salesUpgradeBanner');
+    const locked = !hasPlanAtLeast('standard');
+    banner.innerHTML = locked ? upgradePrompt('AI Sales Assistant', 'Standard') : '';
+    document.querySelectorAll('#panel-sales input, #panel-sales textarea, #panel-sales select, #panel-sales button').forEach(el => {
+      if(el.id !== 'saEnabled' || locked) el.disabled = locked;
+    });
+    if(locked) document.getElementById('saEnabled').checked = false;
+  }
+
+  async function saveSalesSettings(){
+    const payload = {
+      agent_id: agent.id,
+      enabled: document.getElementById('saEnabled').checked,
+      allow_upsell: document.getElementById('saUpsell').checked,
+      allow_cross_sell: document.getElementById('saCrossSell').checked,
+      sales_tone: salesSettingsState.sales_tone,
+      recommendation_style: salesSettingsState.recommendation_style,
+      max_products_shown: parseInt(document.getElementById('saMaxProducts').value, 10),
+      custom_sales_instructions: document.getElementById('saInstructions').value.trim() || null,
+      sales_rules: document.getElementById('saRules').value.trim() || null,
+      updated_at: new Date().toISOString()
+    };
+    const { error } = await sb.from('sales_assistant_settings').upsert(payload, { onConflict: 'agent_id' });
+    if(error){ alert('Save failed: ' + error.message + '\n\nIf this mentions permissions, run sales-assistant-schema.sql in Supabase first.'); return; }
+    showToast('saToast');
+  }
+
+  // ===== Test AI =====
+  function appendTestBubble(text, who, withActions){
+    const body = document.getElementById('testChatBody');
+    const wrap = document.createElement('div');
+    wrap.style.display = 'flex';
+    wrap.style.flexDirection = 'column';
+    wrap.style.alignItems = who === 'user' ? 'flex-end' : 'flex-start';
+    const b = document.createElement('div');
+    b.className = 'bubble ' + who;
+    b.textContent = text;
+    wrap.appendChild(b);
+    if(withActions){
+      const actions = document.createElement('div');
+      actions.className = 'bubble-actions';
+      actions.innerHTML = `<button onclick="reportIncorrect(this)">Report incorrect answer</button>`;
+      wrap.appendChild(actions);
+    }
+    body.appendChild(wrap);
+    body.scrollTop = body.scrollHeight;
+  }
+
+  function reportIncorrect(btn){
+    btn.parentElement.innerHTML = `<button onclick="showPanel('business')">Improve this answer →</button>`;
+  }
+
+  function clearTestChat(){
+    document.getElementById('testChatBody').innerHTML = '';
+    testHistory = [];
+    appendTestBubble(`Hi! I'm ${agent.agent_name}. Ask me anything about the store.`, 'bot', false);
+  }
+
+  let testHistory = [];
+
+  async function callAI(question){
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/chat_ai`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
+      body: JSON.stringify({ agent_id: agent.id, message: question, history: testHistory })
+    });
+    if(!res.ok){
+      const errData = await res.json().catch(() => ({}));
+      throw new Error((errData.error || 'Something went wrong reaching your AI.') + (errData.details ? ' — ' + errData.details : ''));
+    }
+    const data = await res.json();
+    return data.reply;
+  }
+
+  function askTest(question){
+    appendTestBubble(question, 'user', false);
+    testHistory.push({ role: 'user', content: question });
+
+    const body = document.getElementById('testChatBody');
+    const typingWrap = document.createElement('div');
+    typingWrap.id = 'typingIndicator';
+    typingWrap.innerHTML = `<div class="bubble bot" style="align-self:flex-start;color:var(--ink-soft);">Typing…</div>`;
+    body.appendChild(typingWrap);
+    body.scrollTop = body.scrollHeight;
+
+    callAI(question).then(reply => {
+      document.getElementById('typingIndicator')?.remove();
+      appendTestBubble(reply, 'bot', true);
+      testHistory.push({ role: 'assistant', content: reply });
+    }).catch(err => {
+      document.getElementById('typingIndicator')?.remove();
+      appendTestBubble("I couldn't reach the AI just now — " + err.message, 'bot', false);
+    });
+  }
+
+  function askTestFromInput(){
+    const input = document.getElementById('testInput');
+    const val = input.value.trim();
+    if(!val) return;
+    askTest(val);
+    input.value = '';
+  }
+
+  // ===== Readiness =====
+  async function refreshReadiness(){
+    const [{ data: bi }, { count: prodCount }, { count: faqCount }, { data: pol }, { count: customCount }, { data: settings }] = await Promise.all([
+      sb.from('business_information').select('*').eq('agent_id', agent.id).single(),
+      sb.from('products').select('id', {count:'exact', head:true}).eq('agent_id', agent.id),
+      sb.from('faqs').select('id', {count:'exact', head:true}).eq('agent_id', agent.id),
+      sb.from('policies').select('*').eq('agent_id', agent.id),
+      sb.from('custom_knowledge').select('id', {count:'exact', head:true}).eq('agent_id', agent.id),
+      sb.from('ai_settings').select('custom_instructions').eq('agent_id', agent.id).single()
+    ]);
+
+    const businessReady = !!(bi?.description || bi?.sells);
+    const productsReady = (prodCount || 0) > 0;
+    const faqsReady = (faqCount || 0) > 0;
+    const policiesReady = (pol || []).some(p => p.content);
+    const customReady = (customCount || 0) > 0;
+    const instructionsReady = !!settings?.custom_instructions;
+
+    const flags = [businessReady, productsReady, faqsReady, policiesReady, customReady, instructionsReady];
+    const pct = Math.round((flags.filter(Boolean).length / flags.length) * 100);
+
+    document.getElementById('readinessPct').textContent = pct + '%';
+    document.getElementById('readinessFill').style.width = pct + '%';
+
+    const setSource = (key, ready) => {
+      document.getElementById('dot-' + key).className = 'source-dot ' + (ready ? 'ready' : 'missing');
+      document.getElementById('status-' + key).textContent = ready ? 'Available' : 'Not added yet';
+    };
+    setSource('business', businessReady);
+    setSource('products', productsReady);
+    setSource('faqs', faqsReady);
+    setSource('policies', policiesReady);
+    setSource('custom', customReady);
+    setSource('instructions', instructionsReady);
+
+    const missing = [];
+    if(!businessReady) missing.push('business info');
+    if(!productsReady) missing.push('products');
+    if(!faqsReady) missing.push('FAQs');
+    if(!policiesReady) missing.push('policies');
+    if(!customReady) missing.push('custom knowledge');
+    if(!instructionsReady) missing.push('AI instructions');
+    document.getElementById('readinessNote').textContent = missing.length
+      ? `Add ${missing.join(', ')} to improve readiness. This is a completeness indicator, not an accuracy score.`
+      : `Your knowledge base covers every section. This is a completeness indicator, not an accuracy score.`;
+  }
+
+  // ===== Subscription Plans =====
+  async function loadServices(){
+    const { data } = await sb.from('subscription_plans').select('*').eq('is_active', true).order('sort_order');
+    const grid = document.getElementById('tcServiceGrid');
+    grid.innerHTML = (data || []).map(s => `
+      <div class="service-card ${s.is_popular ? 'popular' : ''}">
+        ${s.is_popular ? '<span class="pc-badge">Most Popular</span>' : ''}
+        <h4>${s.name}</h4>
+        <div class="price">$${s.price}<span style="font-size:11px;font-weight:500;color:var(--ink-soft);">/${s.billing_period === 'yearly' ? 'yr' : 'mo'}</span></div>
+        <p class="desc">${s.description}</p>
+        <a href="account.html?view=services" class="btn btn-ghost btn-sm btn-block">View Details</a>
+      </div>
+    `).join('');
+  }
+
+  // ===== Init =====
+  (async () => {
+    const { data: { session } } = await sb.auth.getSession();
+    if(!session){ window.location.href = 'auth.html'; return; }
+
+    const { data: agents } = await sb.from('ai_agents').select('*').eq('user_id', session.user.id).order('created_at', {ascending:false}).limit(1);
+    if(!agents || agents.length === 0){
+      window.location.href = 'create-agent.html';
+      return;
+    }
+    agent = agents[0];
+    currentUser = { id: session.user.id };
+
+    await loadBusinessInfo();
+    await loadProducts();
+    await loadFaqs();
+    await loadPolicies();
+    await loadCustomKnowledge();
+    await loadInstructions();
+    await loadCurrentUserPlanTier();
+    await loadShopifyConnection();
+    await loadSalesSettings();
+    await refreshReadiness();
+    await loadServices();
+    clearTestChat();
+
+    const hash = window.location.hash.replace('#','');
+    if(hash) showPanel(hash);
+  })();
+</script>
+
+</body>
+</html>
