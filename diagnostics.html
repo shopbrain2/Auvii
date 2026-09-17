@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Auvii Diagnostics</title>
+
+<style>
+  body{
+    font-family:-apple-system,sans-serif;
+    max-width:640px;
+    margin:0 auto;
+    padding:24px 18px 80px;
+    background:#F7F7F4;
+    color:#14171C;
+  }
+
+  h1{
+    font-size:20px;
+    margin-bottom:6px;
+  }
+
+  p.sub{
+    color:#4B5058;
+    font-size:13.5px;
+    margin-bottom:22px;
+  }
+
+  .field{
+    margin-bottom:18px;
+  }
+
+  .field label{
+    display:block;
+    font-size:12.5px;
+    font-weight:600;
+    margin-bottom:5px;
+  }
+
+  .field input{
+    width:100%;
+    box-sizing:border-box;
+    border:1.5px solid #DDDCD5;
+    border-radius:8px;
+    padding:10px 12px;
+    font-size:13.5px;
+  }
+
+  button{
+    background:#2F5FFF;
+    color:#fff;
+    border:none;
+    border-radius:8px;
+    padding:12px;
+    font-size:14px;
+    font-weight:600;
+    width:100%;
+    cursor:pointer;
+    margin-bottom:28px;
+  }
+
+  .check{
+    background:#fff;
+    border:1.5px solid #DDDCD5;
+    border-radius:10px;
+    padding:14px 16px;
+    margin-bottom:12px;
+  }
+
+  .check .title{
+    font-weight:600;
+    font-size:14px;
+    margin-bottom:6px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+  }
+
+  .pill{
+    font-size:11px;
+    font-weight:700;
+    padding:3px 9px;
+    border-radius:20px;
+    white-space:nowrap;
+  }
+
+  .pill.pass{
+    background:#E4F5EC;
+    color:#1A7A4C;
+  }
+
+  .pill.fail{
+    background:#FFEDE6;
+    color:#B5431F;
+  }
+
+  .pill.pending{
+    background:#EFEFEA;
+    color:#4B5058;
+  }
+
+  .detail{
+    font-size:12.5px;
+    color:#4B5058;
+    white-space:pre-wrap;
+    word-break:break-word;
+    margin-top:6px;
+    font-family:monospace;
+    background:#F7F7F4;
+    border-radius:6px;
+    padding:8px 10px;
+  }
+</style>
+</head>
+
+<body>
+
+<h1>Widget & Crawler Diagnostics</h1>
+
+<p class="sub">
+  This checks each Auvii component directly and shows the real response.
+</p>
+
+<div class="field">
+  <label>Agent ID to test chat</label>
+
+  <input
+    type="text"
+    id="agentId"
+    placeholder="e.g. 7232cc32-1cfc-4c49-b239-461887106969"
+  >
+</div>
+
+<button onclick="runChecks()">
+  Run Diagnostics
+</button>
+
+<div id="results"></div>
+
+<script src="sb-config.js"></script>
+
+<!-- Supabase client -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+
+let supabaseClient = null;
+
+
+/* ==========================================
+   CREATE SUPABASE CLIENT
+========================================== */
+
+try {
+
+  if(
+    typeof SUPABASE_URL === 'undefined' ||
+    typeof SUPABASE_ANON_KEY === 'undefined'
+  ){
+
+    console.error(
+      'SUPABASE_URL or SUPABASE_ANON_KEY is missing from sb-config.js'
+    );
+
+  } else {
+
+    supabaseClient =
+      window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_ANON_KEY
+      );
+
+  }
+
+} catch(e){
+
+  console.error(
+    'Supabase client initialization failed:',
+    e
+  );
+
+}
+
+
+/* ==========================================
+   UI HELPERS
+========================================== */
+
+function setCheck(id, title){
+
+  document
+    .getElementById('results')
+    .insertAdjacentHTML(
+      'beforeend',
+      `
+      <div class="check" id="check-${id}">
+
+        <div class="title">
+
+          <span>${title}</span>
+
+          <span
+            class="pill pending"
+            id="pill-${id}"
+          >
+            Checking…
+          </span>
+
+        </div>
+
+        <div
+          class="detail"
+          id="detail-${id}"
+        ></div>
+
+      </div>
+      `
+    );
+
+}
+
+
+function updateCheck(id, pass, detail){
+
+  const pill =
+    document.getElementById(`pill-${id}`);
+
+  const detailBox =
+    document.getElementById(`detail-${id}`);
+
+  if(!pill || !detailBox) return;
+
+  pill.textContent =
+    pass ? 'Pass' : 'Fail';
+
+  pill.className =
+    'pill ' + (
+      pass ? 'pass' : 'fail'
+    );
+
+  detailBox.textContent =
+    detail;
+
+}
+
+
+/* ==========================================
+   RUN ALL CHECKS
+========================================== */
+
+async function runChecks(){
+
+  const agentId =
+    document
+      .getElementById('agentId')
+      .value
+      .trim();
+
+  document.getElementById('results').innerHTML = '';
+
+
+  /* ==========================================
+     CHECK 1 — WIDGET JS
+  ========================================== */
+
+  setCheck(
+    'widgetjs',
+    'sb-chat.js is uploaded and reachable'
+  );
+
+  try{
+
+    const res =
+      await fetch(
+        'https://shopbrain2.github.io/shopbrain/sb-chat.js',
+        {
+          cache:'no-store'
+        }
+      );
+
+    const text =
+      await res.text();
+
+    if(
+      res.ok &&
+      text.includes('Auvii')
+    ){
+
+      updateCheck(
+        'widgetjs',
+        true,
+        `HTTP ${res.status} — file found, ${text.length} bytes.`
+      );
+
+    }else{
+
+      updateCheck(
+        'widgetjs',
+        false,
+        `HTTP ${res.status} — sb-chat.js was not found or does not contain the expected Auvii code.
+
+URL:
+https://shopbrain2.github.io/shopbrain/sb-chat.js`
+      );
+
+    }
+
+  }catch(e){
+
+    updateCheck(
+      'widgetjs',
+      false,
+      `Network error: ${e.message}`
+    );
+
+  }
+
+
+  /* ==========================================
+     CHECK 2 — CHAT INIT
+  ========================================== */
+
+  if(!agentId){
+
+    document
+      .getElementById('results')
+      .insertAdjacentHTML(
+        'beforeend',
+        `
+        <p style="color:#B5431F;font-size:13px;">
+          Enter an Agent ID to test chat_ai.
+          The crawler itself does not require an Agent ID.
+        </p>
+        `
+      );
+
+    return;
+
+  }
+
+
+  setCheck(
+    'init',
+    'chat_ai — widget init call'
+  );
+
+  try{
+
+    const res =
+      await fetch(
+        `${SUPABASE_URL}/functions/v1/chat_ai`,
+        {
+          method:'POST',
+
+          headers:{
+            'Content-Type':'application/json',
+            'Authorization':
+              `Bearer ${SUPABASE_ANON_KEY}`
+          },
+
+          body:JSON.stringify({
+            agent_id:agentId,
+            action:'init'
+          })
+        }
+      );
+
+    const data =
+      await res.json().catch(
+        () => ({
+          error:'Response was not valid JSON.'
+        })
+      );
+
+    if(
+      res.ok &&
+      !data.error
+    ){
+
+      updateCheck(
+        'init',
+        true,
+        `Agent: "${data.agent_name}" · Welcome message: "${data.welcome_message}"`
+      );
+
+    }else{
+
+      updateCheck(
+        'init',
+        false,
+        `HTTP ${res.status} — ${
+          data.error ||
+          'Unknown error'
+        }`
+      );
+
+    }
+
+  }catch(e){
+
+    updateCheck(
+      'init',
+      false,
+      `Network/CORS error: ${e.message}`
+    );
+
+  }
+
+
+  /* ==========================================
+     CHECK 3 — CHAT MESSAGE
+  ========================================== */
+
+  setCheck(
+    'message',
+    'chat_ai — sending a real test message'
+  );
+
+  try{
+
+    const res =
+      await fetch(
+        `${SUPABASE_URL}/functions/v1/chat_ai`,
+        {
+          method:'POST',
+
+          headers:{
+            'Content-Type':'application/json',
+            'Authorization':
+              `Bearer ${SUPABASE_ANON_KEY}`
+          },
+
+          body:JSON.stringify({
+            agent_id:agentId,
+            message:'diagnostics test message',
+            history:[]
+          })
+        }
+      );
+
+    const data =
+      await res.json().catch(
+        () => ({
+          error:'Response was not valid JSON.'
+        })
+      );
+
+    if(
+      res.ok &&
+      data.reply
+    ){
+
+      updateCheck(
+        'message',
+        true,
+        `AI replied: "${String(data.reply).slice(0,200)}"`
+      );
+
+    }else{
+
+      updateCheck(
+        'message',
+        false,
+        `HTTP ${res.status} — ${
+          data.error ||
+          'No reply returned'
+        }`
+      );
+
+    }
+
+  }catch(e){
+
+    updateCheck(
+      'message',
+      false,
+      `Network/CORS error: ${e.message}`
+    );
+
+  }
+
+
+  /* ==========================================
+     CHECK 4 — CRAWLER
+     
+     IMPORTANT:
+     No agent ID is required.
+     We get the current Supabase session
+     directly instead of reading localStorage.
+  ========================================== */
+
+  setCheck(
+    'crawl',
+    'crawl-website — authenticated crawler test'
+  );
+
+  try{
+
+    if(!supabaseClient){
+
+      updateCheck(
+        'crawl',
+        false,
+        'Supabase client could not be initialized. Check sb-config.js.'
+      );
+
+      return;
+
+    }
+
+
+    /* ----------------------------------------
+       GET CURRENT SESSION
+    ---------------------------------------- */
+
+    const {
+      data: sessionData,
+      error: sessionError
+    } =
+      await supabaseClient.auth.getSession();
+
+
+    if(sessionError){
+
+      updateCheck(
+        'crawl',
+        false,
+        `Could not get Supabase session:
+
+${sessionError.message}`
+      );
+
+      return;
+
+    }
+
+
+    const session =
+      sessionData?.session;
+
+
+    if(
+      !session ||
+      !session.access_token
+    ){
+
+      updateCheck(
+        'crawl',
+        false,
+        `No active Supabase login session was found.
+
+Log in to Auvii in this same browser/device and run Diagnostics again.`
+      );
+
+      return;
+
+    }
+
+
+    /* ----------------------------------------
+       CALL CRAWLER
+       
+       NO AGENT ID
+    ---------------------------------------- */
+
+    const res =
+      await fetch(
+        `${SUPABASE_URL}/functions/v1/crawl-website`,
+        {
+          method:'POST',
+
+          headers:{
+            'Content-Type':'application/json',
+
+            'apikey':
+              SUPABASE_ANON_KEY,
+
+            'Authorization':
+              `Bearer ${session.access_token}`
+          },
+
+          body:JSON.stringify({
+            url:'https://example.com'
+          })
+        }
+      );
+
+
+    const rawText =
+      await res.text();
+
+
+    let data = {};
+
+    try{
+
+      data =
+        rawText
+          ? JSON.parse(rawText)
+          : {};
+
+    }catch(e){
+
+      data = {
+        raw:rawText
+      };
+
+    }
+
+
+    /* ----------------------------------------
+       RESULT
+    ---------------------------------------- */
+
+    if(
+      res.ok &&
+      data.success
+    ){
+
+      updateCheck(
+        'crawl',
+        true,
+        `HTTP ${res.status}
+
+Website:
+${data.url}
+
+Pages:
+${data.pages}
+
+Knowledge characters:
+${data.knowledge}
+
+The authenticated crawler is working.`
+      );
+
+    }else{
+
+      updateCheck(
+        'crawl',
+        false,
+        `HTTP ${res.status}
+
+${
+  data.error ||
+  data.message ||
+  data.details ||
+  data.raw ||
+  'Unknown crawler error'
+}
+
+Full response:
+${JSON.stringify(data,null,2)}`
+      );
+
+    }
+
+  }catch(e){
+
+    updateCheck(
+      'crawl',
+      false,
+      `Network/CORS error: ${e.message}
+
+The crawl-website function could not be reached, has a CORS problem, or the browser blocked the request.`
+    );
+
+  }
+
+}
+
+</script>
+
+</body>
+</html>
