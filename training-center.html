@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Training Center — Auvii</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="sb-config.js"></script>
+<style>
+:root{--paper:#f7f7f4;--dim:#efefea;--ink:#14171c;--soft:#555b64;--line:#dddcd5;--blue:#2f5fff;--blue2:#eaefff;--orange:#ff6b45;--green:#1faa80;--white:#fff}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:14px Inter,Arial,sans-serif}h1,h2,h3,h4{font-family:Arial,sans-serif;margin:0}button,input,textarea,select{font:inherit}
+header{background:#fff;border-bottom:1px solid var(--line);padding:15px 0;position:sticky;top:0;z-index:10}.head{max-width:1100px;margin:auto;padding:0 20px;display:flex;justify-content:space-between;align-items:center}.logo{font-weight:800;font-size:20px;color:var(--blue);text-decoration:none}
+.layout{max-width:1100px;margin:auto;padding:28px 20px 80px;display:grid;grid-template-columns:210px 1fr;gap:28px}.nav{position:sticky;top:75px;height:max-content}.nav button{display:block;width:100%;text-align:left;background:none;border:0;padding:10px 12px;border-radius:8px;color:var(--soft);font-weight:600;cursor:pointer}.nav button.active,.nav button:hover{background:var(--blue2);color:var(--blue)}
+.panel{display:none}.panel.active{display:block}.sub{color:var(--soft);margin:7px 0 24px}.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:18px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:12px}.source{padding:13px 0;border-bottom:1px solid var(--line);display:flex;justify-content:space-between}.dot{width:9px;height:9px;border-radius:50%;background:var(--line);display:inline-block;margin-right:8px}.dot.ready{background:var(--green)}
+.bar{height:8px;background:var(--dim);border-radius:8px;overflow:hidden}.fill{height:100%;background:var(--blue);width:0;transition:.3s}.pct{font-size:30px;font-weight:800;color:var(--blue)}
+label{font-size:13px;font-weight:700;display:block;margin-bottom:6px}.field{margin-bottom:15px}input,textarea,select{width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:8px;background:var(--paper);outline:none}textarea{min-height:90px;resize:vertical}input:focus,textarea:focus,select:focus{border-color:var(--blue)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}.btn{border:0;border-radius:8px;padding:10px 15px;font-weight:700;cursor:pointer}.primary{background:var(--blue);color:#fff}.ghost{background:#fff;border:1px solid var(--line)}.orange{background:var(--orange);color:#fff}.small{padding:7px 11px;font-size:12px}
+.save{display:flex;justify-content:flex-end;gap:8px}.toast{color:var(--green);display:none;font-size:12px;align-items:center}.toast.show{display:flex}
+.list{margin-top:15px}.item{background:#fff;border:1px solid var(--line);border-radius:12px;padding:15px;margin-bottom:10px}.delete{background:none;border:0;color:var(--soft);font-weight:700;cursor:pointer}.empty{border:1px dashed var(--line);border-radius:10px;padding:18px;text-align:center;color:var(--soft)}
+.addform{display:none}.addform.open{display:block}.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}.product{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff}.product img{width:100%;height:125px;object-fit:cover;background:var(--dim)}.productbody{padding:13px}.pill{display:inline-block;border:1px solid var(--line);padding:8px 13px;border-radius:8px;margin:3px;cursor:pointer;font-weight:600;color:var(--soft)}.pill.selected{border-color:var(--blue);background:var(--blue2);color:var(--blue)}
+.switch{position:relative;width:42px;height:23px;display:inline-block}.switch input{display:none}.slider{position:absolute;inset:0;background:var(--line);border-radius:20px}.slider:before{content:"";position:absolute;width:17px;height:17px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s}.switch input:checked+.slider{background:var(--blue)}.switch input:checked+.slider:before{transform:translateX(19px)}
+.chat{border:1px solid var(--line);border-radius:13px;background:#fff;overflow:hidden}.messages{min-height:300px;max-height:430px;overflow:auto;padding:18px}.bubble{max-width:82%;padding:10px 13px;border-radius:11px;margin-bottom:10px}.bot{background:var(--dim)}.user{background:var(--blue);color:#fff;margin-left:auto}.chatbar{display:flex;gap:8px;border-top:1px solid var(--line);padding:12px}.chatbar input{background:#fff}
+.website-card{border:1px solid var(--line);border-radius:12px;padding:16px;margin-top:10px;background:#fff}.website-url{color:var(--blue);font-size:12px;word-break:break-all;margin-top:3px}.website-content{margin-top:12px;padding:12px;background:var(--paper);border-radius:9px;white-space:pre-wrap;max-height:250px;overflow:auto;color:var(--soft);font-size:13px}.badge{font-size:11px;background:#e6f5ef;color:#0e7a5c;padding:4px 8px;border-radius:10px;font-weight:700}
+@media(max-width:800px){.layout{grid-template-columns:1fr}.nav{position:static;display:flex;overflow-x:auto;gap:5px}.nav button{width:auto;white-space:nowrap}.grid2{grid-template-columns:1fr}}
+
+/* Full mobile-first responsiveness */
+html,body{width:100%;min-width:0;overflow-x:hidden}main{min-width:0}.layout{width:100%}.card,.panel{min-width:0;max-width:100%}input,textarea,select,button{max-width:100%}.pgrid,.grid2{min-width:0}
+.pricing-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:18px}.price-card{border:1px solid var(--line);border-radius:14px;padding:18px;background:#fff;display:flex;flex-direction:column;min-width:0}.price-card.featured{border:2px solid var(--blue)}.price-card h3{font-size:17px}.price{font-size:30px;font-weight:800;margin:12px 0 4px}.price small{font-size:12px;color:var(--soft);font-weight:600}.price-list{padding:0;margin:14px 0 20px;list-style:none;color:var(--soft);line-height:1.7}.price-list li{margin:6px 0}.price-list li:before{content:'✓ ';color:var(--green);font-weight:800}.price-card .btn{margin-top:auto}
+@media(max-width:900px){.layout{grid-template-columns:1fr;padding:18px 14px 70px}.nav{position:sticky;top:64px;z-index:5;display:flex;gap:5px;overflow-x:auto;padding:6px;background:rgba(247,247,244,.96);border:1px solid var(--line);border-radius:12px}.nav button{width:auto;white-space:nowrap;flex:0 0 auto}.grid2{grid-template-columns:minmax(0,1fr)}.pricing-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){header{padding:11px 0}.head{padding:0 12px}.layout{padding:12px 10px 70px;gap:12px}.nav{top:57px}.card{padding:14px;border-radius:12px}.row{align-items:flex-start;flex-wrap:wrap}.save{flex-direction:column;align-items:stretch}.save .btn{width:100%}.pgrid{grid-template-columns:minmax(0,1fr)}.chatbar{flex-direction:column}.chatbar input,.chatbar button{width:100%}.pricing-grid{grid-template-columns:minmax(0,1fr)}.price-card{padding:16px}h1{font-size:25px}}
+@media(max-width:380px){.layout{padding-left:7px;padding-right:7px}.card{padding:12px}.nav button{padding:9px 10px;font-size:12px}}
+</style>
+</head>
+<body>
+<header><div class="head"><a class="logo" href="account.html">Auvii</a><a class="btn ghost small" href="account.html">← Dashboard</a></div></header>
+
+<div class="layout">
+<nav class="nav">
+<button class="active" data-panel="overview">Overview</button>
+<button data-panel="business">Business Info</button>
+<button data-panel="products">Products</button>
+<button data-panel="faqs">FAQs</button>
+<button data-panel="policies">Policies</button>
+<button data-panel="custom">Custom Knowledge</button>
+<button data-panel="instructions">AI Instructions</button>
+<button data-panel="sales">Sales Assistant</button>
+<button data-panel="test">Test Your AI</button>
+<button data-panel="services">Pricing</button>
+</nav>
+
+<main>
+<section class="panel active" id="overview">
+<h1>Training Center</h1><p class="sub">Teach your AI everything it needs to know about your business.</p>
+<div class="card"><div class="row"><b>AI Knowledge</b><b class="pct" id="readinessPct">—%</b></div><div class="bar"><div class="fill" id="readinessFill"></div></div><p class="sub" id="readinessNote" style="margin:9px 0 0;font-size:12px">Loading knowledge readiness…</p></div>
+<div class="card">
+<div class="source"><span><i class="dot" id="dot-business"></i>Business Information</span><span id="status-business">—</span></div>
+<div class="source"><span><i class="dot" id="dot-products"></i>Products</span><span id="status-products">—</span></div>
+<div class="source"><span><i class="dot" id="dot-faqs"></i>FAQs</span><span id="status-faqs">—</span></div>
+<div class="source"><span><i class="dot" id="dot-policies"></i>Policies</span><span id="status-policies">—</span></div>
+<div class="source"><span><i class="dot" id="dot-custom"></i>Custom Knowledge</span><span id="status-custom">—</span></div>
+<div class="source"><span><i class="dot" id="dot-instructions"></i>AI Instructions</span><span id="status-instructions">—</span></div>
+<div class="source"><span><i class="dot" id="dot-website"></i>Website Knowledge</span><span id="status-website">—</span></div>
+</div>
+<div class="card"><h2 style="font-size:17px">Crawl your website</h2><p class="sub" style="margin:5px 0 14px;font-size:12px">Auvii uses Firecrawl to read your website and save the content directly to this AI's training data.</p><div class="field"><label>Website URL</label><input id="trainingCrawlerUrl" type="url" placeholder="https://yourstore.com"></div><button id="trainingCrawlerBtn" class="btn primary" onclick="runAuviiTrainingCrawler()">Crawl &amp; Train</button><div id="trainingCrawlerStatus" style="display:none;margin-top:10px;color:var(--soft);font-size:12px"></div></div><div class="card"><div class="row"><div><h2 style="font-size:17px">Website Knowledge</h2><p class="sub" style="margin:4px 0 0;font-size:12px">Website content saved by Auvii's crawler.</p></div><button class="btn ghost small" onclick="loadWebsiteKnowledge()">Refresh</button></div><div id="websiteKnowledgeList" class="list"><div class="empty">Loading…</div></div></div>
+</section>
+
+<section class="panel" id="business"><h1>Business Information</h1><p class="sub">The basics your AI needs to represent your store accurately.</p><div class="card">
+<div class="field"><label>Business name</label><input id="biName"></div><div class="field"><label>Business description</label><textarea id="biDescription"></textarea></div><div class="field"><label>What does your store sell?</label><input id="biSells"></div><div class="field"><label>Target customers</label><input id="biTarget"></div><div class="grid2"><div class="field"><label>Business location</label><input id="biLocation"></div><div class="field"><label>Opening hours</label><input id="biHours"></div></div><div class="field"><label>Contact information</label><input id="biContact"></div><div class="save"><span class="toast" id="biToast">✓ Saved</span><button class="btn primary" onclick="saveBusinessInfo()">Save</button></div>
+</div></section>
+
+<section class="panel" id="products"><h1>Products</h1><p class="sub">Manage products manually or import a CSV file.</p><button class="btn primary small" onclick="toggle('productForm')">+ Add Product</button> <button class="btn ghost small" onclick="csvInput.click()">Import Product File</button><input type="file" id="csvInput" accept=".csv" hidden>
+<div class="card addform" id="productForm"><div class="grid2"><div class="field"><label>Name</label><input id="pName"></div><div class="field"><label>Price</label><input id="pPrice"></div></div><div class="field"><label>Description</label><textarea id="pDescription"></textarea></div><div class="grid2"><div class="field"><label>Category</label><input id="pCategory"></div><div class="field"><label>Availability</label><select id="pAvailability"><option value="in_stock">In stock</option><option value="out_of_stock">Out of stock</option><option value="preorder">Preorder</option></select></div></div><div class="grid2"><div class="field"><label>Product URL</label><input id="pUrl"></div><div class="field"><label>Image URL</label><input id="pImageUrl"></div></div><div class="field"><label>Additional information</label><textarea id="pExtra"></textarea></div><div class="save"><button class="btn ghost small" onclick="toggle('productForm')">Cancel</button><button class="btn primary small" onclick="saveProduct()">Save Product</button></div></div><div id="productsList" class="list"></div></section>
+
+<section class="panel" id="faqs"><h1>FAQs</h1><p class="sub">Common questions and answers for your AI.</p><button class="btn primary small" onclick="toggle('faqForm')">+ Add FAQ</button><div class="card addform" id="faqForm"><div class="field"><label>Question</label><input id="faqQ"></div><div class="field"><label>Answer</label><textarea id="faqA"></textarea></div><div class="save"><button class="btn ghost small" onclick="toggle('faqForm')">Cancel</button><button class="btn primary small" onclick="saveFaq()">Save FAQ</button></div></div><div id="faqsList" class="list"></div></section>
+
+<section class="panel" id="policies"><h1>Store Policies</h1><p class="sub">Clear policies help your AI answer confidently.</p><div class="card">
+<div class="field"><label>Delivery</label><textarea id="polDelivery"></textarea></div><div class="field"><label>Returns & Refunds</label><textarea id="polReturns"></textarea></div><div class="field"><label>Payments</label><textarea id="polPayments"></textarea></div><div class="field"><label>Warranty</label><textarea id="polWarranty"></textarea></div><div class="field"><label>Cancellation</label><textarea id="polCancellation"></textarea></div><div class="save"><span class="toast" id="polToast">✓ Saved</span><button class="btn primary" onclick="savePolicies()">Save Policies</button></div>
+</div></section>
+
+<section class="panel" id="custom"><h1>Custom Knowledge</h1><p class="sub">Add information that does not fit the other sections.</p><button class="btn primary small" onclick="toggle('customForm')">+ Add Knowledge</button><div class="card addform" id="customForm"><div class="field"><label>Knowledge</label><textarea id="customContent"></textarea></div><div class="save"><button class="btn ghost small" onclick="toggle('customForm')">Cancel</button><button class="btn primary small" onclick="saveCustomKnowledge()">Save</button></div></div><div id="customList" class="list"></div></section>
+
+<section class="panel" id="instructions"><h1>AI Instructions</h1><p class="sub">Control your AI's behaviour and response style.</p><div class="card">
+<label>Tone</label><div id="toneRow"><span class="pill" data-v="friendly">Friendly</span><span class="pill" data-v="professional">Professional</span><span class="pill" data-v="casual">Casual</span><span class="pill" data-v="helpful">Helpful</span></div><br>
+<label>Response length</label><div id="lengthRow"><span class="pill" data-v="short">Short</span><span class="pill" data-v="balanced">Balanced</span><span class="pill" data-v="detailed">Detailed</span></div><br>
+<div class="field"><label>Custom instructions</label><textarea id="customInstructions"></textarea></div><div class="save"><span class="toast" id="instrToast">✓ Saved</span><button class="btn primary" onclick="saveInstructions()">Save Instructions</button></div>
+</div><div class="card"><div class="row"><b>AI Restrictions</b></div><div id="restrictionRows"></div><div class="save" style="margin-top:12px"><button class="btn primary small" onclick="saveRestrictions()">Save Restrictions</button></div></div></section>
+
+<section class="panel" id="sales"><h1>AI Sales Assistant</h1><p class="sub">Help customers discover products and make purchasing decisions.</p><div class="card">
+<div class="row"><div><b>Enable Sales Assistant</b><p class="sub" style="margin:3px 0;font-size:12px">Allow the AI to recommend relevant products.</p></div><label class="switch"><input type="checkbox" id="saEnabled"><span class="slider"></span></label></div>
+<hr style="border:0;border-top:1px solid var(--line);margin:15px 0"><label>Sales tone</label><div id="saToneRow"><span class="pill" data-v="friendly">Friendly</span><span class="pill" data-v="professional">Professional</span><span class="pill" data-v="casual">Casual</span></div><br><label>Recommendation style</label><div id="saStyleRow"><span class="pill" data-v="conservative">Conservative</span><span class="pill" data-v="balanced">Balanced</span><span class="pill" data-v="sales_focused">More Sales-Focused</span></div><br><div class="grid2"><div class="field"><label>Max products shown</label><select id="saMaxProducts"><option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option></select></div><div></div></div><div class="row"><b>Allow upselling</b><label class="switch"><input type="checkbox" id="saUpsell"><span class="slider"></span></label></div><div class="row" style="padding:12px 0"><b>Allow cross-selling</b><label class="switch"><input type="checkbox" id="saCrossSell"><span class="slider"></span></label></div><div class="field"><label>Custom sales instructions</label><textarea id="saInstructions"></textarea></div><div class="field"><label>Hard rules</label><textarea id="saRules"></textarea></div><div class="save"><span class="toast" id="saToast">✓ Saved</span><button class="btn primary" onclick="saveSalesSettings()">Save Settings</button></div>
+</div></section>
+
+<section class="panel" id="test"><h1>Test Your AI</h1><p class="sub">Ask questions based on the AI's current knowledge.</p><div class="chat"><div class="messages" id="messages"></div><div class="chatbar"><input id="testInput" placeholder="Ask a question…" onkeydown="if(event.key==='Enter')askTest()"><button class="btn primary" onclick="askTest()">Send</button></div></div></section>
+
+<section class="panel" id="services"><h1>Pricing</h1><p class="sub">Choose the Auvii plan that fits your store. The 7-day trial gives you access to the full Auvii experience.</p><div class="pricing-grid">
+<div class="price-card"><h3>Free Trial</h3><div class="price">$0 <small>/ 7 days</small></div><ul class="price-list"><li>Full Auvii access during trial</li><li>AI customer-service assistant</li><li>Website crawler</li><li>Training Center</li><li>Auvii branding included</li></ul><a href="account.html" class="btn ghost small">Current Trial</a></div>
+<div class="price-card"><h3>Basic</h3><div class="price">$5 <small>/ month</small></div><ul class="price-list"><li>AI customer-service assistant</li><li>Website crawling</li><li>Unlimited training</li><li>Test before launch</li><li>Website connection</li></ul><a href="account.html?view=services" class="btn primary small">Choose Basic</a></div>
+<div class="price-card featured"><h3>Standard</h3><div class="price">$10 <small>/ month</small></div><ul class="price-list"><li>Everything in Basic</li><li>Sales Assistant</li><li>Product recommendations</li><li>Upselling support</li><li>Cross-selling support</li></ul><a href="account.html?view=services" class="btn primary small">Choose Standard</a></div>
+<div class="price-card"><h3>Premium</h3><div class="price">$20 <small>/ month</small></div><ul class="price-list"><li>Everything in Standard</li><li>Advanced Sales Assistant</li><li>Advanced sales controls</li><li>Priority setup support</li><li>Full AI customization</li></ul><a href="account.html?view=services" class="btn orange small">Choose Premium</a></div>
+</div></section>
+</main></div>
+
+<script>
+let agent=null,currentUser=null,testHistory=[],settingsState={tone:'friendly',response_length:'balanced'},salesState={sales_tone:'friendly',recommendation_style:'balanced'},restrictions={};
+
+const $=id=>document.getElementById(id);
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+function toggle(id){$(id).classList.toggle('open')}
+function toast(id){$(id).classList.add('show');setTimeout(()=>$(id).classList.remove('show'),1800)}
+function setSource(name,ready,text){$('dot-'+name).className='dot '+(ready?'ready':'');$('status-'+name).textContent=text|| (ready?'Available':'Not added yet')}
+
+document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));$(b.dataset.panel).classList.add('active');if(b.dataset.panel==='overview')loadWebsiteKnowledge();scrollTo(0,0)});
+
+async function loadBusinessInfo(){let {data}=await sb.from('business_information').select('*').eq('agent_id',agent.id).maybeSingle();if(!data)return;biName.value=data.business_name||'';biDescription.value=data.description||'';biSells.value=data.sells||'';biTarget.value=data.target_customers||'';biLocation.value=data.location||'';biHours.value=data.opening_hours||'';biContact.value=data.contact_info||''}
+async function saveBusinessInfo(){let {error}=await sb.from('business_information').upsert({agent_id:agent.id,business_name:biName.value.trim()||null,description:biDescription.value.trim()||null,sells:biSells.value.trim()||null,target_customers:biTarget.value.trim()||null,location:biLocation.value.trim()||null,opening_hours:biHours.value.trim()||null,contact_info:biContact.value.trim()||null,updated_at:new Date().toISOString()},{onConflict:'agent_id'});if(error)return alert(error.message);toast('biToast');refreshReadiness()}
+
+async function loadProducts(){let {data,error}=await sb.from('products').select('*').eq('agent_id',agent.id).order('created_at',{ascending:false});if(error)return console.error(error);$('productsList').innerHTML=!data?.length?'<div class="empty">No products yet.</div>':'<div class="pgrid">'+data.map(p=>`<div class="product">${p.image_url?`<img src="${esc(p.image_url)}">`:''}<div class="productbody"><div class="row"><b>${esc(p.name)}</b><button class="delete" onclick="deleteRow('products','${p.id}',loadProducts)">Delete</button></div><p style="color:var(--soft)">${esc(p.description||'')}</p><b>${esc(p.price||'')}</b></div></div>`).join('')+'</div>'}
+async function saveProduct(){if(!pName.value.trim())return alert('Product name is required.');let {error}=await sb.from('products').insert({agent_id:agent.id,name:pName.value.trim(),description:pDescription.value.trim()||null,price:pPrice.value.trim()||null,category:pCategory.value.trim()||null,availability:pAvailability.value,product_url:pUrl.value.trim()||null,image_url:pImageUrl.value.trim()||null,additional_info:pExtra.value.trim()||null});if(error)return alert(error.message);['pName','pDescription','pPrice','pCategory','pUrl','pImageUrl','pExtra'].forEach(x=>$(x).value='');toggle('productForm');loadProducts();refreshReadiness()}
+csvInput.onchange=async e=>{let f=e.target.files[0];if(!f)return;let text=await f.text(),lines=text.split(/\r?\n/).filter(Boolean),h=lines.shift().split(',').map(x=>x.trim().toLowerCase()),rows=lines.map(line=>{let c=line.split(','),o={agent_id:agent.id};h.forEach((k,i)=>{if(['name','description','price','category','availability','product_url','additional_info'].includes(k))o[k]=c[i]?.trim()||null});if(!o.availability)o.availability='in_stock';return o}).filter(x=>x.name);if(!rows.length)return alert('No valid products found.');let {error}=await sb.from('products').insert(rows);if(error)alert(error.message);else{loadProducts();refreshReadiness()}};
+
+async function loadFaqs(){let {data,error}=await sb.from('faqs').select('*').eq('agent_id',agent.id).order('created_at',{ascending:false});if(error)return console.error(error);$('faqsList').innerHTML=!data?.length?'<div class="empty">No FAQs yet.</div>':data.map(f=>`<div class="item"><div class="row"><b>${esc(f.question)}</b><button class="delete" onclick="deleteRow('faqs','${f.id}',loadFaqs)">Delete</button></div><p style="color:var(--soft)">${esc(f.answer)}</p></div>`).join('')}
+async function saveFaq(){if(!faqQ.value.trim()||!faqA.value.trim())return;let {error}=await sb.from('faqs').insert({agent_id:agent.id,question:faqQ.value.trim(),answer:faqA.value.trim()});if(error)return alert(error.message);faqQ.value='';faqA.value='';toggle('faqForm');loadFaqs();refreshReadiness()}
+
+async function loadPolicies(){let {data}=await sb.from('policies').select('*').eq('agent_id',agent.id),m={};(data||[]).forEach(x=>m[x.policy_type]=x.content);polDelivery.value=m.delivery||'';polReturns.value=m.returns||'';polPayments.value=m.payments||'';polWarranty.value=m.warranty||'';polCancellation.value=m.cancellation||''}
+async function savePolicies(){let rows=[['delivery',polDelivery.value],['returns',polReturns.value],['payments',polPayments.value],['warranty',polWarranty.value],['cancellation',polCancellation.value]].map(([policy_type,content])=>({agent_id:agent.id,policy_type,content:content.trim()||null,updated_at:new Date().toISOString()}));let {error}=await sb.from('policies').upsert(rows,{onConflict:'agent_id,policy_type'});if(error)return alert(error.message);toast('polToast');refreshReadiness()}
+
+async function loadCustomKnowledge(){let {data}=await sb.from('custom_knowledge').select('*').eq('agent_id',agent.id).order('created_at',{ascending:false});$('customList').innerHTML=!data?.length?'<div class="empty">No custom knowledge yet.</div>':data.map(x=>`<div class="item"><div class="row"><span>${esc(x.content)}</span><button class="delete" onclick="deleteRow('custom_knowledge','${x.id}',loadCustomKnowledge)">Delete</button></div></div>`).join('')}
+async function saveCustomKnowledge(){if(!customContent.value.trim())return;let {error}=await sb.from('custom_knowledge').insert({agent_id:agent.id,content:customContent.value.trim()});if(error)return alert(error.message);customContent.value='';toggle('customForm');loadCustomKnowledge();refreshReadiness()}
+
+function pills(row,state,key){document.querySelectorAll('#'+row+' .pill').forEach(p=>p.onclick=()=>{state[key]=p.dataset.v;document.querySelectorAll('#'+row+' .pill').forEach(x=>x.classList.toggle('selected',x===p))})}
+async function loadInstructions(){let {data}=await sb.from('ai_settings').select('*').eq('agent_id',agent.id).maybeSingle();if(data){settingsState.tone=data.tone||'friendly';settingsState.response_length=data.response_length||'balanced';customInstructions.value=data.custom_instructions||'';restrictions=data.restrictions||{}};pills('toneRow',settingsState,'tone');pills('lengthRow',settingsState,'response_length');document.querySelectorAll('#toneRow .pill').forEach(x=>x.classList.toggle('selected',x.dataset.v===settingsState.tone));document.querySelectorAll('#lengthRow .pill').forEach(x=>x.classList.toggle('selected',x.dataset.v===settingsState.response_length));renderRestrictions()}
+async function saveInstructions(){let {error}=await sb.from('ai_settings').update({tone:settingsState.tone,response_length:settingsState.response_length,custom_instructions:customInstructions.value.trim()||null,updated_at:new Date().toISOString()}).eq('agent_id',agent.id);if(error)return alert(error.message);toast('instrToast');refreshReadiness()}
+function renderRestrictions(){let names={no_invent_info:'Do not invent product information',no_invent_prices:'Do not invent prices',no_false_availability:'Do not claim unavailable products are available',no_refund_promises:'Do not make refund promises',stay_within_knowledge:'Stay within the AI knowledge',escalate_complex:'Escalate complex questions to a human'};$('restrictionRows').innerHTML=Object.entries(names).map(([k,v])=>`<div class="row" style="padding:10px 0;border-bottom:1px solid var(--line)"><b style="font-size:13px">${v}</b><label class="switch"><input type="checkbox" id="r_${k}" ${restrictions[k]?'checked':''}><span class="slider"></span></label></div>`).join('')}
+async function saveRestrictions(){let keys=['no_invent_info','no_invent_prices','no_false_availability','no_refund_promises','stay_within_knowledge','escalate_complex'];let r={};keys.forEach(k=>r[k]=$('r_'+k).checked);let {error}=await sb.from('ai_settings').update({restrictions:r,updated_at:new Date().toISOString()}).eq('agent_id',agent.id);if(error)alert(error.message);else restrictions=r}
+
+async function loadSalesSettings(){let {data}=await sb.from('sales_assistant_settings').select('*').eq('agent_id',agent.id).maybeSingle();if(!data)return;saEnabled.checked=!!data.enabled;saUpsell.checked=data.allow_upsell??true;saCrossSell.checked=data.allow_cross_sell??true;saMaxProducts.value=data.max_products_shown||3;saInstructions.value=data.custom_sales_instructions||'';saRules.value=data.sales_rules||'';salesState.sales_tone=data.sales_tone||'friendly';salesState.recommendation_style=data.recommendation_style||'balanced';pills('saToneRow',salesState,'sales_tone');pills('saStyleRow',salesState,'recommendation_style');document.querySelectorAll('#saToneRow .pill').forEach(x=>x.classList.toggle('selected',x.dataset.v===salesState.sales_tone));document.querySelectorAll('#saStyleRow .pill').forEach(x=>x.classList.toggle('selected',x.dataset.v===salesState.recommendation_style))}
+async function saveSalesSettings(){let payload={agent_id:agent.id,enabled:saEnabled.checked,allow_upsell:saUpsell.checked,allow_cross_sell:saCrossSell.checked,max_products_shown:+saMaxProducts.value,sales_tone:salesState.sales_tone,recommendation_style:salesState.recommendation_style,custom_sales_instructions:saInstructions.value.trim()||null,sales_rules:saRules.value.trim()||null,updated_at:new Date().toISOString()};let {error}=await sb.from('sales_assistant_settings').upsert(payload,{onConflict:'agent_id'});if(error)alert(error.message);else toast('saToast')}
+
+/* WEBSITE KNOWLEDGE: reads the exact table populated by crawl-website. */
+async function loadWebsiteKnowledge(){
+ let {data,error}=await sb.from('ai_knowledge').select('id,source_type,source_url,title,content,description,metadata,crawl_id,crawled_at,created_at,status').eq('agent_id',agent.id).eq('source_type','website').order('created_at',{ascending:false});
+ if(error){setSource('website',false,'Error');$('websiteKnowledgeList').innerHTML='<div class="empty">Could not load website knowledge: '+esc(error.message)+'</div>';return}
+ data=data||[];window.websiteKnowledge=data;setSource('website',data.length>0,data.length?data.length+' page'+(data.length===1?'':'s')+' available':'Not crawled yet');
+ if(!data.length){$('websiteKnowledgeList').innerHTML='<div class="empty">No website knowledge yet. Run a successful website crawl from your Auvii dashboard.</div>';return}
+ $('websiteKnowledgeList').innerHTML=data.map(x=>`<div class="website-card"><div class="row"><div><b>${esc(x.title||'Website page')}</b><div class="website-url">${esc(x.source_url||'')}</div></div><span class="badge">${esc(x.status||'active')}</span></div><div class="website-content">${esc(x.content||'No content stored.')}</div><div style="font-size:11px;color:var(--soft);margin-top:8px">${(x.content||'').length.toLocaleString()} characters · ${x.crawled_at?new Date(x.crawled_at).toLocaleString():''} <button class="delete" onclick="deleteWebsite('${x.id}')">Delete</button></div></div>`).join('')
+}
+async function deleteWebsite(id){if(!confirm('Delete this website knowledge?'))return;let {error}=await sb.from('ai_knowledge').delete().eq('id',id);if(error)alert(error.message);else{await loadWebsiteKnowledge();refreshReadiness()}}
+
+async function refreshReadiness(){
+ let [{data:bi},{count:pc},{count:fc},{data:pol},{count:cc},{data:ins},{count:wc}]=await Promise.all([
+  sb.from('business_information').select('*').eq('agent_id',agent.id).maybeSingle(),
+  sb.from('products').select('id',{count:'exact',head:true}).eq('agent_id',agent.id),
+  sb.from('faqs').select('id',{count:'exact',head:true}).eq('agent_id',agent.id),
+  sb.from('policies').select('*').eq('agent_id',agent.id),
+  sb.from('custom_knowledge').select('id',{count:'exact',head:true}).eq('agent_id',agent.id),
+  sb.from('ai_settings').select('custom_instructions').eq('agent_id',agent.id).maybeSingle(),
+  sb.from('ai_knowledge').select('id',{count:'exact',head:true}).eq('agent_id',agent.id).eq('source_type','website').eq('status','active')
+ ]);
+ let flags=[!!(bi?.description||bi?.sells),(pc||0)>0,(fc||0)>0,(pol||[]).some(x=>x.content),(cc||0)>0,!!ins?.custom_instructions,(wc||0)>0];
+ let pct=Math.round(flags.filter(Boolean).length/flags.length*100);readinessPct.textContent=pct+'%';readinessFill.style.width=pct+'%';
+ setSource('business',flags[0]);setSource('products',flags[1],(pc||0)+' product'+((pc||0)===1?'':'s'));setSource('faqs',flags[2],(fc||0)+' FAQ'+((fc||0)===1?'':'s'));setSource('policies',flags[3]);setSource('custom',flags[4],(cc||0)+' entr'+((cc||0)===1?'y':'ies'));setSource('instructions',flags[5]);setSource('website',flags[6],flags[6]?(wc||0)+' page'+((wc||0)===1?'':'s')+' available':'Not crawled yet');
+ readinessNote.textContent=flags.every(Boolean)?'Your knowledge base has content in every section.':'Add more information to improve knowledge completeness.';
+}
+
+async function callAI(q){let res=await fetch(`${SUPABASE_URL}/functions/v1/chat_ai`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPABASE_ANON_KEY}`},body:JSON.stringify({agent_id:agent.id,message:q,history:testHistory})});let d=await res.json().catch(()=>({}));if(!res.ok)throw Error(d.error||'AI request failed');return d.reply||d.message||'No response.'}
+function addBubble(text,type){let d=document.createElement('div');d.className='bubble '+type;d.textContent=text;messages.appendChild(d);messages.scrollTop=messages.scrollHeight}
+function clearChat(){messages.innerHTML='';testHistory=[];addBubble(`Hi! I'm ${agent.agent_name}. Ask me anything about the store.`,'bot')}
+async function askTest(){let q=testInput.value.trim();if(!q)return;testInput.value='';addBubble(q,'user');testHistory.push({role:'user',content:q});try{let r=await callAI(q);addBubble(r,'bot');testHistory.push({role:'assistant',content:r})}catch(e){addBubble('Could not reach the AI: '+e.message,'bot')}}
+
+async function loadServices(){ return; }
+</script>
+
+
+<!-- Auvii agent + crawler connection -->
+<script>
+(function(){
+  const CRAWLER_FUNCTION='crawl-website';
+  async function initialiseTraining(){
+    try{
+      const {data:{session},error:sessionError}=await sb.auth.getSession();
+      if(sessionError) throw sessionError;
+      if(!session){location.href='auth.html';return;}
+
+      const {data:agents,error}=await sb.from('ai_agents').select('*').eq('user_id',session.user.id).order('created_at',{ascending:false}).limit(1);
+      if(error) throw error;
+      agent=agents&&agents.length?agents[0]:null;
+
+      if(!agent){
+        document.querySelector('main').innerHTML=`<section class="panel active"><div class="card" style="text-align:center;padding:35px 20px"><h2>Create your AI first</h2><p class="sub">Create your Auvii AI agent before adding training data.</p><a class="btn primary" href="create-agent.html">Create AI Agent</a></div></section>`;
+        return;
+      }
+
+      await Promise.allSettled([loadBusinessInfo(),loadProducts(),loadFaqs(),loadPolicies(),loadCustomKnowledge(),loadInstructions(),loadSalesSettings(),loadWebsiteKnowledge(),refreshReadiness()]);
+      clearChat();
+    }catch(e){
+      console.error('Training Center initialization failed:',e);
+      alert('Could not load your Training Center. Please refresh and try again.');
+    }
+  }
+
+  window.runAuviiTrainingCrawler=async function(){
+    if(!agent)return alert('Create an AI agent first.');
+    const input=document.getElementById('trainingCrawlerUrl');
+    const button=document.getElementById('trainingCrawlerBtn');
+    const status=document.getElementById('trainingCrawlerStatus');
+    const url=(input?.value||'').trim();
+    if(!url)return alert('Enter your website URL.');
+    button.disabled=true;button.textContent='Crawling…';
+    status.textContent='Connecting to Firecrawl…';status.style.display='block';
+    try{
+      const {data:{session}}=await sb.auth.getSession();
+      const res=await fetch(`${SUPABASE_URL}/functions/v1/${CRAWLER_FUNCTION}`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${session.access_token}`},body:JSON.stringify({url,website_url:url,agent_id:agent.id})});
+      const data=await res.json().catch(()=>({}));
+      if(!res.ok)throw new Error(data.error||'Website crawl failed.');
+      status.textContent=`Crawled successfully. ${data.routed_items||0} training item(s) routed.`;
+      input.value='';
+      await Promise.allSettled([loadWebsiteKnowledge(),refreshReadiness(),loadProducts(),loadFaqs(),loadPolicies(),loadBusinessInfo(),loadCustomKnowledge(),loadInstructions()]);
+    }catch(e){status.textContent='';alert(e.message||'Website crawl failed.')}
+    finally{button.disabled=false;button.textContent='Crawl & Train';}
+  };
+
+  document.addEventListener('DOMContentLoaded',initialiseTraining);
+})();
+</script>
+
+</body>
+</html>
