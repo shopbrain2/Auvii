@@ -1,0 +1,5955 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — Auvii</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="sb-config.js"></script>
+
+<style>
+:root{
+  --paper:#F7F7F4;
+  --paper-dim:#EFEFEA;
+  --ink:#14171C;
+  --ink-soft:#4B5058;
+  --line:#DDDCD5;
+  --cobalt:#2F5FFF;
+  --cobalt-dim:#EAEFFF;
+  --orange:#FF6B45;
+  --orange-dim:#FFEDE6;
+  --mint:#1FAA80;
+  --mint-dim:#E6F5EF;
+  --white:#FFFFFF;
+}
+
+*{box-sizing:border-box;}
+
+body{
+  margin:0;
+  background:var(--paper);
+  color:var(--ink);
+  font-family:'Inter',sans-serif;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+
+h1,h2,h3{
+  font-family:'Space Grotesk',sans-serif;
+  font-weight:600;
+  letter-spacing:-0.01em;
+  line-height:1.15;
+  margin:0;
+}
+
+p{margin:0;}
+
+a{
+  color:inherit;
+  text-decoration:none;
+}
+
+button,input,textarea,select{
+  font-family:inherit;
+}
+
+.btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  padding:11px 18px;
+  border-radius:8px;
+  font-family:'Inter',sans-serif;
+  font-weight:600;
+  font-size:14px;
+  cursor:pointer;
+  border:1.5px solid transparent;
+  transition:background .15s ease,transform .15s ease,border-color .15s ease;
+}
+
+.btn:active{transform:scale(.98);}
+.btn:disabled{opacity:.6;cursor:default;}
+
+.btn-primary{
+  background:var(--cobalt);
+  color:var(--white);
+}
+
+.btn-primary:hover{background:#2450DE;}
+
+.btn-ghost{
+  background:transparent;
+  color:var(--ink);
+  border-color:var(--line);
+}
+
+.btn-ghost:hover{border-color:var(--ink);}
+
+.btn-orange{
+  background:var(--orange);
+  color:var(--white);
+}
+
+.btn-orange:hover{background:#E85A34;}
+
+.btn-sm{
+  padding:8px 14px;
+  font-size:13px;
+}
+
+.btn-block{width:100%;}
+
+.shell{
+  display:flex;
+  min-height:100vh;
+}
+
+.sidebar{
+  width:230px;
+  flex:none;
+  background:var(--white);
+  border-right:1px solid var(--line);
+  display:flex;
+  flex-direction:column;
+  padding:20px 14px;
+  position:sticky;
+  top:0;
+  height:100vh;
+}
+
+.side-logo{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  font-family:'Space Grotesk',sans-serif;
+  font-weight:700;
+  font-size:18px;
+  padding:8px 8px 22px;
+}
+
+.logo-mark{
+  width:24px;
+  height:24px;
+  border-radius:6px;
+  background:var(--cobalt);
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  flex:none;
+}
+
+.nav-item{
+  display:flex;
+  align-items:center;
+  gap:11px;
+  padding:10px 12px;
+  border-radius:8px;
+  font-size:14px;
+  font-weight:600;
+  color:var(--ink-soft);
+  cursor:pointer;
+  margin-bottom:2px;
+  transition:background .15s ease,color .15s ease;
+}
+
+.nav-item svg{
+  width:17px;
+  height:17px;
+  stroke:currentColor;
+  flex:none;
+}
+
+.nav-item:hover{
+  background:var(--paper-dim);
+  color:var(--ink);
+}
+
+.nav-item.active{
+  background:var(--cobalt-dim);
+  color:var(--cobalt);
+}
+
+.sidebar-footer{
+  margin-top:auto;
+  padding-top:14px;
+  border-top:1px solid var(--line);
+}
+
+.side-profile{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:8px;
+  border-radius:8px;
+  font-size:13px;
+  font-weight:600;
+}
+
+.avatar-circle{
+  width:28px;
+  height:28px;
+  border-radius:50%;
+  background:var(--cobalt-dim);
+  color:var(--cobalt);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:12px;
+  font-weight:700;
+  font-family:'Space Grotesk',sans-serif;
+  flex:none;
+}
+
+.side-profile .name-truncate{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.logout-row{
+  display:flex;
+  align-items:center;
+  gap:11px;
+  padding:10px 12px;
+  border-radius:8px;
+  font-size:13.5px;
+  font-weight:600;
+  color:var(--ink-soft);
+  cursor:pointer;
+}
+
+.logout-row:hover{
+  background:var(--paper-dim);
+  color:var(--ink);
+}
+
+.logout-row svg{
+  width:16px;
+  height:16px;
+  stroke:currentColor;
+}
+
+.main-col{
+  flex:1;
+  min-width:0;
+}
+
+.topbar{
+  display:none;
+  align-items:center;
+  justify-content:space-between;
+  padding:14px 18px;
+  border-bottom:1px solid var(--line);
+  background:var(--white);
+  position:sticky;
+  top:0;
+  z-index:20;
+}
+
+.content{
+  max-width:920px;
+  margin:0 auto;
+  padding:36px 32px 100px;
+}
+
+@media(max-width:900px){
+  .sidebar{display:none;}
+
+  .topbar{display:flex;}
+
+  .content{
+    padding:24px 18px 90px;
+  }
+}
+
+.bottom-nav{
+  display:none;
+  position:fixed;
+  bottom:0;
+  left:0;
+  right:0;
+  background:var(--white);
+  border-top:1px solid var(--line);
+  z-index:30;
+  padding:6px 4px;
+}
+
+@media(max-width:900px){
+  .bottom-nav{display:flex;}
+}
+
+.bnav-item{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:3px;
+  padding:7px 2px;
+  cursor:pointer;
+  color:var(--ink-soft);
+}
+
+.bnav-item svg{
+  width:19px;
+  height:19px;
+  stroke:currentColor;
+}
+
+.bnav-item span{
+  font-size:10px;
+  font-weight:600;
+}
+
+.bnav-item.active{
+  color:var(--cobalt);
+}
+
+.view{display:none;}
+.view.active{display:block;}
+
+.page-title{
+  font-size:24px;
+  margin-bottom:4px;
+}
+
+.page-sub{
+  color:var(--ink-soft);
+  font-size:14px;
+  margin-bottom:32px;
+}
+
+.card{
+  border:1px solid var(--line);
+  border-radius:14px;
+  background:var(--white);
+  padding:24px;
+}
+
+.empty-card{
+  border:1.5px dashed var(--line);
+  border-radius:14px;
+  padding:38px 28px;
+  text-align:center;
+  background:var(--white);
+}
+
+.empty-card .icon{
+  width:48px;
+  height:48px;
+  border-radius:11px;
+  background:var(--cobalt-dim);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin:0 auto 16px;
+}
+
+.empty-card .icon svg{
+  width:22px;
+  height:22px;
+  stroke:var(--cobalt);
+}
+
+.empty-card h3{
+  font-size:17px;
+  margin-bottom:8px;
+}
+
+.empty-card p{
+  color:var(--ink-soft);
+  font-size:14px;
+  max-width:400px;
+  margin:0 auto 20px;
+}
+
+.sec-title{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin:36px 0 14px;
+}
+
+.sec-title:first-of-type{
+  margin-top:0;
+}
+
+.sec-title h2{
+  font-size:16.5px;
+}
+
+.sec-title a.link{
+  font-size:13px;
+  font-weight:600;
+  color:var(--cobalt);
+  cursor:pointer;
+}
+
+.agent-card{
+  border:1px solid var(--line);
+  border-radius:14px;
+  background:var(--white);
+  padding:24px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:18px;
+  flex-wrap:wrap;
+}
+
+.agent-card-left{
+  display:flex;
+  align-items:center;
+  gap:15px;
+}
+
+.ai-avatar{
+  width:44px;
+  height:44px;
+  border-radius:10px;
+  background:var(--cobalt);
+  position:relative;
+  flex:none;
+}
+
+.ai-avatar::before,
+.ai-avatar::after{
+  content:'';
+  position:absolute;
+  background:var(--white);
+  border-radius:2px;
+}
+
+.ai-avatar::before{
+  width:15px;
+  height:2.5px;
+  top:20.5px;
+  left:14.5px;
+}
+
+.ai-avatar::after{
+  width:2.5px;
+  height:15px;
+  top:14.5px;
+  left:20.5px;
+}
+
+.agent-card h3{
+  font-size:15.5px;
+  margin-bottom:3px;
+}
+
+.agent-status{
+  font-size:12px;
+  color:var(--mint);
+  font-weight:600;
+  display:flex;
+  align-items:center;
+  gap:5px;
+}
+
+.agent-status::before{
+  content:'';
+  width:6px;
+  height:6px;
+  border-radius:50%;
+  background:var(--mint);
+}
+
+.agent-actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+.stat-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:14px;
+  margin:18px 0 4px;
+}
+
+@media(max-width:600px){
+  .stat-grid{
+    grid-template-columns:1fr;
+  }
+}
+
+.stat-card{
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:var(--white);
+  padding:18px 20px;
+}
+
+.stat-card .num{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:24px;
+  font-weight:700;
+}
+
+.stat-card .label{
+  font-size:12.5px;
+  color:var(--ink-soft);
+  margin-top:3px;
+}
+
+.quick-grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:12px;
+}
+
+@media(max-width:600px){
+  .quick-grid{
+    grid-template-columns:1fr;
+  }
+}
+
+.quick-card{
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:var(--white);
+  padding:18px;
+  cursor:pointer;
+  transition:border-color .15s ease;
+}
+
+.quick-card:hover{
+  border-color:var(--cobalt);
+}
+
+.quick-card h4{
+  font-size:14px;
+  margin-bottom:4px;
+}
+
+.quick-card p{
+  font-size:12.5px;
+  color:var(--ink-soft);
+}
+
+.assistant-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:18px 20px;
+  background:var(--white);
+  margin-bottom:10px;
+  flex-wrap:wrap;
+  gap:12px;
+}
+
+.service-grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:14px;
+}
+
+@media(max-width:700px){
+  .service-grid{
+    grid-template-columns:1fr;
+  }
+}
+
+.service-card{
+  border:1px solid var(--line);
+  border-radius:14px;
+  background:var(--white);
+  padding:22px;
+  cursor:pointer;
+  transition:border-color .15s ease;
+  position:relative;
+}
+
+.service-card:hover{
+  border-color:var(--orange);
+}
+
+.service-card.popular{
+  border-color:var(--orange);
+  border-width:1.5px;
+}
+
+.pc-badge{
+  position:absolute;
+  top:-9px;
+  right:16px;
+  background:var(--orange);
+  color:white;
+  font-size:10.5px;
+  font-weight:700;
+  padding:3px 10px;
+  border-radius:100px;
+}
+
+.service-card h4{
+  font-size:16px;
+  margin-bottom:6px;
+}
+
+.service-card .price{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:21px;
+  font-weight:700;
+  margin-bottom:8px;
+}
+
+.service-card p.desc{
+  font-size:13px;
+  color:var(--ink-soft);
+  margin-bottom:14px;
+}
+
+.service-card ul{
+  margin:0;
+  padding:0 0 0 18px;
+  font-size:12.5px;
+  color:var(--ink-soft);
+}
+
+.service-card li{
+  margin-bottom:4px;
+}
+
+.code-box{
+  background:var(--ink);
+  color:#D8DAE0;
+  border-radius:10px;
+  padding:18px 20px;
+  font-family:monospace;
+  font-size:12.5px;
+  line-height:1.7;
+  overflow-x:auto;
+  margin-bottom:14px;
+  position:relative;
+}
+
+.copy-btn{
+  position:absolute;
+  top:12px;
+  right:12px;
+  background:rgba(255,255,255,.1);
+  color:white;
+  border:none;
+  border-radius:6px;
+  padding:6px 11px;
+  font-size:12px;
+  font-weight:600;
+  cursor:pointer;
+}
+
+.copy-btn:hover{
+  background:rgba(255,255,255,.18);
+}
+
+.settings-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:14px 0;
+  border-bottom:1px solid var(--line);
+  gap:14px;
+}
+
+.settings-row:last-child{
+  border-bottom:none;
+}
+
+.settings-row .label{
+  font-size:13.5px;
+  color:var(--ink-soft);
+}
+
+.settings-row .value{
+  font-size:14.5px;
+  font-weight:600;
+}
+
+.modal-overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(20,23,28,.5);
+  display:none;
+  align-items:flex-start;
+  justify-content:center;
+  padding:40px 20px;
+  overflow-y:auto;
+  z-index:100;
+}
+
+.modal-overlay.active{
+  display:flex;
+}
+
+.modal{
+  background:var(--white);
+  border-radius:16px;
+  max-width:480px;
+  width:100%;
+  padding:32px 30px;
+  position:relative;
+}
+
+.modal-close{
+  position:absolute;
+  top:20px;
+  right:20px;
+  background:none;
+  border:none;
+  cursor:pointer;
+  width:28px;
+  height:28px;
+}
+
+.modal-close svg{
+  width:16px;
+  height:16px;
+  stroke:var(--ink-soft);
+}
+
+.modal-tag{
+  font-size:13px;
+  font-weight:600;
+  color:var(--orange);
+  margin-bottom:6px;
+}
+
+.modal h3{
+  font-size:22px;
+  margin-bottom:6px;
+}
+
+.modal .modal-price{
+  font-family:'Space Grotesk',sans-serif;
+  font-weight:700;
+  font-size:16px;
+  color:var(--ink-soft);
+  margin-bottom:18px;
+}
+
+.field{
+  margin-bottom:15px;
+}
+
+.field label{
+  display:block;
+  font-size:13px;
+  font-weight:600;
+  margin-bottom:6px;
+}
+
+.field input,
+.field textarea,
+.field select{
+  width:100%;
+  border:1.5px solid var(--line);
+  border-radius:8px;
+  padding:10px 12px;
+  font-family:'Inter',sans-serif;
+  font-size:14px;
+  color:var(--ink);
+  background:var(--paper);
+}
+
+.field input:focus,
+.field textarea:focus,
+.field select:focus{
+  outline:none;
+  border-color:var(--cobalt);
+}
+
+.field textarea{
+  resize:vertical;
+  min-height:64px;
+}
+
+.error-box{
+  background:var(--orange-dim);
+  color:#B5431F;
+  border:1px solid rgba(255,107,69,.35);
+  border-radius:8px;
+  padding:10px 13px;
+  font-size:13px;
+  margin-top:12px;
+  display:none;
+}
+
+.error-box.show{
+  display:block;
+}
+
+/* CRAWLER */
+
+.crawler-form{
+  display:flex;
+  gap:10px;
+  align-items:stretch;
+}
+
+.crawler-form input{
+  flex:1;
+  min-width:0;
+  border:1.5px solid var(--line);
+  border-radius:8px;
+  padding:12px 13px;
+  font-size:14px;
+  background:var(--paper);
+  color:var(--ink);
+}
+
+.crawler-form input:focus{
+  outline:none;
+  border-color:var(--cobalt);
+}
+
+@media(max-width:600px){
+  .crawler-form{
+    flex-direction:column;
+  }
+
+  .crawler-form .btn{
+    width:100%;
+  }
+}
+
+.crawl-status{
+  display:none;
+  margin-top:16px;
+  border-radius:10px;
+  padding:12px 14px;
+  font-size:13px;
+}
+
+.crawl-status.show{
+  display:flex;
+  align-items:center;
+  gap:9px;
+}
+
+.crawl-status.loading{
+  background:var(--cobalt-dim);
+  color:var(--cobalt);
+}
+
+.crawl-status.success{
+  background:var(--mint-dim);
+  color:#0E7A5C;
+}
+
+.crawl-status.error{
+  background:var(--orange-dim);
+  color:#B5431F;
+}
+
+.crawl-progress-wrap{
+  display:none;
+  margin-top:16px;
+  padding:14px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:var(--paper);
+}
+
+.crawl-progress-wrap.show{display:block;}
+.crawl-progress-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  margin-bottom:9px;
+}
+.crawl-stage{font-size:12.5px;font-weight:600;}
+.crawl-elapsed{font-family:'Space Grotesk',sans-serif;font-size:12.5px;font-weight:700;white-space:nowrap;}
+.crawl-progress-track{height:7px;background:var(--line);border-radius:999px;overflow:hidden;}
+.crawl-progress-bar{height:100%;width:0%;background:var(--cobalt);border-radius:999px;transition:width .3s ease;}
+.crawl-progress-meta{display:flex;justify-content:space-between;gap:10px;margin-top:8px;font-size:11.5px;color:var(--ink-soft);}
+.crawl-background-note{display:none;margin-top:10px;font-size:11.5px;color:var(--ink-soft);}
+.crawl-background-note.show{display:block;}
+@media(max-width:600px){
+  .crawl-progress-head{align-items:flex-start;flex-direction:column;gap:4px;}
+  .crawl-progress-meta{flex-direction:column;gap:2px;}
+}
+
+.crawl-spinner{
+  width:15px;
+  height:15px;
+  border:2px solid currentColor;
+  border-right-color:transparent;
+  border-radius:50%;
+  animation:crawlSpin .7s linear infinite;
+  flex:none;
+}
+
+@keyframes crawlSpin{
+  to{transform:rotate(360deg);}
+}
+
+.crawl-stats{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+  margin-top:16px;
+}
+
+@media(max-width:900px){
+  .crawl-stats{
+    grid-template-columns:repeat(3,1fr);
+  }
+}
+
+@media(max-width:700px){
+  .crawl-stats{
+    grid-template-columns:repeat(2,1fr);
+  }
+}
+
+.crawl-stat{
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:var(--paper);
+  padding:15px;
+}
+
+.crawl-stat .n{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:21px;
+  font-weight:700;
+}
+
+.crawl-stat .l{
+  font-size:11.5px;
+  color:var(--ink-soft);
+  margin-top:2px;
+}
+
+.crawl-history{
+  margin-top:18px;
+}
+
+.crawl-history-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  padding:12px 0;
+  border-bottom:1px solid var(--line);
+}
+
+.crawl-history-row:last-child{
+  border-bottom:none;
+}
+
+.crawl-url{
+  font-size:13px;
+  font-weight:600;
+  word-break:break-all;
+}
+
+.crawl-time{
+  color:var(--ink-soft);
+  font-size:11.5px;
+  white-space:nowrap;
+}
+
+.crawl-help{
+  color:var(--ink-soft);
+  font-size:12.5px;
+  line-height:1.6;
+}
+
+/* loading */
+
+.dashboard-loading{
+  padding:70px 20px;
+  text-align:center;
+  color:var(--ink-soft);
+}
+
+.dashboard-loading .loader{
+  width:28px;
+  height:28px;
+  margin:0 auto 12px;
+  border:3px solid var(--line);
+  border-top-color:var(--cobalt);
+  border-radius:50%;
+  animation:crawlSpin .8s linear infinite;
+}
+
+/* Notifications */
+
+#notifPanel{
+  position:fixed;
+  top:64px;
+  right:16px;
+  width:320px;
+  max-width:calc(100vw - 32px);
+  max-height:70vh;
+  overflow-y:auto;
+  background:#fff;
+  border-radius:14px;
+  box-shadow:0 12px 40px rgba(0,0,0,.22);
+  display:none;
+  z-index:600;
+}
+
+#notifPanel.open{
+  display:block;
+}
+
+.notif-item{
+  padding:12px 16px;
+  border-bottom:1px solid var(--line);
+  font-size:13px;
+}
+
+.notif-item:last-child{
+  border-bottom:none;
+}
+
+.notif-item.unread{
+  background:var(--cobalt-dim);
+}
+
+.notif-item .msg{
+  color:var(--ink);
+}
+
+.notif-item .time{
+  color:var(--ink-soft);
+  font-size:11px;
+  margin-top:3px;
+}
+
+.notif-empty{
+  padding:20px;
+  text-align:center;
+  color:var(--ink-soft);
+  font-size:13px;
+}
+
+/* Support */
+
+#supportBubble{
+  position:fixed;
+  right:20px;
+  bottom:20px;
+  width:56px;
+  height:56px;
+  border-radius:50%;
+  background:var(--cobalt);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:grab;
+  box-shadow:0 6px 20px rgba(0,0,0,.25);
+  z-index:500;
+  border:none;
+  touch-action:none;
+}
+
+#supportBubble .support-avatar{
+  width:38px;
+  height:38px;
+  border-radius:50%;
+  object-fit:cover;
+  display:block;
+  border:2px solid rgba(255,255,255,.9);
+  background:#fff;
+}
+
+#supportBubble svg{
+  width:24px;
+  height:24px;
+  stroke:#fff;
+}
+
+#supportPanel{
+  position:fixed;
+  right:20px;
+  bottom:86px;
+  width:320px;
+  max-width:calc(100vw - 40px);
+  height:420px;
+  max-height:calc(100vh - 140px);
+  background:#fff;
+  border-radius:16px;
+  box-shadow:0 12px 40px rgba(0,0,0,.22);
+  display:none;
+  flex-direction:column;
+  overflow:hidden;
+  z-index:500;
+}
+
+@media(max-width:900px){
+  #supportBubble{
+    bottom:78px;
+  }
+
+  #supportPanel{
+    bottom:144px;
+    max-height:calc(100vh - 200px);
+  }
+}
+
+#supportPanel.open{
+  display:flex;
+}
+
+#supportHead{
+  background:var(--cobalt);
+  color:#fff;
+  padding:14px 16px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+#supportHead .t{
+  font-weight:700;
+  font-size:14px;
+}
+
+#supportHead .s{
+  font-size:11px;
+  opacity:.85;
+}
+
+#supportHead button{
+  background:none;
+  border:none;
+  color:#fff;
+  opacity:.85;
+  cursor:pointer;
+  padding:4px;
+}
+
+#supportThread{
+  flex:1;
+  overflow-y:auto;
+  padding:12px;
+  background:var(--paper);
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+#supportSetup{
+  padding:14px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+#supportSetup textarea{
+  border:1.5px solid var(--line);
+  border-radius:8px;
+  padding:9px 12px;
+  font-size:13.5px;
+  font-family:inherit;
+  min-height:60px;
+  resize:vertical;
+}
+
+.svc-msg{
+  max-width:82%;
+  padding:9px 12px;
+  border-radius:12px;
+  font-size:13.5px;
+  line-height:1.4;
+}
+
+.svc-msg.visitor{
+  background:var(--cobalt);
+  color:#fff;
+  align-self:flex-end;
+}
+
+.svc-msg.admin{
+  background:#fff;
+  border:1px solid var(--line);
+  align-self:flex-start;
+}
+
+#supportFoot{
+  border-top:1px solid var(--line);
+  padding:10px;
+  display:none;
+  gap:8px;
+  background:#fff;
+}
+
+#supportFoot.show{
+  display:flex;
+}
+
+#supportFoot input{
+  flex:1;
+  border:1px solid var(--line);
+  border-radius:20px;
+  padding:9px 14px;
+  font-size:13.5px;
+  font-family:inherit;
+}
+</style>
+</head>
+
+<body>
+
+<div class="shell">
+
+  <aside class="sidebar">
+
+    <a href="index.html" class="side-logo">
+      <span class="logo-mark">
+        <svg viewBox="0 0 24 24" style="width:68%;height:68%;">
+          <path d="M5 5h14a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-8.5l-3.8 3.6v-3.6H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z" fill="#fff"/>
+          <line x1="9" y1="10.6" x2="15" y2="10.6" stroke="#2F5FFF" stroke-width="1" stroke-linecap="round"/>
+          <line x1="9" y1="10.6" x2="12" y2="8" stroke="#2F5FFF" stroke-width="1" stroke-linecap="round"/>
+          <line x1="15" y1="10.6" x2="12" y2="8" stroke="#2F5FFF" stroke-width="1" stroke-linecap="round"/>
+          <circle cx="9" cy="10.6" r="1.15" fill="#2F5FFF"/>
+          <circle cx="15" cy="10.6" r="1.15" fill="#2F5FFF"/>
+          <circle cx="12" cy="8" r="1.15" fill="#2F5FFF"/>
+        </svg>
+      </span>
+      Auvii
+    </a>
+
+    <div class="nav-item active" data-view="overview" onclick="showView('overview')">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="7" height="9"/>
+        <rect x="14" y="3" width="7" height="5"/>
+        <rect x="14" y="12" width="7" height="9"/>
+        <rect x="3" y="16" width="7" height="5"/>
+      </svg>
+      Overview
+    </div>
+
+    <div class="nav-item" data-view="assistants" onclick="showView('assistants')">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+      </svg>
+      AI Assistants
+    </div>
+
+    <a href="training-center.html" class="nav-item" data-view="training">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+      </svg>
+      Training Center
+    </a>
+
+    <!-- NEW: CRAWLER -->
+    <div class="nav-item" data-view="crawler" onclick="showView('crawler')">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="7"/>
+        <path d="m20 20-4-4"/>
+        <path d="M8 11h6M11 8v6"/>
+      </svg>
+      Website Crawler
+    </div>
+
+    <div class="nav-item" data-view="conversations" onclick="showView('conversations')">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+      </svg>
+      Conversations
+    </div>
+
+    <div class="nav-item" data-view="connect" onclick="showView('connect')">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M2 12h20M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20z"/>
+      </svg>
+      Connect Website
+    </div>
+
+    <div class="nav-item" data-view="subscription" onclick="showView('subscription')">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+        <path d="M9 4h6v3H9zM9 12h6M9 16h6"/>
+      </svg>
+      Subscription
+    </div>
+
+    <div class="nav-item" data-view="settings" onclick="showView('settings')">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83"/>
+      </svg>
+      Settings
+    </div>
+
+    <div class="sidebar-footer">
+
+      <div class="side-profile" style="display:flex;align-items:center;justify-content:space-between;">
+        <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+          <div class="avatar-circle" id="avatarInitial">…</div>
+          <span class="name-truncate" id="storeNameChip">Loading…</span>
+        </div>
+
+        <button
+          id="notifBellDesktop"
+          onclick="toggleNotifPanel()"
+          style="position:relative;background:none;border:none;cursor:pointer;padding:4px;flex-shrink:0;"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+          </svg>
+
+          <span
+            id="notifBadgeDesktop"
+            style="display:none;position:absolute;top:0;right:0;background:var(--orange);color:#fff;font-size:10px;font-weight:700;border-radius:50%;width:15px;height:15px;align-items:center;justify-content:center;"
+          ></span>
+        </button>
+      </div>
+
+      <div class="logout-row" onclick="logout()">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+          <path d="M16 17l5-5-5-5M21 12H9"/>
+        </svg>
+        Log Out
+      </div>
+
+    </div>
+  </aside>
+
+  <div class="main-col">
+
+    <div class="topbar">
+
+      <a href="index.html" class="side-logo" style="padding:0;">
+        <span class="logo-mark">
+          <svg viewBox="0 0 24 24" style="width:68%;height:68%;">
+            <path d="M5 5h14a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-8.5l-3.8 3.6v-3.6H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z" fill="#fff"/>
+            <line x1="9" y1="10.6" x2="15" y2="10.6" stroke="#2F5FFF" stroke-width="1" stroke-linecap="round"/>
+            <line x1="9" y1="10.6" x2="12" y2="8" stroke="#2F5FFF" stroke-width="1" stroke-linecap="round"/>
+            <line x1="15" y1="10.6" x2="12" y2="8" stroke="#2F5FFF" stroke-width="1" stroke-linecap="round"/>
+            <circle cx="9" cy="10.6" r="1.15" fill="#2F5FFF"/>
+            <circle cx="15" cy="10.6" r="1.15" fill="#2F5FFF"/>
+            <circle cx="12" cy="8" r="1.15" fill="#2F5FFF"/>
+          </svg>
+        </span>
+        Auvii
+      </a>
+
+      <div style="display:flex;align-items:center;gap:10px;">
+
+        <button
+          id="notifBellMobile"
+          onclick="toggleNotifPanel()"
+          style="position:relative;background:none;border:none;cursor:pointer;padding:6px;"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px;">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+          </svg>
+
+          <span
+            id="notifBadgeMobile"
+            style="display:none;position:absolute;top:2px;right:2px;background:var(--orange);color:#fff;font-size:10px;font-weight:700;border-radius:50%;width:16px;height:16px;align-items:center;justify-content:center;"
+          ></span>
+        </button>
+
+        <div class="avatar-circle" id="avatarInitialMobile">…</div>
+
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- OVERVIEW -->
+
+      <div class="view active" id="view-overview">
+
+        <h1 class="page-title" id="overviewGreeting">Welcome</h1>
+
+        <p class="page-sub">
+          Here's what's happening with your Auvii account.
+        </p>
+
+        <div id="agentEmpty" class="empty-card">
+
+          <div class="icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+          </div>
+
+          <h3>You haven't created an AI agent yet</h3>
+
+          <p>
+            It's free and takes just a few minutes — tell it about your store and it's ready to chat.
+          </p>
+
+          <a href="create-agent.html" class="btn btn-primary">
+            Create AI Agent — Free
+          </a>
+
+        </div>
+
+        <div id="agentActive" class="agent-card" style="display:none;">
+
+          <div class="agent-card-left">
+
+            <div class="ai-avatar"></div>
+
+            <div>
+              <h3 id="ovAgentName">—</h3>
+              <div class="agent-status">Active</div>
+            </div>
+
+          </div>
+
+          <div class="agent-actions">
+
+            <a href="training-center.html" class="btn btn-ghost btn-sm">
+              Train AI
+            </a>
+
+            <a
+              href="#"
+              class="btn btn-ghost btn-sm"
+              onclick="showView('crawler');return false;"
+            >
+              Crawl Website
+            </a>
+
+            <a
+              href="#"
+              class="btn btn-ghost btn-sm"
+              onclick="showView('connect');return false;"
+            >
+              Connect Website
+            </a>
+
+          </div>
+        </div>
+
+        <div class="stat-grid" id="statGrid" style="display:none;">
+
+          <div class="stat-card">
+            <div class="num" id="statConversations">0</div>
+            <div class="label">Conversations</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="num" id="statMessages">0</div>
+            <div class="label">Messages</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="num" id="statKnowledge">0</div>
+            <div class="label">Knowledge Items</div>
+          </div>
+
+        </div>
+
+        <div class="sec-title">
+          <h2>Quick actions</h2>
+        </div>
+
+        <div class="quick-grid">
+
+          <div class="quick-card" onclick="window.location.href='training-center.html'">
+            <h4>Training Center</h4>
+            <p>Improve what your AI knows.</p>
+          </div>
+
+          <div class="quick-card" onclick="showView('crawler')">
+            <h4>Website Crawler</h4>
+            <p>Let Auvii learn from your website.</p>
+          </div>
+
+          <div class="quick-card" onclick="showView('conversations')">
+            <h4>Conversations</h4>
+            <p>View customer conversations.</p>
+          </div>
+
+          <div class="quick-card" onclick="showView('connect')">
+            <h4>Connect Website</h4>
+            <p>Install the AI widget.</p>
+          </div>
+
+          <div class="quick-card" onclick="showView('subscription')">
+            <h4>Subscription Plans</h4>
+            <p>Manage your Auvii plan.</p>
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- AI ASSISTANTS -->
+
+      <div class="view" id="view-assistants">
+
+        <h1 class="page-title">AI Assistants</h1>
+
+        <p class="page-sub">
+          Manage the AI assistants on your account.
+        </p>
+
+        <div id="assistantsList">
+          <p style="color:var(--ink-soft);font-size:13.5px;">
+            Loading…
+          </p>
+        </div>
+
+      </div>
+
+
+      <!-- WEBSITE CRAWLER -->
+
+      <div class="view" id="view-crawler">
+
+        <h1 class="page-title">Website Crawler</h1>
+
+        <p class="page-sub">
+          Give Auvii your website URL and let your AI learn from your store.
+        </p>
+
+        <div id="crawlerContent">
+
+          <div class="empty-card" id="crawlerNoAgent" style="display:none;">
+
+            <div class="icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="7"/>
+                <path d="m20 20-4-4"/>
+              </svg>
+            </div>
+
+            <h3>Create an AI first</h3>
+
+            <p>
+              Your website content needs an AI assistant to be connected to.
+            </p>
+
+            <a href="create-agent.html" class="btn btn-primary">
+              Create AI Agent
+            </a>
+
+          </div>
+
+          <div class="card" id="crawlerMainCard" style="display:none;">
+
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+
+              <div style="width:40px;height:40px;border-radius:10px;background:var(--cobalt-dim);display:flex;align-items:center;justify-content:center;flex:none;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--cobalt)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:21px;height:21px;">
+                  <circle cx="11" cy="11" r="7"/>
+                  <path d="m20 20-4-4"/>
+                  <path d="M8 11h6M11 8v6"/>
+                </svg>
+              </div>
+
+              <div>
+                <h3 style="font-size:16px;">
+                  Crawl your website
+                </h3>
+
+                <p style="font-size:12.5px;color:var(--ink-soft);">
+                  Auvii will securely crawl your website with Firecrawl and save the results to your AI training data.
+                </p>
+              </div>
+
+            </div>
+
+            <div style="margin-top:22px;">
+
+              <div class="field">
+                <label for="crawlUrl">
+                  Website URL
+                </label>
+
+                <div class="crawler-form">
+
+                  <input
+                    type="url"
+                    id="crawlUrl"
+                    placeholder="https://yourstore.com"
+                    autocomplete="url"
+                  >
+
+                  <button
+                    class="btn btn-primary"
+                    id="crawlButton"
+                    onclick="startWebsiteCrawl()"
+                  >
+                    Crawl Website
+                  </button>
+
+                </div>
+
+              </div>
+
+              <div class="crawl-help">
+                Use your store's main website URL. For example:
+                <b>https://yourstore.com</b>
+              </div>
+
+              <div id="crawlStatus" class="crawl-status"></div>
+
+              <div id="crawlProgressWrap" class="crawl-progress-wrap">
+                <div class="crawl-progress-head">
+                  <span id="crawlStage" class="crawl-stage">Preparing your crawl…</span>
+                  <span id="crawlElapsed" class="crawl-elapsed">00:00 elapsed</span>
+                </div>
+                <div class="crawl-progress-track" aria-label="Crawl progress">
+                  <div id="crawlProgressBar" class="crawl-progress-bar"></div>
+                </div>
+                <div class="crawl-progress-meta">
+                  <span id="crawlProgressText">Waiting for Firecrawl…</span>
+                  <span id="crawlTimeHint">Auvii will keep your crawl state saved.</span>
+                </div>
+                <div id="crawlBackgroundNote" class="crawl-background-note">
+                  You can leave this page safely. Auvii will resume the crawl when you return.
+                </div>
+              </div>
+
+            </div>
+
+            <div class="crawl-stats">
+
+              <div class="crawl-stat">
+                <div class="n" id="crawlPages">0</div>
+                <div class="l">Pages crawled</div>
+              </div>
+
+              <div class="crawl-stat">
+                <div class="n" id="crawlProducts">0</div>
+                <div class="l">Products</div>
+              </div>
+
+              <div class="crawl-stat">
+                <div class="n" id="crawlFaqs">0</div>
+                <div class="l">FAQs</div>
+              </div>
+
+              <div class="crawl-stat">
+                <div class="n" id="crawlPolicies">0</div>
+                <div class="l">Policies</div>
+              </div>
+
+              <div class="crawl-stat">
+                <div class="n" id="crawlBusiness">0</div>
+                <div class="l">Business info</div>
+              </div>
+
+              <div class="crawl-stat">
+                <div class="n" id="crawlCustom">0</div>
+                <div class="l">Custom knowledge</div>
+              </div>
+
+              <div class="crawl-stat">
+                <div class="n" id="crawlKnowledge">0</div>
+                <div class="l">Total knowledge</div>
+              </div>
+
+            </div>
+
+          </div>
+
+          <div class="card" id="crawlerInfoCard" style="margin-top:14px;display:none;">
+
+            <h3 style="font-size:15px;margin-bottom:8px;">
+              How crawling works
+            </h3>
+
+            <div style="font-size:13px;color:var(--ink-soft);line-height:1.8;">
+              <div>1. Enter your store URL.</div>
+              <div>2. Auvii securely sends it to the crawler.</div>
+              <div>3. Your website content is collected.</div>
+              <div>4. Useful information can be added to your AI knowledge.</div>
+              <div>5. Your AI can use that information when answering customers.</div>
+            </div>
+
+          </div>
+
+          <div class="sec-title" id="crawlHistoryTitle" style="display:none;">
+            <h2>Latest crawl</h2>
+          </div>
+
+          <div class="card" id="crawlHistory" style="display:none;"></div>
+
+        </div>
+
+      </div>
+
+
+      <!-- CONVERSATIONS -->
+
+      <div class="view" id="view-conversations">
+
+        <h1 class="page-title">Conversations</h1>
+
+        <p class="page-sub">
+          See what your customers are asking your AI.
+        </p>
+
+        <div id="conversationsList">
+          <p style="color:var(--ink-soft);font-size:13.5px;">
+            Loading…
+          </p>
+        </div>
+
+      </div>
+
+
+      <!-- CONNECT WEBSITE -->
+
+      <div class="view" id="view-connect">
+
+        <h1 class="page-title">Connect Your AI</h1>
+
+        <p class="page-sub">
+          Add the Auvii widget to your website.
+        </p>
+
+        <div id="connectContent">
+          <p style="color:var(--ink-soft);font-size:13.5px;">
+            Loading…
+          </p>
+        </div>
+
+      </div>
+
+
+      <!-- SUBSCRIPTION -->
+
+      <div class="view" id="view-subscription">
+
+        <h1 class="page-title">Subscription</h1>
+
+        <p class="page-sub">
+          Choose a plan to unlock more Auvii features. Paid plans are one-time purchases.
+        </p>
+
+        <div id="currentSubBanner"></div>
+
+        <div class="service-grid" id="serviceGrid">
+          <p style="color:var(--ink-soft);font-size:13.5px;">
+            Loading…
+          </p>
+        </div>
+
+      </div>
+
+
+      <!-- SETTINGS -->
+
+      <div class="view" id="view-settings">
+
+        <h1 class="page-title">Settings</h1>
+
+        <p class="page-sub">
+          Manage your account and AI.
+        </p>
+
+        <div class="sec-title">
+          <h2>Account</h2>
+        </div>
+
+        <div class="card">
+
+          <div class="settings-row">
+
+            <span class="label">
+              Store name
+            </span>
+
+            <div style="display:flex;align-items:center;gap:8px;">
+
+              <input
+                type="text"
+                id="setStoreNameInput"
+                value=""
+                style="border:1.5px solid var(--line);border-radius:8px;padding:8px 11px;font-family:'Inter',sans-serif;font-size:14px;color:var(--ink);background:var(--paper);width:180px;"
+              >
+
+              <button
+                class="btn btn-primary btn-sm"
+                onclick="saveStoreName()"
+                id="saveStoreNameBtn"
+              >
+                Save
+              </button>
+
+            </div>
+
+          </div>
+
+          <div class="settings-row">
+            <span class="label">Email</span>
+            <span class="value" id="setEmail">—</span>
+          </div>
+
+        </div>
+
+        <div class="error-box" id="settingsError" style="margin-top:10px;"></div>
+
+        <div
+          class="error-box"
+          id="settingsSuccess"
+          style="margin-top:10px;background:var(--mint-dim);color:#0E7A5C;border-color:rgba(31,170,128,.35);"
+        ></div>
+
+        <div class="sec-title">
+          <h2>AI</h2>
+        </div>
+
+        <div class="card" id="setAiCard">
+          <p style="color:var(--ink-soft);font-size:13.5px;">
+            Loading…
+          </p>
+        </div>
+
+        <div class="sec-title">
+          <h2>Security</h2>
+        </div>
+
+        <div class="card">
+
+          <div class="settings-row">
+
+            <span class="label">
+              Log out of Auvii
+            </span>
+
+            <button class="btn btn-ghost btn-sm" onclick="logout()">
+              Log Out
+            </button>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- MOBILE NAV -->
+
+<nav class="bottom-nav">
+
+  <div class="bnav-item active" data-view="overview" onclick="showView('overview')">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="3" width="7" height="9"/>
+      <rect x="14" y="3" width="7" height="5"/>
+      <rect x="14" y="12" width="7" height="9"/>
+      <rect x="3" y="16" width="7" height="5"/>
+    </svg>
+    <span>Home</span>
+  </div>
+
+  <a href="training-center.html" class="bnav-item" data-view="training">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+    </svg>
+    <span>Train</span>
+  </a>
+
+  <!-- MOBILE CRAWLER -->
+
+  <div class="bnav-item" data-view="crawler" onclick="showView('crawler')">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="11" cy="11" r="7"/>
+      <path d="m20 20-4-4"/>
+      <path d="M8 11h6M11 8v6"/>
+    </svg>
+    <span>Crawl</span>
+  </div>
+
+  <div class="bnav-item" data-view="connect" onclick="showView('connect')">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"/>
+      <path d="M2 12h20M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20z"/>
+    </svg>
+    <span>Connect</span>
+  </div>
+
+  <div class="bnav-item" data-view="subscription" onclick="showView('subscription')">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+      <path d="M9 4h6v3H9zM9 12h6M9 16h6"/>
+    </svg>
+    <span>Plan</span>
+  </div>
+
+  <div class="bnav-item" data-view="settings" onclick="showView('settings')">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="3"/>
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83"/>
+    </svg>
+    <span>Settings</span>
+  </div>
+
+</nav>
+
+
+<!-- MODAL -->
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modalContent"></div>
+</div>
+
+
+<!-- NOTIFICATIONS -->
+
+<div id="notifPanel"></div>
+
+
+<!-- SUPPORT BUBBLE -->
+
+<button
+  id="supportBubble"
+  onclick="toggleSupportWidget()"
+  aria-label="Chat with Auvii"
+>
+  <img
+    class="support-avatar"
+    src="https://ui-avatars.com/api/?name=Auvii+Team&background=2F5FFF&color=fff&size=96&bold=true"
+    alt="Auvii Team"
+  >
+</button>
+
+
+<!-- SUPPORT PANEL -->
+
+<div id="supportPanel">
+
+  <div id="supportHead">
+
+    <div style="display:flex;align-items:center;gap:10px;">
+      <img
+        src="https://ui-avatars.com/api/?name=Auvii+Team&background=ffffff&color=2F5FFF&size=64&bold=true"
+        alt="Auvii Team"
+        style="width:38px;height:38px;border-radius:50%;object-fit:cover;background:#fff;"
+      >
+      <div>
+        <div class="t">Auvii Team</div>
+        <div class="s">● We're here to help</div>
+      </div>
+    </div>
+
+    <button onclick="toggleSupportWidget()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round">
+        <path d="M18 6 6 18M6 6l12 12"/>
+      </svg>
+    </button>
+
+  </div>
+
+  <div id="supportThread"></div>
+
+  <div id="supportSetup">
+
+    <textarea
+      id="supportFirstMsg"
+      placeholder="How can we help?"
+    ></textarea>
+
+    <button
+      class="btn btn-primary btn-sm"
+      onclick="startSupportChat()"
+    >
+      Send
+    </button>
+
+  </div>
+
+  <div id="supportFoot">
+
+    <input
+      type="text"
+      id="supportInput"
+      placeholder="Type a message…"
+    >
+
+    <button
+      class="btn btn-primary btn-sm"
+      onclick="sendSupportMessage()"
+    >
+      Send
+    </button>
+
+  </div>
+
+</div>
+
+
+<script>
+/* =========================================================
+   AUVII ACCOUNT DASHBOARD
+   ========================================================= */
+
+let currentUser = null;
+let currentAgent = null;
+let PLANS = {};
+
+/* Auvii plan definitions. The 7-day trial gets full access;
+   Basic intentionally has a smaller feature set. */
+const AUVII_PLANS = {
+  free: {
+    key:'free', name:'Free Trial', price:0, duration:'7 days', billing:'trial',
+    features:['Full Auvii access for 7 days','AI customer-service assistant','Website crawler','Training Center','Test before launch','Website connection','Analytics','Sales Assistant','AI customization']
+  },
+  basic: {
+    key:'basic', name:'Basic', price:5, duration:'month', billing:'one_time',
+    features:['AI customer-service assistant','Website crawler','Unlimited training','Test before launch','Website connection','Conversations']
+  },
+  standard: {
+    key:'standard', name:'Standard', price:10, duration:'month', billing:'one_time',
+    features:['Everything in Basic','Analytics','Sales Assistant','Product recommendations','Upselling and cross-selling']
+  },
+  premium: {
+    key:'premium', name:'Premium', price:15, duration:'month', billing:'one_time',
+    features:['Everything in Standard','Advanced Analytics','Advanced Sales Assistant','Full AI customization']
+  }
+};
+
+let currentSubscription = null;
+
+let notifPollTimer = null;
+
+let supportChatId = null;
+let supportPollTimer = null;
+let supportLastCount = 0;
+let supportBubbleWasDragged = false;
+
+
+/* =========================================================
+   HELPERS
+   ========================================================= */
+
+function escapeHtml(value){
+  return String(value ?? '')
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#039;');
+}
+
+function escapeAttr(value){
+  return escapeHtml(value);
+}
+
+
+/* =========================================================
+   AGENT ID SAFETY
+   ========================================================= */
+
+const AUVII_UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+async function ensureCurrentAgent(){
+
+  if(currentAgent?.id){
+    return currentAgent;
+  }
+
+  if(!currentUser?.id){
+    const {data:{session},error:sessionError} =
+      await sb.auth.getSession();
+
+    if(sessionError) throw sessionError;
+
+    if(!session?.user?.id){
+      window.location.href = 'auth.html';
+      return null;
+    }
+
+    currentUser = currentUser || {
+      id:session.user.id,
+      storeName:session.user.user_metadata?.store_name || session.user.email || 'My Store',
+      email:session.user.email || ''
+    };
+  }
+
+  const {data:agents,error} = await sb
+    .from('ai_agents')
+    .select('*')
+    .eq('user_id',currentUser.id)
+    .order('created_at',{ascending:false})
+    .limit(1);
+
+  if(error) throw error;
+
+  currentAgent =
+    agents && agents.length
+      ? agents[0]
+      : null;
+
+  return currentAgent;
+}
+
+function requireValidAgentId(agent){
+
+  const agentId = String(agent?.id || '').trim();
+
+  if(!agentId){
+    throw new Error(
+      'No AI Agent is connected to this account. Create an AI Agent first.'
+    );
+  }
+
+  if(!AUVII_UUID_RE.test(agentId)){
+    throw new Error(
+      'Your AI Agent ID is invalid. Refresh the dashboard and try again.'
+    );
+  }
+
+  return agentId;
+}
+
+function setText(id,value){
+  const el = document.getElementById(id);
+  if(el) el.textContent = value ?? '';
+}
+
+function safeDate(value){
+  if(!value) return '—';
+
+  const date = new Date(value);
+
+  if(Number.isNaN(date.getTime())){
+    return '—';
+  }
+
+  return date.toLocaleDateString();
+}
+
+function safeDateTime(value){
+  if(!value) return '—';
+
+  const date = new Date(value);
+
+  if(Number.isNaN(date.getTime())){
+    return '—';
+  }
+
+  return date.toLocaleString();
+}
+
+
+/* =========================================================
+   VIEW SWITCHING
+   ========================================================= */
+
+function showView(name){
+
+  document.querySelectorAll('.view').forEach(view=>{
+    view.classList.remove('active');
+  });
+
+  const target = document.getElementById('view-' + name);
+
+  if(target){
+    target.classList.add('active');
+  }
+
+  if(name !== 'crawler' && crawlerProcessing){
+    setCrawlerBackgroundNote(false);
+    setCrawlerStatus('loading','Crawl is continuing in the background. Return to Website Crawler to resume progress updates.');
+  }
+
+  document.querySelectorAll('.nav-item,.bnav-item').forEach(item=>{
+    item.classList.toggle(
+      'active',
+      item.dataset.view === name
+    );
+  });
+
+  window.scrollTo({
+    top:0,
+    behavior:'smooth'
+  });
+
+  if(name === 'crawler'){
+    loadCrawler();
+  }
+
+  if(name === 'subscription'){
+    renderPlanCards();
+  }
+}
+
+
+/* =========================================================
+   LOGOUT
+   ========================================================= */
+
+async function logout(){
+
+  try{
+    await sb.auth.signOut();
+  }catch(error){
+    console.error('Logout error:',error);
+  }
+
+  window.location.href = 'auth.html';
+}
+
+
+/* =========================================================
+   OVERVIEW
+   ========================================================= */
+
+async function loadOverview(){
+
+  if(!currentUser) return;
+
+  setText(
+    'overviewGreeting',
+    `Welcome, ${currentUser.storeName}`
+  );
+
+  if(!currentAgent){
+
+    document.getElementById('agentEmpty').style.display = 'block';
+    document.getElementById('agentActive').style.display = 'none';
+    document.getElementById('statGrid').style.display = 'none';
+
+    return;
+  }
+
+  document.getElementById('agentEmpty').style.display = 'none';
+  document.getElementById('agentActive').style.display = 'flex';
+  document.getElementById('statGrid').style.display = 'grid';
+
+  setText(
+    'ovAgentName',
+    currentAgent.agent_name || 'Auvii Assistant'
+  );
+
+  let conversationCount = 0;
+  let productCount = 0;
+  let faqCount = 0;
+  let messageCount = 0;
+
+  try{
+
+    const { count,error } = await sb
+      .from('conversations')
+      .select('id',{
+        count:'exact',
+        head:true
+      })
+      .eq('agent_id',currentAgent.id);
+
+    if(error){
+      console.error('Conversation count error:',error);
+    }else{
+      conversationCount = count || 0;
+    }
+
+  }catch(error){
+    console.error(error);
+  }
+
+  try{
+
+    const { count,error } = await sb
+      .from('products')
+      .select('id',{
+        count:'exact',
+        head:true
+      })
+      .eq('agent_id',currentAgent.id);
+
+    if(error){
+      console.error('Product count error:',error);
+    }else{
+      productCount = count || 0;
+    }
+
+  }catch(error){
+    console.error(error);
+  }
+
+  try{
+
+    const { count,error } = await sb
+      .from('faqs')
+      .select('id',{
+        count:'exact',
+        head:true
+      })
+      .eq('agent_id',currentAgent.id);
+
+    if(error){
+      console.error('FAQ count error:',error);
+    }else{
+      faqCount = count || 0;
+    }
+
+  }catch(error){
+    console.error(error);
+  }
+
+  try{
+
+    const { data:convIds,error } = await sb
+      .from('conversations')
+      .select('id')
+      .eq('agent_id',currentAgent.id);
+
+    if(error){
+      console.error('Conversation IDs error:',error);
+    }else if(convIds && convIds.length){
+
+      const { count,messageError } = await sb
+        .from('messages')
+        .select('id',{
+          count:'exact',
+          head:true
+        })
+        .in(
+          'conversation_id',
+          convIds.map(c=>c.id)
+        );
+
+      if(messageError){
+        console.error(
+          'Message count error:',
+          messageError
+        );
+      }else{
+        messageCount = count || 0;
+      }
+    }
+
+  }catch(error){
+    console.error(error);
+  }
+
+  setText(
+    'statConversations',
+    conversationCount
+  );
+
+  setText(
+    'statMessages',
+    messageCount
+  );
+
+  setText(
+    'statKnowledge',
+    productCount + faqCount
+  );
+}
+
+
+/* =========================================================
+   AI ASSISTANTS
+   ========================================================= */
+
+async function loadAssistants(){
+
+  const list =
+    document.getElementById('assistantsList');
+
+  if(!list) return;
+
+  if(!currentAgent){
+
+    list.innerHTML = `
+      <div class="empty-card">
+
+        <div class="icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+          </svg>
+        </div>
+
+        <h3>No AI assistants yet</h3>
+
+        <p>
+          Create your first one for free.
+        </p>
+
+        <a href="create-agent.html" class="btn btn-primary">
+          Create AI Agent — Free
+        </a>
+
+      </div>
+    `;
+
+    return;
+  }
+
+  list.innerHTML = `
+    <div class="assistant-row">
+
+      <div>
+
+        <div style="font-weight:600;font-size:15px;">
+          ${escapeHtml(currentAgent.agent_name || 'Auvii Assistant')}
+        </div>
+
+        <div style="font-size:12.5px;color:var(--ink-soft);margin-top:3px;">
+          Created ${safeDate(currentAgent.created_at)}
+          · Status: ${escapeHtml(currentAgent.status || 'active')}
+        </div>
+
+      </div>
+
+      <div style="display:flex;gap:8px;">
+
+        <a href="training-center.html" class="btn btn-ghost btn-sm">
+          Train
+        </a>
+
+        <button
+          class="btn btn-ghost btn-sm"
+          onclick="showView('crawler')"
+        >
+          Crawl
+        </button>
+
+        <button
+          class="btn btn-ghost btn-sm"
+          onclick="showView('connect')"
+        >
+          Connect
+        </button>
+
+      </div>
+
+    </div>
+  `;
+}
+
+
+/* =========================================================
+   WEBSITE CRAWLER
+   ========================================================= */
+
+/*
+  IMPORTANT:
+  Your Supabase Edge Function is:
+
+  crawl-website
+
+  The dashboard calls:
+
+  /functions/v1/crawl-website
+
+  The request sends:
+  {
+    url: "...",
+    website_url: "...",
+    agent_id: "..."
+  }
+
+  Sending both url and website_url makes the dashboard
+  compatible with either common naming convention.
+*/
+
+const CRAWLER_FUNCTION = 'crawl-website';
+
+
+function normaliseUrl(value){
+
+  let url = String(value || '').trim();
+
+  if(!url){
+    return '';
+  }
+
+  if(!/^https?:\/\//i.test(url)){
+    url = 'https://' + url;
+  }
+
+  try{
+
+    const parsed = new URL(url);
+
+    if(
+      parsed.protocol !== 'http:' &&
+      parsed.protocol !== 'https:'
+    ){
+      return '';
+    }
+
+    return parsed.href;
+
+  }catch(error){
+    return '';
+  }
+}
+
+
+function setCrawlerStatus(type,message){
+
+  const box =
+    document.getElementById('crawlStatus');
+
+  if(!box) return;
+
+  if(!message){
+
+    box.className = 'crawl-status';
+    box.innerHTML = '';
+    return;
+  }
+
+  box.className =
+    'crawl-status show ' + type;
+
+  if(type === 'loading'){
+
+    box.innerHTML = `
+      <span class="crawl-spinner"></span>
+      <span>${escapeHtml(message)}</span>
+    `;
+
+  }else{
+
+    box.innerHTML = `
+      <span>${escapeHtml(message)}</span>
+    `;
+  }
+}
+
+
+function resetCrawlerStats(){
+
+  setText('crawlPages','0');
+  setText('crawlProducts','0');
+  setText('crawlFaqs','0');
+  setText('crawlPolicies','0');
+  setText('crawlBusiness','0');
+  setText('crawlCustom','0');
+  setText('crawlKnowledge','0');
+}
+
+
+/*
+  The crawler is asynchronous. Firecrawl can take longer than a
+  normal browser request, so account.html must NEVER wait for one
+  long request. The Edge Function supports three actions:
+
+    start   -> starts Firecrawl and returns firecrawl_crawl_id
+    status  -> checks Firecrawl progress
+    process_batch -> processes a small batch of completed pages
+
+  Keeping this state in localStorage also lets the page recover if
+  the user refreshes the account page while a crawl is running.
+*/
+const CRAWL_STATE_KEY = 'auvii_active_crawl';
+let crawlerPollTimer = null;
+let crawlerProcessing = false;
+let crawlerTimer = null;
+let crawlerPageVisible = false;
+
+
+function formatCrawlerElapsed(startedAt){
+  const start = new Date(startedAt || '').getTime();
+  if(!Number.isFinite(start)) return '00:00 elapsed';
+  const seconds = Math.max(0,Math.floor((Date.now()-start)/1000));
+  const h = Math.floor(seconds/3600);
+  const m = Math.floor((seconds%3600)/60);
+  const s = seconds%60;
+  return h > 0
+    ? `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')} elapsed`
+    : `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')} elapsed`;
+}
+
+function updateCrawlerTimer(){
+  const state = getActiveCrawl();
+  const el = document.getElementById('crawlElapsed');
+  if(el && state?.startedAt) el.textContent = formatCrawlerElapsed(state.startedAt);
+}
+
+function startCrawlerTimer(startedAt){
+  if(startedAt){
+    const state = getActiveCrawl() || {};
+    state.startedAt = startedAt;
+    saveActiveCrawl(state);
+  }
+  clearInterval(crawlerTimer);
+  updateCrawlerTimer();
+  crawlerTimer = setInterval(updateCrawlerTimer,1000);
+}
+
+function stopCrawlerTimer(){
+  clearInterval(crawlerTimer);
+  crawlerTimer = null;
+}
+
+function setCrawlerProgress(percent,stage,text,hint){
+  const wrap=document.getElementById('crawlProgressWrap');
+  const bar=document.getElementById('crawlProgressBar');
+  const stageEl=document.getElementById('crawlStage');
+  const textEl=document.getElementById('crawlProgressText');
+  const hintEl=document.getElementById('crawlTimeHint');
+  if(wrap) wrap.classList.add('show');
+  if(bar) bar.style.width=Math.max(0,Math.min(100,Number(percent)||0))+'%';
+  if(stageEl) stageEl.textContent=stage||'';
+  if(textEl) textEl.textContent=text||'';
+  if(hintEl) hintEl.textContent=hint||'';
+}
+
+function hideCrawlerProgress(){
+  const wrap=document.getElementById('crawlProgressWrap');
+  if(wrap) wrap.classList.remove('show');
+  const note=document.getElementById('crawlBackgroundNote');
+  if(note) note.classList.remove('show');
+}
+
+function setCrawlerBackgroundNote(show){
+  const note=document.getElementById('crawlBackgroundNote');
+  if(note) note.classList.toggle('show',!!show);
+}
+
+function isCrawlerViewActive(){
+  const view=document.getElementById('view-crawler');
+  return !!view && view.classList.contains('active');
+}
+
+
+function saveActiveCrawl(state){
+  try{
+    localStorage.setItem(
+      CRAWL_STATE_KEY,
+      JSON.stringify(state)
+    );
+  }catch(error){
+    console.warn('Could not save crawler state:',error);
+  }
+}
+
+
+function getActiveCrawl(){
+  try{
+    const raw = localStorage.getItem(CRAWL_STATE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  }catch(error){
+    return null;
+  }
+}
+
+
+function clearActiveCrawl(){
+  try{
+    localStorage.removeItem(CRAWL_STATE_KEY);
+  }catch(error){}
+}
+
+
+function crawlerNumber(source,keys){
+  if(!source || typeof source !== 'object') return null;
+
+  for(const key of keys){
+    const value = source[key];
+
+    if(typeof value === 'number' && Number.isFinite(value)){
+      return value;
+    }
+  }
+
+  return null;
+}
+
+
+function applyCrawlerCounts(data,state){
+
+  const sources = [
+    data?.counts,
+    data?.stats,
+    data?.statistics,
+    data?.result?.counts,
+    data?.result?.stats,
+    data?.data?.counts,
+    data?.data?.stats,
+    data?.result,
+    data?.data,
+    data
+  ].filter(Boolean);
+
+  const findCount = keys => {
+    for(const source of sources){
+      const value = crawlerNumber(source,keys);
+      if(value !== null) return value;
+    }
+    return null;
+  };
+
+  const pages = findCount(['pages','pages_crawled','pagesCrawled','completed','processed']);
+  const products = findCount(['products','products_found','productsFound','product_count','productCount']);
+  const faqs = findCount(['faqs','faqs_found','faqsFound','faq_count','faqCount']);
+  const policies = findCount(['policies','policies_found','policiesFound','policy_count','policyCount']);
+  const business = findCount(['business_information','businessInfo','business_information_found','businessInfoFound','business_count','businessCount']);
+  const custom = findCount(['custom_knowledge','customKnowledge','custom_knowledge_found','customKnowledgeFound','custom_count','customCount']);
+  const knowledge = findCount(['knowledge','knowledge_added','knowledgeAdded','knowledge_items','knowledgeItems','knowledge_count','knowledgeCount']);
+
+  if(pages !== null) setText('crawlPages',pages);
+  if(products !== null) setText('crawlProducts',products);
+  if(faqs !== null) setText('crawlFaqs',faqs);
+  if(policies !== null) setText('crawlPolicies',policies);
+  if(business !== null) setText('crawlBusiness',business);
+  if(custom !== null) setText('crawlCustom',custom);
+  if(knowledge !== null) setText('crawlKnowledge',knowledge);
+
+  if(state){
+    if(pages !== null) state.pages = pages;
+    if(products !== null) state.products = products;
+    if(faqs !== null) state.faqs = faqs;
+    if(policies !== null) state.policies = policies;
+    if(business !== null) state.business = business;
+    if(custom !== null) state.custom = custom;
+    if(knowledge !== null) state.knowledge = knowledge;
+  }
+}
+
+
+function restoreCrawlerCounts(state){
+  if(!state) return;
+
+  const keys = [
+    ['crawlPages','pages'],
+    ['crawlProducts','products'],
+    ['crawlFaqs','faqs'],
+    ['crawlPolicies','policies'],
+    ['crawlBusiness','business'],
+    ['crawlCustom','custom'],
+    ['crawlKnowledge','knowledge']
+  ];
+
+  keys.forEach(([element,key])=>{
+    if(typeof state[key] === 'number'){
+      setText(element,state[key]);
+    }
+  });
+}
+
+
+function extractNumber(data,keys){
+
+  if(!data || typeof data !== 'object'){
+    return 0;
+  }
+
+  for(const key of keys){
+
+    const value = data[key];
+
+    if(typeof value === 'number'){
+      return value;
+    }
+
+    if(Array.isArray(value)){
+      return value.length;
+    }
+  }
+
+  return 0;
+}
+
+
+function extractCrawlerStats(data){
+
+  const source =
+    data?.counts ||
+    data?.stats ||
+    data?.statistics ||
+    data?.result?.counts ||
+    data?.result?.stats ||
+    data?.result ||
+    data?.data?.counts ||
+    data?.data?.stats ||
+    data?.data ||
+    data ||
+    {};
+
+  return {
+    pages: crawlerNumber(source,['pages','pages_crawled','pagesCrawled','completed','processed']) || 0,
+    products: crawlerNumber(source,['products','products_found','productsFound','product_count','productCount']) || 0,
+    faqs: crawlerNumber(source,['faqs','faqs_found','faqsFound','faq_count','faqCount']) || 0,
+    policies: crawlerNumber(source,['policies','policies_found','policiesFound','policy_count','policyCount']) || 0,
+    business: crawlerNumber(source,['business_information','businessInfo','business_information_found','businessInfoFound','business_count','businessCount']) || 0,
+    custom: crawlerNumber(source,['custom_knowledge','customKnowledge','custom_knowledge_found','customKnowledgeFound','custom_count','customCount']) || 0,
+    knowledge: crawlerNumber(source,['knowledge','knowledge_added','knowledgeAdded','knowledge_items','knowledgeItems','knowledge_count','knowledgeCount']) || 0
+  };
+}
+
+
+function showCrawlerResult(data,url){
+
+  const state = getActiveCrawl() || {};
+
+  applyCrawlerCounts(data,state);
+
+  const stats = extractCrawlerStats(data);
+
+  if(stats.pages) setText('crawlPages',stats.pages);
+  if(stats.products) setText('crawlProducts',stats.products);
+  if(stats.faqs) setText('crawlFaqs',stats.faqs);
+  if(stats.policies) setText('crawlPolicies',stats.policies);
+  if(stats.business) setText('crawlBusiness',stats.business);
+  if(stats.custom) setText('crawlCustom',stats.custom);
+  if(stats.knowledge) setText('crawlKnowledge',stats.knowledge);
+
+  const history =
+    document.getElementById('crawlHistory');
+
+  const title =
+    document.getElementById('crawlHistoryTitle');
+
+  if(!history || !title) return;
+
+  const resultMessage =
+    data?.message ||
+    data?.result?.message ||
+    data?.data?.message ||
+    'Website crawl completed successfully.';
+
+  history.innerHTML = `
+    <div class="crawl-history-row">
+      <div style="min-width:0;">
+        <div class="crawl-url">${escapeHtml(url)}</div>
+        <div style="font-size:12px;color:var(--mint);margin-top:3px;">
+          ${escapeHtml(resultMessage)}
+        </div>
+        <div style="font-size:12px;color:var(--ink-soft);margin-top:8px;">
+          ${stats.pages} pages · ${stats.products} products · ${stats.faqs} FAQs · ${stats.policies} policies · ${stats.business} business info · ${stats.custom} custom knowledge
+        </div>
+      </div>
+      <div class="crawl-time">${safeDateTime(new Date().toISOString())}</div>
+    </div>
+  `;
+
+  title.style.display = 'flex';
+  history.style.display = 'block';
+}
+
+
+async function crawlerRequest(session,body){
+
+  /*
+     The crawl-website Edge Function expects the Agent ID as `agentId`.
+     Keep `agent_id` as well because older versions of the function used
+     snake_case. This makes the dashboard compatible with both versions.
+  */
+  /*
+     Keep BOTH camelCase and snake_case names because the deployed
+     crawl-website function may validate the camelCase contract while
+     older code may still read the snake_case fields.
+  */
+  const resolvedAgentId = String(
+    body?.agentId || body?.agent_id || currentAgent?.id || ''
+  ).trim();
+
+  const resolvedCrawlId = String(
+    body?.crawlId ||
+    body?.crawl_id ||
+    body?.firecrawl_crawl_id ||
+    body?.firecrawlCrawlId ||
+    ''
+  ).trim();
+
+  const requestBody = {
+    ...body,
+    agentId: resolvedAgentId,
+    agent_id: resolvedAgentId
+  };
+
+  /* crawlId is required by status/process requests, but must not be
+     fabricated. Only add it when a real crawl ID exists. */
+  if(resolvedCrawlId){
+    requestBody.crawlId = resolvedCrawlId;
+    requestBody.crawl_id = resolvedCrawlId;
+    requestBody.firecrawl_crawl_id = resolvedCrawlId;
+  }
+
+  if(!requestBody.agentId){
+    throw new Error('Agent ID is required. Create an AI Agent first.');
+  }
+
+  if(['status','process_batch'].includes(String(body?.action || '').toLowerCase()) && !resolvedCrawlId){
+    throw new Error('Crawl ID is required. The website crawl did not return a valid crawl ID.');
+  }
+
+  const response = await fetch(
+    `${SUPABASE_URL}/functions/v1/${CRAWLER_FUNCTION}`,
+    {
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'apikey': typeof SUPABASE_ANON_KEY !== 'undefined' ? SUPABASE_ANON_KEY : '',
+        'Authorization':`Bearer ${session.access_token}`
+      },
+      body:JSON.stringify(requestBody)
+    }
+  );
+
+  const raw = await response.text();
+  let data = {};
+
+  try{
+    data = raw ? JSON.parse(raw) : {};
+  }catch(error){
+    data = {raw};
+  }
+
+  if(!response.ok){
+    throw new Error(
+      data?.error ||
+      data?.message ||
+      data?.details ||
+      data?.raw ||
+      `Crawler returned HTTP ${response.status}.`
+    );
+  }
+
+  if(data?.error){
+    throw new Error(data.error);
+  }
+
+  return data;
+}
+
+
+function crawlerProgressMessage(status){
+
+  const total = Number(status?.total || status?.data?.total || status?.result?.total || 0);
+  const completed = Number(status?.completed || status?.data?.completed || status?.result?.completed || 0);
+  const failed = Number(status?.failed || status?.data?.failed || status?.result?.failed || 0);
+
+  if(total > 0){
+    const percent = Math.min(100,Math.round((completed / total) * 100));
+    return `Firecrawl is scanning your website… ${percent}% (${completed}/${total} pages)${failed ? ` · ${failed} failed` : ''}`;
+  }
+
+  return 'Firecrawl is scanning your website…';
+}
+
+
+async function waitForFirecrawl(session,crawlId,state){
+
+  const maxChecks = 225;
+
+  for(let check=0; check<maxChecks; check++){
+
+    if(!isCrawlerViewActive()){
+      setCrawlerBackgroundNote(false);
+      return { paused:true };
+    }
+
+    const status = await crawlerRequest(session,{
+      action:'status',
+      crawlId:crawlId,
+      crawl_id:crawlId,
+      firecrawl_crawl_id:crawlId,
+      agentId:requireValidAgentId(currentAgent),
+      agent_id:requireValidAgentId(currentAgent)
+    });
+
+    applyCrawlerCounts(status,state);
+
+    const statusValue = String(
+      status?.status ||
+      status?.data?.status ||
+      status?.result?.status ||
+      ''
+    ).toLowerCase();
+
+    const ready =
+      status?.ready === true ||
+      status?.data?.ready === true ||
+      status?.result?.ready === true;
+
+    const completed =
+      ready ||
+      ['completed','complete','done','success','succeeded'].includes(statusValue);
+
+    if(statusValue === 'failed' || statusValue === 'error'){
+      throw new Error(
+        status?.error ||
+        status?.message ||
+        'Firecrawl could not finish the website crawl.'
+      );
+    }
+
+    const total = Number(status?.total || status?.data?.total || status?.result?.total || 0);
+    const completedPages = Number(status?.completed || status?.data?.completed || status?.result?.completed || 0);
+    const percent = total > 0 ? Math.round((completedPages/total)*100) : 5;
+    setCrawlerProgress(
+      percent,
+      completed ? 'Organizing your store knowledge' : 'Scanning your website',
+      completed ? 'Website scan finished. Auvii is organizing the useful information…' : `${completedPages}/${total || '…'} pages scanned`,
+      completed ? 'Next: saving products, FAQs, policies and business information.' : 'You can leave this page safely; the crawl state is saved.'
+    );
+    setCrawlerStatus(
+      'loading',
+      completed
+        ? 'Website scan finished. Auvii is now organizing the information…'
+        : crawlerProgressMessage(status)
+    );
+
+    saveActiveCrawl(state);
+
+    if(completed){
+      return status;
+    }
+
+    await new Promise(resolve=>setTimeout(resolve,4000));
+  }
+
+  throw new Error(
+    'The website crawl is taking longer than expected. You can refresh this page and Auvii will try to continue the active crawl.'
+  );
+}
+
+
+async function processCrawlerPages(session,crawlId,state){
+
+  let offset = Number(state.offset || 0);
+  let guard = 0;
+
+  while(guard < 500){
+
+    if(!isCrawlerViewActive()){
+      setCrawlerBackgroundNote(false);
+      return { paused:true };
+    }
+
+    guard++;
+
+    const processedSoFar = Number(state.pages || 0);
+    setCrawlerProgress(
+      100,
+      'Organizing your store knowledge',
+      `${processedSoFar} pages processed — saving structured knowledge…`,
+      'Auvii is placing useful information into Products, FAQs, Policies, Business Information and Custom Knowledge.'
+    );
+    setCrawlerStatus(
+      'loading',
+      `Organizing website knowledge… ${processedSoFar} pages processed`
+    );
+
+    const result = await crawlerRequest(session,{
+      action:'process_batch',
+      crawlId:crawlId,
+      crawl_id:crawlId,
+      firecrawl_crawl_id:crawlId,
+      agentId:requireValidAgentId(currentAgent),
+      agent_id:requireValidAgentId(currentAgent),
+      offset:offset,
+      batch_size:2,
+      limit:2
+    });
+
+    applyCrawlerCounts(result,state);
+
+    const nextOffset =
+      result?.next_offset ??
+      result?.nextOffset ??
+      result?.data?.next_offset ??
+      result?.data?.nextOffset ??
+      result?.result?.next_offset ??
+      result?.result?.nextOffset;
+
+    const done =
+      result?.done === true ||
+      result?.complete === true ||
+      result?.completed === true ||
+      result?.data?.done === true ||
+      result?.result?.done === true;
+
+    if(typeof nextOffset === 'number' && nextOffset > offset){
+      offset = nextOffset;
+    }else if(!done){
+      offset += 2;
+    }
+
+    state.offset = offset;
+    saveActiveCrawl(state);
+
+    if(done){
+      return result;
+    }
+
+    await new Promise(resolve=>setTimeout(resolve,150));
+  }
+
+  throw new Error('Crawler processing stopped after reaching the safety limit.');
+}
+
+
+async function continueActiveWebsiteCrawl(){
+
+  if(crawlerProcessing) return;
+
+  try{
+    const agent = await ensureCurrentAgent();
+    if(!agent) return;
+    requireValidAgentId(agent);
+  }catch(error){
+    setCrawlerStatus('error',error?.message || 'Could not load your AI Agent.');
+    return;
+  }
+
+  const state = getActiveCrawl();
+
+  if(!state?.crawlId){
+    return;
+  }
+
+  crawlerProcessing = true;
+
+  const button = document.getElementById('crawlButton');
+
+  if(button){
+    button.disabled = true;
+    button.textContent = 'Crawling…';
+  }
+
+  restoreCrawlerCounts(state);
+
+  try{
+    const {data:{session},error:sessionError} = await sb.auth.getSession();
+
+    if(sessionError) throw sessionError;
+    if(!session){
+      window.location.href = 'auth.html';
+      return;
+    }
+
+    const crawlStatus = await waitForFirecrawl(
+      session,
+      state.crawlId,
+      state
+    );
+
+    if(crawlStatus?.paused){
+      return;
+    }
+
+    const processed = await processCrawlerPages(
+      session,
+      state.crawlId,
+      state
+    );
+
+    if(processed?.paused){
+      return;
+    }
+
+    applyCrawlerCounts(processed,state);
+    saveActiveCrawl(state);
+
+    showCrawlerResult(
+      Object.assign({},crawlStatus,processed,{
+        counts:{
+          pages:state.pages || 0,
+          products:state.products || 0,
+          faqs:state.faqs || 0,
+          policies:state.policies || 0,
+          business_information:state.business || 0,
+          custom_knowledge:state.custom || 0,
+          knowledge:state.knowledge || 0
+        },
+        message:'Website crawled and the useful store knowledge was added to your Training Center.'
+      }),
+      state.url
+    );
+
+    setCrawlerStatus(
+      'success',
+      `Done. ${state.products || 0} products, ${state.faqs || 0} FAQs, ${state.policies || 0} policies, ${state.business || 0} business info items and ${state.custom || 0} custom knowledge items were saved.`
+    );
+
+    clearActiveCrawl();
+    stopCrawlerTimer();
+    setCrawlerProgress(100,'Crawl complete',`Finished in ${formatCrawlerElapsed(state.startedAt).replace(' elapsed','')}`, 'Your structured store knowledge is ready in Training Center.');
+    setCrawlerBackgroundNote(false);
+
+    try{
+      await loadOverview();
+    }catch(error){
+      console.error('Could not refresh overview after crawl:',error);
+    }
+
+  }catch(error){
+
+    console.error('Website crawler error:',error);
+
+    setCrawlerStatus(
+      'error',
+      error?.message || 'Could not finish crawling this website. Please try again.'
+    );
+
+  }finally{
+
+    crawlerProcessing = false;
+
+    if(button){
+      button.disabled = false;
+      button.textContent = 'Crawl Website';
+    }
+  }
+}
+
+
+async function startWebsiteCrawl(){
+
+  if(crawlerProcessing){
+    return;
+  }
+
+  let agent = null;
+
+  try{
+    agent = await ensureCurrentAgent();
+  }catch(error){
+    console.error('Agent loading error before crawl:',error);
+    setCrawlerStatus('error',error?.message || 'Could not load your AI Agent.');
+    return;
+  }
+
+  if(!agent){
+    setCrawlerStatus('error','Create an AI Agent first. The website crawler needs an Agent ID.');
+    return;
+  }
+
+  let agentId = '';
+
+  try{
+    agentId = requireValidAgentId(agent);
+  }catch(error){
+    setCrawlerStatus('error',error?.message || 'Your AI Agent ID is invalid.');
+    return;
+  }
+
+  const input = document.getElementById('crawlUrl');
+  const button = document.getElementById('crawlButton');
+  const rawUrl = input?.value?.trim() || '';
+  const url = normaliseUrl(rawUrl);
+
+  if(!url){
+    setCrawlerStatus('error','Please enter a valid website URL.');
+    return;
+  }
+
+  if(input) input.value = url;
+
+  const existing = getActiveCrawl();
+
+  if(existing?.crawlId){
+    setCrawlerStatus('loading','Resuming your active website crawl…');
+    await continueActiveWebsiteCrawl();
+    return;
+  }
+
+  if(button){
+    button.disabled = true;
+    button.textContent = 'Starting…';
+  }
+
+  resetCrawlerStats();
+  setCrawlerStatus('loading','Starting your website crawl…');
+
+  try{
+
+    const {data:{session},error:sessionError} = await sb.auth.getSession();
+
+    if(sessionError) throw sessionError;
+
+    if(!session){
+      window.location.href = 'auth.html';
+      return;
+    }
+
+    const start = await crawlerRequest(session,{
+      action:'start',
+      url:url,
+      website_url:url,
+      agentId:agentId,
+      agent_id:agentId
+    });
+
+    const crawlId =
+      start?.firecrawl_crawl_id ||
+      start?.crawl_id ||
+      start?.crawlId ||
+      start?.data?.firecrawl_crawl_id ||
+      start?.data?.crawl_id ||
+      start?.result?.firecrawl_crawl_id ||
+      start?.result?.crawl_id;
+
+    if(!crawlId){
+      throw new Error(
+        'The crawler started but did not return a Firecrawl crawl ID. Check the crawl-website function response.'
+      );
+    }
+
+    const state = {
+      crawlId:String(crawlId),
+      url:url,
+      offset:0,
+      pages:0,
+      products:0,
+      faqs:0,
+      policies:0,
+      business:0,
+      custom:0,
+      knowledge:0,
+      startedAt:new Date().toISOString()
+    };
+
+    saveActiveCrawl(state);
+    startCrawlerTimer(state.startedAt);
+    setCrawlerProgress(2,'Starting your website crawl','Firecrawl is preparing your website scan…','You can leave this page safely; Auvii will resume the crawl when you return.');
+
+    await continueActiveWebsiteCrawl();
+
+  }catch(error){
+
+    console.error('Website crawler start error:',error);
+
+    clearActiveCrawl();
+
+    setCrawlerStatus(
+      'error',
+      error?.message || 'Could not start the website crawler. Please try again.'
+    );
+
+    crawlerProcessing = false;
+
+    if(button){
+      button.disabled = false;
+      button.textContent = 'Crawl Website';
+    }
+  }
+}
+
+
+async function loadCrawler(){
+
+  const noAgent =
+    document.getElementById('crawlerNoAgent');
+
+  const mainCard =
+    document.getElementById('crawlerMainCard');
+
+  const infoCard =
+    document.getElementById('crawlerInfoCard');
+
+  if(!noAgent || !mainCard) return;
+
+  try{
+    await ensureCurrentAgent();
+  }catch(error){
+    console.error('Crawler agent loading error:',error);
+  }
+
+  if(!currentAgent){
+
+    noAgent.style.display = 'block';
+    mainCard.style.display = 'none';
+
+    if(infoCard){
+      infoCard.style.display = 'none';
+    }
+
+    return;
+  }
+
+  noAgent.style.display = 'none';
+  mainCard.style.display = 'block';
+
+  if(infoCard){
+    infoCard.style.display = 'block';
+  }
+
+  const active = getActiveCrawl();
+
+  if(active?.crawlId){
+    restoreCrawlerCounts(active);
+    startCrawlerTimer(active.startedAt);
+    setCrawlerProgress(5,'Resuming your website crawl',`Crawl in progress for ${formatCrawlerElapsed(active.startedAt).replace(' elapsed','')}`, 'Auvii saved this crawl so you can safely leave and return.');
+    setCrawlerStatus(
+      'loading',
+      'An active website crawl is in progress. Auvii will continue it automatically…'
+    );
+
+    clearTimeout(crawlerPollTimer);
+    crawlerPollTimer = setTimeout(()=>{
+      continueActiveWebsiteCrawl();
+    },600);
+  }
+}
+
+
+/* =========================================================
+   CONNECT WEBSITE
+   ========================================================= */
+
+/*
+  Keep the currently deployed widget URL until you
+  confirm a replacement.
+*/
+const WIDGET_SRC =
+  'https://shopbrain2.github.io/shopbrain/sb-chat.js';
+
+
+async function loadConnect(){
+
+  const box =
+    document.getElementById('connectContent');
+
+  if(!box) return;
+
+  if(!currentAgent){
+
+    box.innerHTML = `
+      <div class="empty-card">
+
+        <h3>Create an AI first</h3>
+
+        <p>
+          You'll get a widget code to install once your AI exists.
+        </p>
+
+        <a href="create-agent.html" class="btn btn-primary">
+          Create AI Agent — Free
+        </a>
+
+      </div>
+    `;
+
+    return;
+  }
+
+  let ws = null;
+
+  try{
+
+    const {data,error} = await sb
+      .from('widget_settings')
+      .select('*')
+      .eq('agent_id',currentAgent.id)
+      .maybeSingle();
+
+    if(error){
+      console.error(
+        'Widget settings error:',
+        error
+      );
+    }
+
+    ws = data || null;
+
+  }catch(error){
+    console.error(
+      'Widget settings exception:',
+      error
+    );
+  }
+
+  const position =
+    ws?.position ||
+    'bottom-right';
+
+  const color =
+    ws?.theme_color ||
+    '#2F5FFF';
+
+  const welcome =
+    ws?.welcome_message ||
+    'Hi! 👋 How can I help you today?';
+
+  box.innerHTML = `
+
+    <p style="font-size:14px;color:var(--ink-soft);margin-bottom:14px;">
+      Add this to your website, right before the closing
+      <code>&lt;/body&gt;</code> tag.
+    </p>
+
+    <div class="code-box">
+
+      <button
+        class="copy-btn"
+        onclick="copyWidgetCode()"
+      >
+        Copy
+      </button>
+
+      <div>
+        &lt;<span style="color:#7CA6FF;">script</span>
+        <span style="color:#FFB27C;">src</span>=
+        <span style="color:#7CE0B8;">"${escapeHtml(WIDGET_SRC)}"</span>
+        <span style="color:#FFB27C;">data-agent</span>=
+        <span style="color:#7CE0B8;">"${escapeHtml(currentAgent.id)}"</span>&gt;
+        &lt;/<span style="color:#7CA6FF;">script</span>&gt;
+      </div>
+
+    </div>
+
+    <div class="sec-title" style="margin-top:28px;">
+      <h2>Customize your widget</h2>
+    </div>
+
+    <div class="field">
+
+      <label>
+        Welcome message
+      </label>
+
+      <input
+        type="text"
+        id="wsWelcome"
+        value="${escapeAttr(welcome)}"
+      >
+
+    </div>
+
+    <div class="field">
+
+      <label>
+        Position on page
+      </label>
+
+      <select id="wsPosition">
+
+        <option
+          value="bottom-right"
+          ${position === 'bottom-right' ? 'selected' : ''}
+        >
+          Bottom right
+        </option>
+
+        <option
+          value="bottom-left"
+          ${position === 'bottom-left' ? 'selected' : ''}
+        >
+          Bottom left
+        </option>
+
+      </select>
+
+    </div>
+
+    <div class="field">
+
+      <label>
+        Theme color
+      </label>
+
+      <input
+        type="color"
+        id="wsColor"
+        value="${escapeAttr(color)}"
+        style="height:42px;width:80px;padding:2px;"
+      >
+
+    </div>
+
+    <button
+      class="btn btn-primary btn-sm"
+      onclick="saveWidgetSettings()"
+    >
+      Save widget settings
+    </button>
+
+    <div
+      class="error-box"
+      id="widgetSaveMsg"
+      style="display:none;color:var(--cobalt);background:var(--cobalt-dim);"
+    ></div>
+
+    <a
+      href="widget-preview.html?agent=${encodeURIComponent(currentAgent.id)}"
+      target="_blank"
+      style="font-size:13px;font-weight:600;color:var(--cobalt);display:block;margin-top:22px;"
+    >
+      Preview your widget live →
+    </a>
+
+    <div class="sec-title" style="margin-top:28px;">
+      <h2>Where do I paste this?</h2>
+    </div>
+
+    <div class="card" style="margin-bottom:12px;">
+
+      <h4 style="font-size:14px;margin-bottom:8px;">
+        🛍️ Shopify
+      </h4>
+
+      <ol style="font-size:13px;color:var(--ink-soft);padding-left:18px;line-height:1.8;">
+
+        <li>
+          Shopify Admin → <b>Online Store</b> → <b>Themes</b>
+        </li>
+
+        <li>
+          On your active theme, tap the "…" menu → <b>Edit code</b>
+        </li>
+
+        <li>
+          Open <code>layout/theme.liquid</code>
+        </li>
+
+        <li>
+          Scroll to the bottom and find <code>&lt;/body&gt;</code>
+        </li>
+
+        <li>
+          Paste the code above right before it, then tap <b>Save</b>
+        </li>
+
+      </ol>
+
+    </div>
+
+    <div class="card" style="margin-bottom:12px;">
+
+      <h4 style="font-size:14px;margin-bottom:8px;">
+        🌐 WordPress / Wix / Squarespace / other builders
+      </h4>
+
+      <p style="font-size:13px;color:var(--ink-soft);">
+
+        Look for a setting called
+        <b>"Custom code," "Footer code,"</b>
+        or <b>"Embed code"</b>.
+
+        These are usually under Settings or a Theme editor.
+
+      </p>
+
+    </div>
+
+    <div class="card">
+
+      <h4 style="font-size:14px;margin-bottom:8px;">
+        💻 Custom-built website
+      </h4>
+
+      <p style="font-size:13px;color:var(--ink-soft);">
+
+        Paste the snippet directly into your HTML file,
+        right before the closing <code>&lt;/body&gt;</code>
+        tag.
+
+      </p>
+
+    </div>
+  `;
+}
+
+
+async function saveWidgetSettings(){
+
+  if(!currentAgent) return;
+
+  const welcome =
+    document.getElementById('wsWelcome')
+      ?.value
+      ?.trim() || '';
+
+  const position =
+    document.getElementById('wsPosition')
+      ?.value || 'bottom-right';
+
+  const color =
+    document.getElementById('wsColor')
+      ?.value || '#2F5FFF';
+
+  const {
+    error
+  } = await sb
+    .from('widget_settings')
+    .upsert({
+      agent_id:currentAgent.id,
+      welcome_message:welcome,
+      position,
+      theme_color:color,
+      updated_at:new Date().toISOString()
+    },{
+      onConflict:'agent_id'
+    });
+
+  const msg =
+    document.getElementById('widgetSaveMsg');
+
+  if(error){
+
+    if(msg){
+      msg.textContent =
+        'Could not save: ' + error.message;
+
+      msg.style.display = 'block';
+      msg.style.color = '#B5431F';
+      msg.style.background = 'var(--orange-dim)';
+    }
+
+    return;
+  }
+
+  if(msg){
+
+    msg.textContent =
+      'Saved — changes apply next time your widget loads.';
+
+    msg.style.display = 'block';
+    msg.style.color = 'var(--cobalt)';
+    msg.style.background = 'var(--cobalt-dim)';
+
+    setTimeout(()=>{
+      msg.style.display = 'none';
+    },2500);
+  }
+}
+
+
+async function copyWidgetCode(){
+
+  if(!currentAgent) return;
+
+  const code =
+    `<script src="${WIDGET_SRC}" data-agent="${currentAgent.id}"><\/script>`;
+
+  try{
+
+    await navigator.clipboard.writeText(code);
+
+  }catch(error){
+
+    const textarea =
+      document.createElement('textarea');
+
+    textarea.value = code;
+
+    document.body.appendChild(textarea);
+
+    textarea.select();
+
+    document.execCommand('copy');
+
+    textarea.remove();
+  }
+
+  const btn =
+    document.querySelector(
+      '#connectContent .copy-btn'
+    );
+
+  if(!btn) return;
+
+  const original =
+    btn.textContent;
+
+  btn.textContent = 'Copied!';
+
+  setTimeout(()=>{
+    btn.textContent = original;
+  },1500);
+}
+
+
+/* =========================================================
+   CONVERSATIONS
+   ========================================================= */
+
+async function loadConversations(){
+
+  const box =
+    document.getElementById('conversationsList');
+
+  if(!box) return;
+
+  if(!currentAgent){
+
+    box.innerHTML = `
+      <div class="empty-card">
+
+        <h3>Create an AI first</h3>
+
+        <p>
+          Conversations will show up here once your AI is live.
+        </p>
+
+      </div>
+    `;
+
+    return;
+  }
+
+  try{
+
+    const {
+      data:convos,
+      error
+    } = await sb
+      .from('conversations')
+      .select('*')
+      .eq('agent_id',currentAgent.id)
+      .order(
+        'last_message_at',
+        {ascending:false}
+      )
+      .limit(50);
+
+    if(error){
+      throw error;
+    }
+
+    if(!convos || !convos.length){
+
+      box.innerHTML = `
+        <div class="empty-card">
+
+          <div class="icon">
+
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+
+          </div>
+
+          <h3>No conversations yet</h3>
+
+          <p>
+            Once your AI is connected to your website,
+            customer conversations will show up here.
+          </p>
+
+        </div>
+      `;
+
+      return;
+    }
+
+    box.innerHTML =
+      convos.map(c=>`
+
+        <div
+          class="assistant-row"
+          style="cursor:pointer;"
+          onclick="openConversation('${escapeAttr(c.id)}')"
+        >
+
+          <div>
+
+            <div style="font-weight:600;font-size:14.5px;">
+              ${escapeHtml(
+                c.customer_identifier ||
+                'Anonymous visitor'
+              )}
+            </div>
+
+            <div style="font-size:12.5px;color:var(--ink-soft);margin-top:3px;">
+              ${safeDateTime(c.last_message_at)}
+              ·
+              ${escapeHtml(c.status || 'open')}
+            </div>
+
+          </div>
+
+          <span style="color:var(--cobalt);font-size:13px;font-weight:600;">
+            View →
+          </span>
+
+        </div>
+
+      `).join('');
+
+  }catch(error){
+
+    console.error(
+      'Conversation loading error:',
+      error
+    );
+
+    box.innerHTML = `
+      <div class="empty-card">
+
+        <h3>Couldn't load conversations</h3>
+
+        <p>
+          Refresh the page and try again.
+        </p>
+
+        <button
+          class="btn btn-primary"
+          onclick="loadConversations()"
+        >
+          Try Again
+        </button>
+
+      </div>
+    `;
+  }
+}
+
+
+async function openConversation(id){
+
+  try{
+
+    const {
+      data:msgs,
+      error
+    } = await sb
+      .from('messages')
+      .select('*')
+      .eq('conversation_id',id)
+      .order(
+        'created_at',
+        {ascending:true}
+      );
+
+    if(error){
+      throw error;
+    }
+
+    const modal =
+      document.getElementById('modalContent');
+
+    modal.innerHTML = `
+
+      <button
+        class="modal-close"
+        onclick="closeModal()"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke-width="2"
+          stroke-linecap="round"
+        >
+          <path d="M18 6 6 18M6 6l12 12"/>
+        </svg>
+      </button>
+
+      <div class="modal-tag">
+        Conversation
+      </div>
+
+      <h3>
+        Chat history
+      </h3>
+
+      <div
+        style="display:flex;flex-direction:column;gap:10px;max-height:55vh;overflow-y:auto;margin-top:16px;"
+      >
+
+        ${
+          (msgs || []).map(m=>`
+
+            <div
+              style="
+                align-self:${m.sender === 'customer' ? 'flex-end' : 'flex-start'};
+                max-width:80%;
+                background:${m.sender === 'customer' ? 'var(--cobalt)' : 'var(--paper-dim)'};
+                color:${m.sender === 'customer' ? '#fff' : 'inherit'};
+                padding:9px 13px;
+                border-radius:14px;
+                font-size:13.5px;
+              "
+            >
+              ${escapeHtml(m.content || '')}
+            </div>
+
+          `).join('') ||
+
+          '<p style="color:var(--ink-soft);font-size:13.5px;">No messages found.</p>'
+        }
+
+      </div>
+    `;
+
+    document
+      .getElementById('modalOverlay')
+      .classList.add('active');
+
+  }catch(error){
+
+    console.error(
+      'Open conversation error:',
+      error
+    );
+
+    alert(
+      'Could not load this conversation.'
+    );
+  }
+}
+
+
+/* =========================================================
+   NOTIFICATIONS
+   ========================================================= */
+
+async function notifyAdmins(message){
+
+  try{
+
+    const {
+      data:admins,
+      error
+    } = await sb
+      .from('admins')
+      .select('id');
+
+    if(error){
+      console.error(
+        'Admin lookup error:',
+        error
+      );
+
+      return;
+    }
+
+    if(admins && admins.length){
+
+      await sb
+        .from('notifications')
+        .insert(
+          admins.map(a=>({
+            user_id:a.id,
+            type:'admin_alert',
+            message
+          }))
+        );
+    }
+
+  }catch(error){
+
+    console.error(
+      'notifyAdmins error:',
+      error
+    );
+  }
+}
+
+
+async function refreshNotifBadge(){
+
+  if(!currentUser) return;
+
+  try{
+
+    const {count,error} = await sb
+      .from('notifications')
+      .select('id',{
+        count:'exact',
+        head:true
+      })
+      .eq(
+        'user_id',
+        currentUser.id
+      )
+      .eq(
+        'is_read',
+        false
+      );
+
+    if(error){
+      console.error(
+        'Notification badge error:',
+        error
+      );
+
+      return;
+    }
+
+    [
+      'notifBadgeMobile',
+      'notifBadgeDesktop'
+    ].forEach(id=>{
+
+      const el =
+        document.getElementById(id);
+
+      if(!el) return;
+
+      if(count && count > 0){
+
+        el.textContent =
+          count > 9 ? '9+' : count;
+
+        el.style.display = 'flex';
+
+      }else{
+
+        el.style.display = 'none';
+      }
+    });
+
+  }catch(error){
+
+    console.error(
+      'Notification polling error:',
+      error
+    );
+  }
+}
+
+
+function timeAgo(dateStr){
+
+  const diff =
+    (Date.now() -
+      new Date(dateStr).getTime()) /
+    1000;
+
+  if(diff < 60){
+    return 'just now';
+  }
+
+  if(diff < 3600){
+    return Math.floor(diff / 60) + 'm ago';
+  }
+
+  if(diff < 86400){
+    return Math.floor(diff / 3600) + 'h ago';
+  }
+
+  return Math.floor(diff / 86400) + 'd ago';
+}
+
+
+async function toggleNotifPanel(){
+
+  const panel =
+    document.getElementById('notifPanel');
+
+  if(!panel || !currentUser) return;
+
+  const open =
+    panel.classList.toggle('open');
+
+  if(!open) return;
+
+  try{
+
+    const {
+      data:notifs,
+      error
+    } = await sb
+      .from('notifications')
+      .select('*')
+      .eq(
+        'user_id',
+        currentUser.id
+      )
+      .order(
+        'created_at',
+        {ascending:false}
+      )
+      .limit(30);
+
+    if(error){
+      throw error;
+    }
+
+    panel.innerHTML =
+      notifs && notifs.length
+        ? notifs.map(n=>`
+
+            <div class="notif-item ${n.is_read ? '' : 'unread'}">
+
+              <div class="msg">
+                ${escapeHtml(n.message || '')}
+              </div>
+
+              <div class="time">
+                ${timeAgo(n.created_at)}
+              </div>
+
+            </div>
+
+          `).join('')
+
+        : `
+          <div class="notif-empty">
+            No notifications yet.
+          </div>
+        `;
+
+    const unreadIds =
+      (notifs || [])
+        .filter(n=>!n.is_read)
+        .map(n=>n.id);
+
+    if(unreadIds.length){
+
+      await sb
+        .from('notifications')
+        .update({
+          is_read:true
+        })
+        .in(
+          'id',
+          unreadIds
+        );
+
+      refreshNotifBadge();
+    }
+
+  }catch(error){
+
+    console.error(
+      'Notification panel error:',
+      error
+    );
+
+    panel.innerHTML = `
+      <div class="notif-empty">
+        Couldn't load notifications.
+      </div>
+    `;
+  }
+}
+
+
+document.addEventListener('click',e=>{
+
+  const panel =
+    document.getElementById('notifPanel');
+
+  if(
+    !panel ||
+    !panel.classList.contains('open')
+  ){
+    return;
+  }
+
+  if(
+    !panel.contains(e.target) &&
+    !e.target.closest('#notifBellMobile') &&
+    !e.target.closest('#notifBellDesktop')
+  ){
+    panel.classList.remove('open');
+  }
+});
+
+
+function startNotifPolling(){
+
+  clearInterval(notifPollTimer);
+
+  refreshNotifBadge();
+
+  notifPollTimer =
+    setInterval(
+      refreshNotifBadge,
+      20000
+    );
+}
+
+
+/* =========================================================
+   SUPPORT
+   ========================================================= */
+
+function toggleSupportWidget(){
+
+  if(supportBubbleWasDragged){
+
+    supportBubbleWasDragged = false;
+
+    return;
+  }
+
+  const panel =
+    document.getElementById('supportPanel');
+
+  if(!panel) return;
+
+  const open =
+    panel.classList.toggle('open');
+
+  if(open){
+
+    positionPanelNearBubble(
+      'supportBubble',
+      'supportPanel'
+    );
+
+    loadSupportChat();
+    startSupportPolling();
+
+  }else{
+
+    clearInterval(
+      supportPollTimer
+    );
+  }
+}
+
+
+function makeBubbleDraggable(
+  bubbleId,
+  storageKey
+){
+
+  const bubble =
+    document.getElementById(bubbleId);
+
+  if(!bubble) return;
+
+  let startX;
+  let startY;
+  let origX;
+  let origY;
+  let dragging = false;
+
+  try{
+
+    const saved =
+      JSON.parse(
+        localStorage.getItem(storageKey)
+      );
+
+    if(saved){
+
+      bubble.style.left =
+        saved.x + 'px';
+
+      bubble.style.top =
+        saved.y + 'px';
+
+      bubble.style.right =
+        'auto';
+
+      bubble.style.bottom =
+        'auto';
+    }
+
+  }catch(error){}
+
+  bubble.addEventListener(
+    'pointerdown',
+    e=>{
+
+      dragging = false;
+
+      startX = e.clientX;
+      startY = e.clientY;
+
+      const rect =
+        bubble.getBoundingClientRect();
+
+      origX = rect.left;
+      origY = rect.top;
+
+      bubble.setPointerCapture(
+        e.pointerId
+      );
+    }
+  );
+
+  bubble.addEventListener(
+    'pointermove',
+    e=>{
+
+      if(startX === undefined){
+        return;
+      }
+
+      const dx =
+        e.clientX - startX;
+
+      const dy =
+        e.clientY - startY;
+
+      if(
+        !dragging &&
+        (
+          Math.abs(dx) > 6 ||
+          Math.abs(dy) > 6
+        )
+      ){
+
+        dragging = true;
+
+        bubble.style.transition =
+          'none';
+      }
+
+      if(dragging){
+
+        const rect =
+          bubble.getBoundingClientRect();
+
+        let newX =
+          origX + dx;
+
+        let newY =
+          origY + dy;
+
+        newX =
+          Math.max(
+            4,
+            Math.min(
+              window.innerWidth -
+                rect.width -
+                4,
+              newX
+            )
+          );
+
+        newY =
+          Math.max(
+            4,
+            Math.min(
+              window.innerHeight -
+                rect.height -
+                4,
+              newY
+            )
+          );
+
+        bubble.style.left =
+          newX + 'px';
+
+        bubble.style.top =
+          newY + 'px';
+
+        bubble.style.right =
+          'auto';
+
+        bubble.style.bottom =
+          'auto';
+      }
+    }
+  );
+
+  bubble.addEventListener(
+    'pointerup',
+    ()=>{
+
+      bubble.style.transition = '';
+
+      if(dragging){
+
+        supportBubbleWasDragged = true;
+
+        const rect =
+          bubble.getBoundingClientRect();
+
+        localStorage.setItem(
+          storageKey,
+          JSON.stringify({
+            x:rect.left,
+            y:rect.top
+          })
+        );
+
+        setTimeout(()=>{
+          supportBubbleWasDragged = false;
+        },50);
+      }
+
+      startX = undefined;
+      dragging = false;
+    }
+  );
+}
+
+
+function positionPanelNearBubble(
+  bubbleId,
+  panelId
+){
+
+  const bubble =
+    document.getElementById(
+      bubbleId
+    );
+
+  const panel =
+    document.getElementById(
+      panelId
+    );
+
+  if(!bubble || !panel) return;
+
+  const rect =
+    bubble.getBoundingClientRect();
+
+  const panelWidth =
+    panel.offsetWidth || 320;
+
+  const panelHeight =
+    panel.offsetHeight || 420;
+
+  const openLeft =
+    rect.left +
+      panelWidth >
+      window.innerWidth - 10;
+
+  const openAbove =
+    rect.top +
+      rect.height +
+      panelHeight >
+      window.innerHeight - 10;
+
+  panel.style.right = 'auto';
+  panel.style.left = 'auto';
+  panel.style.top = 'auto';
+  panel.style.bottom = 'auto';
+
+  if(openLeft){
+
+    panel.style.left =
+      Math.max(
+        10,
+        rect.right - panelWidth
+      ) + 'px';
+
+  }else{
+
+    panel.style.left =
+      rect.left + 'px';
+  }
+
+  if(openAbove){
+
+    panel.style.bottom =
+      (
+        window.innerHeight -
+        rect.top +
+        10
+      ) + 'px';
+
+  }else{
+
+    panel.style.top =
+      (
+        rect.bottom +
+        10
+      ) + 'px';
+  }
+}
+
+
+async function loadSupportChat(){
+
+  if(!currentUser) return;
+
+  try{
+
+    const {
+      data:chat,
+      error
+    } = await sb
+      .from('site_visitor_chats')
+      .select('*')
+      .eq(
+        'user_id',
+        currentUser.id
+      )
+      .order(
+        'created_at',
+        {ascending:false}
+      )
+      .limit(1)
+      .maybeSingle();
+
+    if(error){
+      throw error;
+    }
+
+    if(!chat){
+
+      supportChatId = null;
+
+      document.getElementById(
+        'supportThread'
+      ).innerHTML = '';
+
+      document.getElementById(
+        'supportSetup'
+      ).style.display = 'flex';
+
+      document.getElementById(
+        'supportFoot'
+      ).classList.remove('show');
+
+      return;
+    }
+
+    supportChatId =
+      chat.id;
+
+    const {
+      data:msgs,
+      error:msgError
+    } = await sb
+      .from('site_visitor_messages')
+      .select('*')
+      .eq(
+        'chat_id',
+        supportChatId
+      )
+      .order('created_at');
+
+    if(msgError){
+      throw msgError;
+    }
+
+    document.getElementById(
+      'supportThread'
+    ).innerHTML =
+
+      (msgs || [])
+        .map(m=>`
+
+          <div class="svc-msg ${m.sender === 'admin' ? 'admin' : 'visitor'}">
+            ${escapeHtml(m.message || '')}
+          </div>
+
+        `)
+        .join('')
+
+      ||
+
+      '<p style="color:var(--ink-soft);font-size:13px;">No messages yet.</p>';
+
+    const thread =
+      document.getElementById(
+        'supportThread'
+      );
+
+    thread.scrollTop =
+      thread.scrollHeight;
+
+    supportLastCount =
+      (msgs || []).length;
+
+    document.getElementById(
+      'supportSetup'
+    ).style.display = 'none';
+
+    document.getElementById(
+      'supportFoot'
+    ).classList.add('show');
+
+  }catch(error){
+
+    console.error(
+      'Support chat error:',
+      error
+    );
+  }
+}
+
+
+async function startSupportChat(){
+
+  if(!currentUser) return;
+
+  const input =
+    document.getElementById(
+      'supportFirstMsg'
+    );
+
+  const msg =
+    input.value.trim();
+
+  if(!msg) return;
+
+  try{
+
+    const {
+      data:chat,
+      error
+    } = await sb
+      .from('site_visitor_chats')
+      .insert({
+        user_id:currentUser.id,
+        visitor_name:currentUser.storeName,
+        visitor_email:currentUser.email
+      })
+      .select('id')
+      .single();
+
+    if(error){
+      throw error;
+    }
+
+    supportChatId =
+      chat.id;
+
+    input.value = '';
+
+    const {
+      error:messageError
+    } = await sb
+      .from('site_visitor_messages')
+      .insert({
+        chat_id:supportChatId,
+        sender:'customer',
+        message:msg
+      });
+
+    if(messageError){
+      throw messageError;
+    }
+
+    await notifyAdmins(
+      `${currentUser.storeName} started a support chat: "${msg.slice(0,60)}"`
+    );
+
+    await loadSupportChat();
+
+  }catch(error){
+
+    alert(
+      'Something went wrong: ' +
+      error.message
+    );
+  }
+}
+
+
+async function sendSupportMessage(){
+
+  if(!supportChatId) return;
+
+  const input =
+    document.getElementById(
+      'supportInput'
+    );
+
+  const msg =
+    input.value.trim();
+
+  if(!msg) return;
+
+  input.value = '';
+
+  try{
+
+    const {
+      error:messageError
+    } = await sb
+      .from('site_visitor_messages')
+      .insert({
+        chat_id:supportChatId,
+        sender:'customer',
+        message:msg
+      });
+
+    if(messageError){
+      throw messageError;
+    }
+
+    await sb
+      .from('site_visitor_chats')
+      .update({
+        last_message_at:
+          new Date().toISOString()
+      })
+      .eq(
+        'id',
+        supportChatId
+      );
+
+    await notifyAdmins(
+      `${currentUser.storeName} sent a support message: "${msg.slice(0,60)}"`
+    );
+
+    await loadSupportChat();
+
+  }catch(error){
+
+    alert(
+      'Could not send message: ' +
+      error.message
+    );
+  }
+}
+
+
+function startSupportPolling(){
+
+  clearInterval(
+    supportPollTimer
+  );
+
+  supportPollTimer =
+    setInterval(async()=>{
+
+      if(!supportChatId) return;
+
+      try{
+
+        const {count} =
+          await sb
+            .from('site_visitor_messages')
+            .select('id',{
+              count:'exact',
+              head:true
+            })
+            .eq(
+              'chat_id',
+              supportChatId
+            );
+
+        if(
+          count &&
+          count > supportLastCount
+        ){
+          loadSupportChat();
+        }
+
+      }catch(error){
+
+        console.error(
+          'Support polling error:',
+          error
+        );
+      }
+
+    },8000);
+}
+
+
+/* =========================================================
+   SUBSCRIPTION
+   ========================================================= */
+
+async function loadCurrentSubscription(){
+
+  const banner =
+    document.getElementById(
+      'currentSubBanner'
+    );
+
+  if(!banner || !currentUser) return;
+
+  try{
+
+    const {
+      data,
+      error
+    } = await sb
+      .from('subscriptions')
+      .select('*')
+      .eq(
+        'user_id',
+        currentUser.id
+      )
+      .maybeSingle();
+
+    if(error){
+
+      console.error(
+        'Subscription query error:',
+        error
+      );
+
+      currentSubscription = null;
+
+    }else{
+
+      currentSubscription =
+        data || null;
+    }
+
+  }catch(error){
+
+    console.error(
+      'Subscription exception:',
+      error
+    );
+
+    currentSubscription = null;
+  }
+
+  /*
+    The "free" key is treated as Auvii's internal
+    7-day trial. It is NOT sent to Whop.
+  */
+
+  if(!currentSubscription){
+
+    banner.innerHTML = `
+      <div
+        class="card"
+        style="background:var(--paper-dim);border:none;margin-bottom:18px;"
+      >
+        <p style="font-size:13.5px;">
+          You're currently on the
+          <b>7-day free trial</b>.
+          No payment is required to start.
+        </p>
+      </div>
+    `;
+
+  }else if(
+    currentSubscription.status === 'cancelled'
+  ){
+
+    banner.innerHTML = `
+      <div
+        class="card"
+        style="background:var(--paper-dim);border:none;margin-bottom:18px;"
+      >
+        <p style="font-size:13.5px;">
+          Your paid subscription is cancelled.
+          You can choose a paid Auvii plan below.
+        </p>
+      </div>
+    `;
+
+  }else if(
+    currentSubscription.status === 'pending'
+  ){
+
+    banner.innerHTML = `
+      <div
+        class="card"
+        style="background:var(--cobalt-dim);border:none;margin-bottom:18px;"
+      >
+        <p style="font-size:13.5px;">
+          ⏳ Finishing up your subscription.
+          This updates automatically once payment is confirmed.
+        </p>
+      </div>
+    `;
+
+  }else if(
+    currentSubscription.status === 'past_due'
+  ){
+
+    banner.innerHTML = `
+      <div
+        class="card"
+        style="background:var(--orange-dim);border:none;margin-bottom:18px;"
+      >
+        <p style="font-size:13.5px;color:#B5431F;">
+          ⚠️ Your last payment failed.
+          Please update your payment method on Whop to keep your Auvii features active.
+        </p>
+      </div>
+    `;
+
+  }else if(
+    currentSubscription.status === 'active' &&
+    currentSubscription.plan_key === 'free'
+  ){
+
+    /*
+      Internal Auvii trial.
+      If trial_ends_at exists, display it.
+    */
+
+    let trialText =
+      'You are currently using the 7-day free trial.';
+
+    if(currentSubscription.trial_ends_at){
+
+      trialText +=
+        ' Trial ends ' +
+        safeDate(
+          currentSubscription.trial_ends_at
+        ) +
+        '.';
+    }
+
+    banner.innerHTML = `
+      <div
+        class="card"
+        style="background:var(--cobalt-dim);border:none;margin-bottom:18px;"
+      >
+        <p style="font-size:13.5px;">
+          🎉 <b>7-day free trial</b> ·
+          ${escapeHtml(trialText)}
+        </p>
+      </div>
+    `;
+
+  }else if(
+    currentSubscription.status === 'active'
+  ){
+
+    const plan =
+      PLANS[
+        currentSubscription.plan_key
+      ];
+
+    banner.innerHTML = `
+      <div
+        class="card"
+        style="background:var(--mint-dim);border:none;margin-bottom:18px;"
+      >
+        <p style="font-size:13.5px;">
+
+          ✅ You're subscribed to
+          <b>
+            ${escapeHtml(
+              plan?.name ||
+              currentSubscription.plan_key
+            )}
+          </b>
+
+          ${
+            currentSubscription.current_period_end
+              ? ' · renews ' +
+                safeDate(
+                  currentSubscription.current_period_end
+                )
+              : ''
+          }
+
+        </p>
+      </div>
+    `;
+
+  }else{
+
+    banner.innerHTML = `
+      <div
+        class="card"
+        style="background:var(--paper-dim);border:none;margin-bottom:18px;"
+      >
+        <p style="font-size:13.5px;">
+          You're currently using Auvii's
+          <b>7-day free trial</b>.
+        </p>
+      </div>
+    `;
+  }
+
+  renderPlanCards();
+}
+
+
+function getAuviiPlanKey(){
+  if(currentSubscription?.status === 'active'){
+    return String(currentSubscription.plan_key || 'free').toLowerCase();
+  }
+  return 'free';
+}
+
+function getAuviiPlan(){
+  const key = getAuviiPlanKey();
+  return AUVII_PLANS[key] || AUVII_PLANS.free;
+}
+
+function hasAuviiFeature(feature){
+  const key = getAuviiPlanKey();
+  if(key === 'free') return true; // full access during 7-day trial
+  const access = {
+    basic:['core'],
+    standard:['core','analytics','sales_assistant'],
+    premium:['core','analytics','sales_assistant','advanced_analytics','customization']
+  };
+  if(feature === 'core') return true;
+  return (access[key] || []).includes(feature);
+}
+
+function planForCard(key){
+  const db = PLANS[key] || {};
+  const local = AUVII_PLANS[key];
+  if(!local) return db;
+  return Object.assign({},db,local,{key,features:local.features});
+}
+
+function renderPlanCards(){
+  const grid = document.getElementById('serviceGrid');
+  if(!grid) return;
+
+  const order = ['free','basic','standard','premium'];
+  const items = order.map(planForCard);
+
+  grid.innerHTML = items.map(plan=>{
+    const isTrial = plan.key === 'free';
+    const isCurrentPlan =
+      (isTrial && getAuviiPlanKey() === 'free') ||
+      (currentSubscription?.status === 'active' && currentSubscription?.plan_key === plan.key);
+
+    const isPopular = plan.key === 'standard';
+    const price = Number(plan.price || 0);
+    const period = isTrial ? 'for 7 days' : 'month';
+
+    return `
+      <div class="service-card ${isPopular ? 'popular' : ''}" style="cursor:default;">
+        ${isPopular ? '<span class="pc-badge">Popular</span>' : ''}
+        ${isCurrentPlan ? '<span class="pc-badge" style="background:var(--mint);">Current Plan</span>' : ''}
+        <h4>${escapeHtml(plan.name)}</h4>
+        <div class="price">
+          $${price.toFixed(0)}
+          <span style="font-size:12px;font-weight:500;color:var(--ink-soft);">${period}</span>
+        </div>
+        <p class="desc">${escapeHtml(
+          isTrial
+            ? 'Full Auvii access for your first 7 days.'
+            : plan.key === 'basic'
+              ? 'Core AI customer-service features without the advanced tools.'
+              : plan.key === 'standard'
+                ? 'Core Auvii plus analytics and Sales Assistant.'
+                : 'Everything in Standard plus advanced analytics and customization.'
+        )}</p>
+        <ul>${plan.features.map(f=>`<li>${escapeHtml(f)}</li>`).join('')}</ul>
+        ${isCurrentPlan
+          ? '<button class="btn btn-ghost btn-sm btn-block" disabled>Current Plan</button>'
+          : isTrial
+            ? '<button class="btn btn-ghost btn-sm btn-block" disabled>7-Day Trial</button>'
+            : `<button class="btn btn-primary btn-sm btn-block" onclick="subscribeToPlan('${escapeAttr(plan.key)}',event)">Choose ${escapeHtml(plan.name)}</button>`}
+      </div>
+    `;
+  }).join('');
+}
+
+/*
+  IMPORTANT:
+
+  The internal Auvii trial is NOT activated by this
+  button and is NOT sent to Whop.
+
+  Only Basic / Standard / Premium go to Whop.
+*/
+
+async function subscribeToPlan(
+  key,
+  clickEvent
+){
+
+  const plan =
+    PLANS[key];
+
+  if(!plan) return;
+
+  if(key === 'free'){
+
+    alert(
+      'Your 7-day free trial is handled automatically by Auvii. No Whop checkout is required.'
+    );
+
+    return;
+  }
+
+  const {
+    data:{session}
+  } = await sb.auth.getSession();
+
+  if(!session){
+
+    window.location.href =
+      'auth.html';
+
+    return;
+  }
+
+  const btn =
+    clickEvent?.currentTarget ||
+    clickEvent?.target;
+
+  if(btn){
+
+    btn.disabled = true;
+    btn.textContent = 'Loading…';
+  }
+
+  try{
+
+    const response =
+      await fetch(
+        `${SUPABASE_URL}/functions/v1/whop_checkout`,
+        {
+          method:'POST',
+
+          headers:{
+            'Content-Type':
+              'application/json',
+
+            'Authorization':
+              `Bearer ${session.access_token}`
+          },
+
+          body:JSON.stringify({
+            plan_key:key
+          })
+        }
+      );
+
+    const raw =
+      await response.text();
+
+    let data = {};
+
+    try{
+      data =
+        raw
+          ? JSON.parse(raw)
+          : {};
+    }catch(error){
+
+      data = {
+        raw
+      };
+    }
+
+    if(
+      !response.ok ||
+      data.error ||
+      !data.checkout_url
+    ){
+
+      throw new Error(
+        data.error ||
+        data.message ||
+        'Something went wrong starting checkout. Try again.'
+      );
+    }
+
+    window.location.href =
+      data.checkout_url;
+
+  }catch(error){
+
+    console.error(
+      'Whop checkout error:',
+      error
+    );
+
+    alert(
+      error.message ||
+      'Could not start checkout.'
+    );
+
+    if(btn){
+
+      btn.disabled = false;
+      btn.textContent = 'Subscribe';
+    }
+  }
+}
+
+
+/* =========================================================
+   MODAL
+   ========================================================= */
+
+function closeModal(){
+
+  const modal =
+    document.getElementById(
+      'modalOverlay'
+    );
+
+  if(modal){
+    modal.classList.remove('active');
+  }
+}
+
+
+document
+  .getElementById('modalOverlay')
+  .addEventListener(
+    'click',
+    function(e){
+
+      if(e.target === this){
+        closeModal();
+      }
+
+    }
+  );
+
+
+/* =========================================================
+   SETTINGS
+   ========================================================= */
+
+function loadSettings(){
+
+  if(!currentUser) return;
+
+  const input =
+    document.getElementById(
+      'setStoreNameInput'
+    );
+
+  if(input){
+    input.value =
+      currentUser.storeName || '';
+  }
+
+  setText(
+    'setEmail',
+    currentUser.email
+  );
+
+  const aiCard =
+    document.getElementById(
+      'setAiCard'
+    );
+
+  if(!aiCard) return;
+
+  if(!currentAgent){
+
+    aiCard.innerHTML = `
+      <p style="color:var(--ink-soft);font-size:13.5px;">
+        No AI created yet.
+      </p>
+    `;
+
+    return;
+  }
+
+  aiCard.innerHTML = `
+
+    <div class="settings-row">
+
+      <span class="label">
+        AI name
+      </span>
+
+      <span class="value">
+        ${escapeHtml(
+          currentAgent.agent_name ||
+          'Auvii Assistant'
+        )}
+      </span>
+
+    </div>
+
+    <div class="settings-row">
+
+      <span class="label">
+        Status
+      </span>
+
+      <span class="value">
+        ${escapeHtml(
+          currentAgent.status ||
+          'active'
+        )}
+      </span>
+
+    </div>
+  `;
+}
+
+
+async function saveStoreName(){
+
+  const input =
+    document.getElementById(
+      'setStoreNameInput'
+    );
+
+  const errBox =
+    document.getElementById(
+      'settingsError'
+    );
+
+  const okBox =
+    document.getElementById(
+      'settingsSuccess'
+    );
+
+  errBox.classList.remove('show');
+  okBox.classList.remove('show');
+
+  const newName =
+    input.value.trim();
+
+  if(!newName){
+
+    errBox.textContent =
+      "Store name can't be empty.";
+
+    errBox.classList.add('show');
+
+    return;
+  }
+
+  const btn =
+    document.getElementById(
+      'saveStoreNameBtn'
+    );
+
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+
+  try{
+
+    const {error} =
+      await sb
+        .from('stores')
+        .update({
+          full_name:newName
+        })
+        .eq(
+          'id',
+          currentUser.id
+        );
+
+    if(error){
+      throw error;
+    }
+
+    currentUser.storeName =
+      newName;
+
+    setText(
+      'storeNameChip',
+      newName
+    );
+
+    setText(
+      'avatarInitial',
+      newName.charAt(0).toUpperCase()
+    );
+
+    setText(
+      'avatarInitialMobile',
+      newName.charAt(0).toUpperCase()
+    );
+
+    setText(
+      'overviewGreeting',
+      `Welcome, ${newName}`
+    );
+
+    okBox.textContent =
+      'Saved.';
+
+    okBox.classList.add('show');
+
+    setTimeout(()=>{
+      okBox.classList.remove('show');
+    },2000);
+
+  }catch(error){
+
+    console.error(
+      'Save store name error:',
+      error
+    );
+
+    errBox.textContent =
+      error.message ||
+      'Could not save store name.';
+
+    errBox.classList.add('show');
+
+  }finally{
+
+    btn.disabled = false;
+    btn.textContent = 'Save';
+  }
+}
+
+
+/* =========================================================
+   DASHBOARD ERROR SCREEN
+   ========================================================= */
+
+function showDashboardError(error){
+
+  console.error(
+    'Auvii dashboard failed:',
+    error
+  );
+
+  const content =
+    document.querySelector('.content');
+
+  if(!content) return;
+
+  content.innerHTML = `
+
+    <div class="empty-card" style="margin-top:40px;">
+
+      <div class="icon">
+
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          style="stroke:var(--orange);"
+        >
+          <path d="M10.3 3.4 2.6 17a2 2 0 0 0 1.7 3h15.4a2 2 0 0 0 1.7-3L13.7 3.4a2 2 0 0 0-3.4 0z"/>
+          <path d="M12 9v4"/>
+          <path d="M12 17h.01"/>
+        </svg>
+
+      </div>
+
+      <h3>
+        We couldn't load your dashboard
+      </h3>
+
+      <p>
+        Something went wrong while loading your Auvii account.
+        Refresh the page and try again.
+      </p>
+
+      <button
+        class="btn btn-primary"
+        onclick="location.reload()"
+      >
+        Refresh Dashboard
+      </button>
+
+    </div>
+  `;
+}
+
+
+/* =========================================================
+   INIT
+   ========================================================= */
+
+async function init(){
+
+  try{
+
+    /*
+      Check Supabase first.
+      This prevents a completely blank dashboard if
+      sb-config.js didn't load correctly.
+    */
+
+    if(typeof sb === 'undefined'){
+
+      throw new Error(
+        'Supabase client was not loaded. Check sb-config.js.'
+      );
+    }
+
+    if(
+      typeof SUPABASE_URL === 'undefined' ||
+      !SUPABASE_URL
+    ){
+
+      throw new Error(
+        'SUPABASE_URL is missing from sb-config.js.'
+      );
+    }
+
+
+    /* SESSION */
+
+    const {
+      data:{session},
+      error:sessionError
+    } =
+      await sb.auth.getSession();
+
+    if(sessionError){
+      throw sessionError;
+    }
+
+    if(!session){
+
+      window.location.href =
+        'auth.html';
+
+      return;
+    }
+
+    const user =
+      session.user;
+
+
+    /* STORE */
+
+    let store = null;
+
+    try{
+
+      const {
+        data,
+        error
+      } = await sb
+        .from('stores')
+        .select(
+          'full_name,email,is_suspended'
+        )
+        .eq(
+          'id',
+          user.id
+        )
+        .maybeSingle();
+
+      if(error){
+
+        console.error(
+          'Store loading error:',
+          error
+        );
+
+      }else{
+
+        store = data;
+      }
+
+    }catch(error){
+
+      console.error(
+        'Store exception:',
+        error
+      );
+    }
+
+
+    if(store?.is_suspended){
+
+      await sb.auth.signOut();
+
+      window.location.href =
+        'auth.html?suspended=1';
+
+      return;
+    }
+
+
+    const storeName =
+      store?.full_name ||
+      user.user_metadata?.store_name ||
+      user.email ||
+      'My Store';
+
+
+    currentUser = {
+      id:user.id,
+      storeName,
+      email:
+        store?.email ||
+        user.email ||
+        ''
+    };
+
+
+    /* HEADER */
+
+    setText(
+      'storeNameChip',
+      storeName
+    );
+
+    setText(
+      'avatarInitial',
+      storeName.charAt(0).toUpperCase()
+    );
+
+    setText(
+      'avatarInitialMobile',
+      storeName.charAt(0).toUpperCase()
+    );
+
+
+    /* AI AGENT */
+
+    try{
+
+      const {
+        data:agents,
+        error
+      } = await sb
+        .from('ai_agents')
+        .select('*')
+        .eq(
+          'user_id',
+          user.id
+        )
+        .order(
+          'created_at',
+          {ascending:false}
+        )
+        .limit(1);
+
+      if(error){
+
+        console.error(
+          'Agent loading error:',
+          error
+        );
+
+        currentAgent = null;
+
+      }else{
+
+        currentAgent =
+          agents && agents.length
+            ? agents[0]
+            : null;
+      }
+
+    }catch(error){
+
+      console.error(
+        'Agent exception:',
+        error
+      );
+
+      currentAgent = null;
+    }
+
+
+    /* PLANS */
+
+    try{
+
+      const {
+        data:plans,
+        error
+      } = await sb
+        .from('subscription_plans')
+        .select('*')
+        .eq(
+          'is_active',
+          true
+        )
+        .order(
+          'sort_order'
+        );
+
+      if(error){
+
+        console.error(
+          'Plans loading error:',
+          error
+        );
+
+      }else{
+        PLANS = {};
+        (plans || []).forEach(plan=>{
+          PLANS[String(plan.key).toLowerCase()] = plan;
+        });
+      }
+
+      /* Local Auvii definitions control the customer-facing tiers.
+         Database rows are still used for checkout IDs/settings. */
+      Object.keys(AUVII_PLANS).forEach(key=>{
+        PLANS[key] = Object.assign({},PLANS[key] || {},AUVII_PLANS[key]);
+      });
+
+    }catch(error){
+
+      console.error(
+        'Plans exception:',
+        error
+      );
+
+      PLANS = {};
+    }
+
+
+    /*
+      Each section loads independently.
+      A failure in one area will not blank
+      the whole dashboard.
+    */
+
+    try{
+      await loadCurrentSubscription();
+    }catch(error){
+      console.error(
+        'Subscription section error:',
+        error
+      );
+    }
+
+
+    try{
+      await loadOverview();
+    }catch(error){
+      console.error(
+        'Overview section error:',
+        error
+      );
+    }
+
+
+    try{
+      await loadAssistants();
+    }catch(error){
+      console.error(
+        'Assistants section error:',
+        error
+      );
+    }
+
+
+    try{
+      await loadCrawler();
+    }catch(error){
+      console.error(
+        'Crawler section error:',
+        error
+      );
+    }
+
+
+    try{
+      await loadConnect();
+    }catch(error){
+      console.error(
+        'Connect section error:',
+        error
+      );
+    }
+
+
+    try{
+      await loadConversations();
+    }catch(error){
+      console.error(
+        'Conversations section error:',
+        error
+      );
+    }
+
+
+    try{
+      loadSettings();
+    }catch(error){
+      console.error(
+        'Settings section error:',
+        error
+      );
+    }
+
+
+    try{
+      startNotifPolling();
+    }catch(error){
+      console.error(
+        'Notification polling error:',
+        error
+      );
+    }
+
+
+    /* URL VIEW */
+
+    const params =
+      new URLSearchParams(
+        window.location.search
+      );
+
+    if(params.get('view')){
+
+      showView(
+        params.get('view')
+      );
+    }
+
+
+    /*
+      Whop return page.
+      This DOES NOT activate a subscription.
+      The webhook remains the source of truth.
+    */
+
+    if(
+      params.get('subscribed') === '1'
+    ){
+
+      setTimeout(()=>{
+
+        alert(
+          'Your payment is being confirmed. Your Auvii plan will update automatically once Whop confirms the payment.'
+        );
+
+      },500);
+    }
+
+
+    /*
+      Initialize support bubble after the
+      page is ready.
+    */
+
+    makeBubbleDraggable(
+      'supportBubble',
+      'auvii_support_bubble_pos'
+    );
+
+
+  }catch(error){
+
+    showDashboardError(
+      error
+    );
+  }
+}
+
+
+/* =========================================================
+   CRAWLER PAGE LIFECYCLE
+   ========================================================= */
+
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden && crawlerProcessing){
+    setCrawlerBackgroundNote(false);
+  }else if(!document.hidden && isCrawlerViewActive()){
+    const active=getActiveCrawl();
+    if(active?.crawlId && !crawlerProcessing){
+      setCrawlerStatus('loading','Resuming your active website crawl…');
+      continueActiveWebsiteCrawl();
+    }
+  }
+});
+
+window.addEventListener('beforeunload',()=>{
+  /* Never cancel the server-side Firecrawl job. Its state is persisted. */
+  stopCrawlerTimer();
+});
+
+
+/* =========================================================
+   DOM READY
+   ========================================================= */
+
+window.addEventListener('error', e=>console.error('Auvii JavaScript error:', e.error || e.message));
+window.addEventListener('unhandledrejection', e=>console.error('Auvii promise error:', e.reason));
+
+if(document.readyState === 'loading'){
+  document.addEventListener('DOMContentLoaded', async ()=>{
+    try{ await init(); }
+    catch(error){ console.error('Auvii dashboard initialization failed:', error); }
+  });
+}else{
+  (async ()=>{
+    try{ await init(); }
+    catch(error){ console.error('Auvii dashboard initialization failed:', error); }
+  })();
+}
+
+</script>
+
+</body>
+</html>
