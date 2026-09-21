@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#2F5FFF">
+<title>Pricing — Auvii</title>
+<meta name="description" content="Auvii plans: Free Trial, Basic, Standard and Premium. Compare features, website crawls and the Sales Assistant.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --paper:#F7F7F4;--paper-dim:#EFEFEA;--ink:#14171C;--ink-soft:#4B5058;--line:#DDDCD5;
+  --cobalt:#2F5FFF;--cobalt-dim:#EAEFFF;--orange:#FF6B45;--orange-dim:#FFEDE6;
+  --mint:#1FAA80;--mint-dim:#E6F5EF;--white:#FFFFFF
+}
+
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
+
+html,body{max-width:100%;overflow-x:hidden;-webkit-text-size-adjust:100%}
+
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:'Inter',Arial,sans-serif;line-height:1.55;
+  -webkit-font-smoothing:antialiased
+}
+
+h1,h2,h3,h4{
+  font-family:'Space Grotesk',Arial,sans-serif;font-weight:600;
+  letter-spacing:-.01em;line-height:1.15;margin:0
+}
+
+p,li,a,span,div,td,th{overflow-wrap:anywhere}
+a{color:inherit}
+img,svg{max-width:100%}
+
+.wrap{width:100%;max-width:1160px;margin:0 auto;padding:0 16px}
+
+/* ---------- header ---------- */
+.site-head{
+  position:sticky;top:0;z-index:50;background:rgba(255,255,255,.96);
+  border-bottom:1px solid var(--line);backdrop-filter:blur(8px)
+}
+.head-in{display:flex;align-items:center;justify-content:space-between;gap:10px;height:60px}
+
+.logo{
+  display:flex;align-items:center;gap:9px;text-decoration:none;
+  font-family:'Space Grotesk',Arial,sans-serif;font-weight:700;font-size:20px
+}
+.logo-mark{
+  width:28px;height:28px;border-radius:7px;background:var(--cobalt);
+  display:flex;align-items:center;justify-content:center;flex:none
+}
+
+.nav{display:none;align-items:center;gap:22px}
+.nav a{text-decoration:none;font-weight:500;font-size:14.5px;color:var(--ink-soft)}
+.nav a:hover,.nav a.active{color:var(--cobalt)}
+.nav a.active{font-weight:600}
+
+.head-cta{display:none;align-items:center;gap:8px}
+
+.menu-btn{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:44px;height:44px;border:1px solid var(--line);border-radius:10px;
+  background:#fff;cursor:pointer
+}
+
+.mobile-menu{
+  display:none;border-top:1px solid var(--line);background:#fff;padding:8px 16px 16px
+}
+.mobile-menu.open{display:block}
+.mobile-menu a{
+  display:block;padding:13px 4px;text-decoration:none;font-weight:600;
+  border-bottom:1px solid var(--paper-dim)
+}
+.mobile-menu a.active{color:var(--cobalt)}
+.mobile-menu .btn{margin-top:12px;width:100%}
+
+/* ---------- buttons ---------- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  min-height:44px;padding:10px 18px;border-radius:10px;border:1.5px solid transparent;
+  font:600 14.5px 'Inter',Arial,sans-serif;text-decoration:none;cursor:pointer;
+  text-align:center;transition:background .15s,border-color .15s,transform .05s
+}
+.btn:active{transform:translateY(1px)}
+.btn-primary{background:var(--cobalt);color:#fff}
+.btn-primary:hover{background:#2450e6}
+.btn-orange{background:var(--orange);color:#fff}
+.btn-orange:hover{background:#f25a33}
+.btn-ghost{background:#fff;border-color:var(--line);color:var(--ink)}
+.btn-ghost:hover{border-color:var(--cobalt);color:var(--cobalt)}
+.btn[aria-disabled="true"]{opacity:.65;pointer-events:none}
+.btn-block{width:100%}
+
+/* ---------- hero ---------- */
+.hero{padding:34px 0 8px;text-align:center}
+.eyebrow{
+  display:inline-block;background:var(--cobalt-dim);color:var(--cobalt);
+  font-weight:600;font-size:12.5px;padding:5px 12px;border-radius:999px;margin-bottom:14px
+}
+.hero h1{font-size:clamp(28px,7vw,46px);max-width:760px;margin:0 auto}
+.hero p{
+  color:var(--ink-soft);max-width:640px;margin:14px auto 0;font-size:16px
+}
+.your-plan{
+  display:none;margin:18px auto 0;max-width:520px;background:var(--mint-dim);
+  color:#0e7a5c;border:1px solid #bfe6d7;border-radius:12px;padding:10px 14px;
+  font-weight:600;font-size:14px
+}
+.your-plan.show{display:block}
+
+/* ---------- plan cards ---------- */
+.plans{
+  display:grid;grid-template-columns:minmax(0,1fr);gap:16px;margin:28px 0 8px
+}
+
+.plan{
+  position:relative;background:#fff;border:1px solid var(--line);border-radius:18px;
+  padding:24px 20px 20px;display:flex;flex-direction:column;min-width:0
+}
+.plan.popular{border:2px solid var(--orange);box-shadow:0 10px 30px rgba(255,107,69,.12)}
+
+.badge{
+  position:absolute;top:-12px;left:20px;background:var(--orange);color:#fff;
+  font-size:12px;font-weight:700;padding:4px 12px;border-radius:999px
+}
+.badge.mint{background:var(--mint);left:auto;right:16px}
+
+.plan h3{font-size:22px}
+.price{
+  font-family:'Space Grotesk',Arial,sans-serif;font-weight:700;font-size:42px;
+  margin:12px 0 2px;line-height:1
+}
+.price small{
+  font:500 14px 'Inter',Arial,sans-serif;color:var(--ink-soft);margin-left:4px
+}
+.plan .desc{color:var(--ink-soft);font-size:14.5px;margin:10px 0 16px}
+
+.plan .btn{margin:2px 0 18px}
+
+.list-title{
+  font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--ink-soft);margin:0 0 8px
+}
+
+.feat{list-style:none;margin:0 0 4px;padding:0}
+.feat li{
+  position:relative;padding:5px 0 5px 26px;font-size:14.5px
+}
+.feat li::before{
+  content:"";position:absolute;left:0;top:9px;width:16px;height:16px;border-radius:50%;
+  background:var(--mint-dim)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4.2 8.4l2.4 2.4 5-5.2' fill='none' stroke='%231FAA80' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+    center/contain no-repeat
+}
+.feat.excl li{color:var(--ink-soft)}
+.feat.excl li::before{
+  background:var(--paper-dim)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M5.2 5.2l5.6 5.6M10.8 5.2l-5.6 5.6' fill='none' stroke='%239aa0a8' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E")
+    center/contain no-repeat
+}
+.not-included{margin-top:14px;padding-top:14px;border-top:1px dashed var(--line)}
+
+/* ---------- sections ---------- */
+section{padding:44px 0 6px}
+.sec-head{text-align:center;margin-bottom:24px}
+.sec-head h2{font-size:clamp(24px,5.5vw,34px)}
+.sec-head p{color:var(--ink-soft);max-width:640px;margin:10px auto 0}
+
+/* comparison table */
+.cmp-wrap{
+  background:#fff;border:1px solid var(--line);border-radius:16px;
+  overflow-x:auto;-webkit-overflow-scrolling:touch
+}
+.swipe-hint{
+  display:block;text-align:center;color:var(--ink-soft);font-size:12.5px;margin:0 0 8px
+}
+table.cmp{border-collapse:separate;border-spacing:0;width:100%;min-width:640px;font-size:14px}
+.cmp th,.cmp td{
+  padding:12px 12px;text-align:center;border-bottom:1px solid var(--paper-dim);
+  vertical-align:middle
+}
+.cmp thead th{
+  position:sticky;top:0;background:#fff;font-family:'Space Grotesk',Arial,sans-serif;
+  font-size:15px;border-bottom:1px solid var(--line);z-index:2
+}
+.cmp thead th small{display:block;font:500 12px 'Inter',Arial,sans-serif;color:var(--ink-soft)}
+.cmp th:first-child,.cmp td:first-child{
+  text-align:left;position:sticky;left:0;background:#fff;z-index:1;
+  min-width:160px;font-weight:500;border-right:1px solid var(--paper-dim)
+}
+.cmp thead th:first-child{z-index:3}
+.cmp .col-pop{background:#FFF8F5}
+.cmp thead th.col-pop{background:#FFF8F5;color:#c2431f}
+.cmp tr.group td{
+  background:var(--paper);font-weight:700;font-size:12px;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--ink-soft);text-align:left
+}
+.cmp tr.group td:first-child{background:var(--paper)}
+.cmp tbody tr:last-child td{border-bottom:0}
+
+.yes,.no{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:22px;height:22px;border-radius:50%;font-size:13px;font-weight:700
+}
+.yes{background:var(--mint-dim);color:var(--mint)}
+.no{background:var(--paper-dim);color:#9aa0a8}
+.val{font-weight:600}
+
+/* info panels */
+.two{display:grid;grid-template-columns:minmax(0,1fr);gap:16px}
+.panel{
+  background:#fff;border:1px solid var(--line);border-radius:18px;padding:22px 20px;min-width:0
+}
+.panel h3{font-size:20px;margin-bottom:10px}
+.panel p{color:var(--ink-soft);margin:0 0 12px;font-size:15px}
+.panel p:last-child{margin-bottom:0}
+
+.crawl-grid{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:14px 0
+}
+.crawl-item{
+  background:var(--paper);border:1px solid var(--paper-dim);border-radius:12px;padding:12px
+}
+.crawl-item b{display:block;font-family:'Space Grotesk',Arial,sans-serif;font-size:14px}
+.crawl-item span{display:block;color:var(--ink-soft);font-size:13.5px;margin-top:2px}
+.crawl-item strong{
+  display:block;font-family:'Space Grotesk',Arial,sans-serif;font-size:22px;margin-top:6px
+}
+
+.note{
+  background:var(--cobalt-dim);border-radius:12px;padding:12px 14px;
+  color:#1d3fb8;font-size:14px;font-weight:500
+}
+
+/* example product card */
+.pcard-wrap{display:flex;flex-direction:column;align-items:center;gap:8px}
+.pcard{
+  width:100%;max-width:280px;background:#fff;border:1px solid var(--line);
+  border-radius:16px;overflow:hidden;box-shadow:0 8px 24px rgba(20,23,28,.08)
+}
+.pcard-img{
+  height:150px;background:linear-gradient(135deg,var(--cobalt-dim),var(--paper-dim));
+  display:flex;align-items:center;justify-content:center;color:var(--cobalt)
+}
+.pcard-body{padding:14px}
+.pcard-body b{display:block;font-family:'Space Grotesk',Arial,sans-serif;font-size:16px}
+.pcard-price{color:var(--cobalt);font-weight:700;margin:2px 0 6px}
+.pcard-body p{margin:0 0 12px;color:var(--ink-soft);font-size:13.5px}
+.pcard-cap{font-size:12.5px;color:var(--ink-soft)}
+
+.check-list{list-style:none;margin:12px 0 0;padding:0}
+.check-list li{
+  position:relative;padding:6px 0 6px 28px;font-size:15px
+}
+.check-list li::before{
+  content:"";position:absolute;left:0;top:9px;width:18px;height:18px;border-radius:50%;
+  background:var(--cobalt-dim)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4.2 8.4l2.4 2.4 5-5.2' fill='none' stroke='%232F5FFF' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+    center/contain no-repeat
+}
+
+/* CTA + footer */
+.final{
+  margin:44px 0 0;background:var(--ink);color:#fff;border-radius:22px;
+  padding:34px 20px;text-align:center
+}
+.final h2{font-size:clamp(22px,5vw,32px)}
+.final p{color:#c9ccd2;margin:10px auto 20px;max-width:520px}
+.final .btn{min-width:200px}
+
+footer{padding:34px 0 40px;color:var(--ink-soft);font-size:13.5px}
+.foot{
+  display:flex;flex-direction:column;gap:14px;align-items:flex-start;
+  border-top:1px solid var(--line);padding-top:22px
+}
+.foot nav{display:flex;flex-wrap:wrap;gap:6px 18px}
+.foot a{text-decoration:none}
+.foot a:hover{color:var(--cobalt)}
+
+/* ---------- breakpoints ---------- */
+@media(min-width:640px){
+  .wrap{padding:0 24px}
+  .plans{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .two{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .crawl-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .foot{flex-direction:row;justify-content:space-between;align-items:center}
+}
+
+@media(min-width:900px){
+  .nav,.head-cta{display:flex}
+  .menu-btn,.mobile-menu{display:none!important}
+}
+
+@media(min-width:1100px){
+  .plans{grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+  .plan{padding:24px 18px 20px}
+  .price{font-size:38px}
+  .hero{padding-top:52px}
+}
+
+@media(max-width:639px){
+  table.cmp{min-width:500px;font-size:13px}
+  .cmp th,.cmp td{padding:10px 7px}
+  .cmp th:first-child,.cmp td:first-child{min-width:112px;max-width:112px;font-size:12.5px}
+  .cmp thead th{font-size:13px}
+  .cmp thead th small{font-size:11px}
+}
+
+@media(max-width:380px){
+  .wrap{padding:0 12px}
+  .plan{padding:22px 16px 18px}
+  .price{font-size:38px}
+}
+</style>
+</head>
+
+<body>
+
+<header class="site-head">
+  <div class="wrap">
+    <div class="head-in">
+
+      <a href="index.html" class="logo" aria-label="Auvii home">
+        <span class="logo-mark">
+          <svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true">
+            <path d="M5 5h14a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-8.5l-3.8 3.6v-3.6H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z" fill="#fff"/>
+            <line x1="9" y1="10.6" x2="15" y2="10.6" stroke="#2F5FFF" stroke-width="1" stroke-linecap="round"/>
+            <line x1="9" y1="10.6" x2="12" y2="8" stroke="#2F5FFF" stroke-width="1" stroke-linecap="round"/>
+            <line x1="15" y1="10.6" x2="12" y2="8" stroke="#2F5FFF" stroke-width="1" stroke-linecap="round"/>
+            <circle cx="9" cy="10.6" r="1.15" fill="#2F5FFF"/>
+            <circle cx="15" cy="10.6" r="1.15" fill="#2F5FFF"/>
+            <circle cx="12" cy="8" r="1.15" fill="#2F5FFF"/>
+          </svg>
+        </span>
+        Auvii
+      </a>
+
+      <nav class="nav" aria-label="Main">
+        <a href="index.html#features">Features</a>
+        <a href="how-it-works.html">How It Works</a>
+        <a href="tiers.html" class="active" aria-current="page">Pricing</a>
+        <a href="index.html#faq">FAQ</a>
+      </nav>
+
+      <div class="head-cta">
+        <a class="btn btn-ghost" data-auth="out" href="auth.html">Log In</a>
+        <a class="btn btn-primary" data-auth="out" href="auth.html?mode=signup">Create AI Agent</a>
+        <a class="btn btn-primary" data-auth="in" href="account.html" hidden>Dashboard</a>
+      </div>
+
+      <button class="menu-btn" id="menuBtn" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mobileMenu">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <path d="M4 7h16M4 12h16M4 17h16"/>
+        </svg>
+      </button>
+
+    </div>
+  </div>
+
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="index.html#features">Features</a>
+    <a href="how-it-works.html">How It Works</a>
+    <a href="tiers.html" class="active" aria-current="page">Pricing</a>
+    <a href="index.html#faq">FAQ</a>
+    <a class="btn btn-ghost" data-auth="out" href="auth.html">Log In</a>
+    <a class="btn btn-primary" data-auth="out" href="auth.html?mode=signup">Create AI Agent</a>
+    <a class="btn btn-primary" data-auth="in" href="account.html" hidden>Go to Dashboard</a>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- HERO -->
+  <div class="hero">
+    <span class="eyebrow">Auvii pricing</span>
+    <h1>Choose the plan that fits your store</h1>
+    <p>Start with a 7-day free trial, then pick the monthly plan with the tools your store needs. Compare every plan below.</p>
+    <div class="your-plan" id="yourPlan" role="status"></div>
+    <a class="btn btn-ghost" data-auth="in" href="account.html?view=subscription" hidden style="margin-top:14px">Manage subscription</a>
+  </div>
+
+  <!-- PLAN CARDS -->
+  <div class="plans" id="plans">
+
+    <!-- Free Trial -->
+    <article class="plan" data-plan="free">
+      <h3>Free Trial</h3>
+      <div class="price">$0<small>for 7 days</small></div>
+      <p class="desc">Full Auvii access for your first 7 days.</p>
+      <a class="btn btn-ghost btn-block" href="auth.html?mode=signup" data-cta="free">Start free trial</a>
+      <p class="list-title">What's included</p>
+      <ul class="feat">
+        <li>Full Auvii access for 7 days</li>
+        <li>AI customer-service assistant</li>
+        <li>Website crawler</li>
+        <li>1 website crawl during the trial</li>
+        <li>Training Center</li>
+        <li>Unlimited training</li>
+        <li>Test before launch</li>
+        <li>Website connection</li>
+        <li>Analytics</li>
+        <li>Sales Assistant</li>
+        <li>Product recommendations</li>
+        <li>Upselling and cross-selling</li>
+        <li>AI customization</li>
+      </ul>
+    </article>
+
+    <!-- Basic -->
+    <article class="plan" data-plan="basic">
+      <h3>Basic</h3>
+      <div class="price">$5<small>/ month</small></div>
+      <p class="desc">Core AI customer-service features without the advanced tools.</p>
+      <a class="btn btn-ghost btn-block" href="auth.html?mode=signup" data-cta="basic">Get Basic</a>
+      <p class="list-title">What's included</p>
+      <ul class="feat">
+        <li>AI customer-service assistant</li>
+        <li>Website crawler</li>
+        <li>1 website crawl per month</li>
+        <li>Up to 25 pages per crawl</li>
+        <li>Unlimited training</li>
+        <li>Training Center</li>
+        <li>Test before launch</li>
+        <li>Website connection</li>
+        <li>Conversations</li>
+      </ul>
+      <div class="not-included">
+        <p class="list-title">Not included</p>
+        <ul class="feat excl">
+          <li>Analytics</li>
+          <li>Sales Assistant</li>
+          <li>Product recommendations</li>
+          <li>Upselling</li>
+          <li>Cross-selling</li>
+          <li>Advanced Analytics</li>
+          <li>Advanced Sales Assistant</li>
+          <li>Full AI customization</li>
+        </ul>
+      </div>
+    </article>
+
+    <!-- Standard -->
+    <article class="plan popular" data-plan="standard">
+      <span class="badge">Most popular</span>
+      <h3>Standard</h3>
+      <div class="price">$10<small>/ month</small></div>
+      <p class="desc">Core Auvii plus analytics and Sales Assistant.</p>
+      <a class="btn btn-orange btn-block" href="auth.html?mode=signup" data-cta="standard">Get Standard</a>
+      <p class="list-title">What's included</p>
+      <ul class="feat">
+        <li>Everything in Basic</li>
+        <li>5 website crawls per month</li>
+        <li>Up to 50 pages per crawl</li>
+        <li>Analytics</li>
+        <li>Sales Assistant</li>
+        <li>Product recommendations</li>
+        <li>Product cards</li>
+        <li>Product images</li>
+        <li>Direct links to product pages</li>
+        <li>Upselling</li>
+        <li>Cross-selling</li>
+      </ul>
+    </article>
+
+    <!-- Premium -->
+    <article class="plan" data-plan="premium">
+      <h3>Premium</h3>
+      <div class="price">$15<small>/ month</small></div>
+      <p class="desc">Everything in Standard plus advanced analytics and customization.</p>
+      <a class="btn btn-ghost btn-block" href="auth.html?mode=signup" data-cta="premium">Get Premium</a>
+      <p class="list-title">What's included</p>
+      <ul class="feat">
+        <li>Everything in Standard</li>
+        <li>10 website crawls per month</li>
+        <li>Up to 100 pages per crawl</li>
+        <li>Advanced Analytics</li>
+        <li>Advanced Sales Assistant</li>
+        <li>Advanced product recommendations</li>
+        <li>Advanced upselling</li>
+        <li>Advanced cross-selling</li>
+        <li>Full AI customization</li>
+      </ul>
+    </article>
+
+  </div>
+
+
+  <!-- COMPARISON -->
+  <section id="compare" aria-labelledby="cmpTitle">
+    <div class="sec-head">
+      <h2 id="cmpTitle">Compare plans feature by feature</h2>
+      <p>See exactly what each plan includes.</p>
+    </div>
+
+    <span class="swipe-hint" id="swipeHint">Swipe sideways to compare all plans →</span>
+
+    <div class="cmp-wrap" tabindex="0" role="region" aria-label="Plan comparison table">
+      <table class="cmp">
+        <thead>
+          <tr>
+            <th scope="col">Feature</th>
+            <th scope="col">Free Trial<small>$0 for 7 days</small></th>
+            <th scope="col">Basic<small>$5 / month</small></th>
+            <th scope="col" class="col-pop">Standard<small>$10 / month</small></th>
+            <th scope="col">Premium<small>$15 / month</small></th>
+          </tr>
+        </thead>
+        <tbody>
+
+          <tr class="group"><td colspan="5">Core</td></tr>
+          <tr><td>AI customer-service assistant</td><td><span class="yes" aria-label="Included">✓</span></td><td><span class="yes" aria-label="Included">✓</span></td><td class="col-pop"><span class="yes" aria-label="Included">✓</span></td><td><span class="yes" aria-label="Included">✓</span></td></tr>
+          <tr><td>Training Center</td><td><span class="yes" aria-label="Included">✓</span></td><td><span class="yes" aria-label="Included">✓</span></td><td class="col-pop"><span class="yes" aria-label="Included">✓</span></td><td><span class="yes" aria-label="Included">✓</span></td></tr>
+          <tr><td>Unlimited training</td><td><span class="yes" aria-label="Included">✓</span></td><td><span class="yes" aria-label="Included">✓</span></td><td class="col-pop"><span class="yes" aria-label="Included">✓</span></td><td><span class="yes" aria-label="Included">✓</span></td></tr>
+          <tr><td>Test before launch</td><td><span class="yes" aria-label="Included">✓</span></td><td><span class="yes" aria-label="Included">✓</span></td><td class="col-pop"><span class="yes" aria-label="Included">✓</span></td><td><span class="yes" aria-label="Included">✓</span></td></tr>
+          <tr><td>Website connection</td><td><span class="yes" aria-label="Included">✓</span></td><td><span class="yes" aria-label="Included">✓</span></td><td class="col-pop"><span class="yes" aria-label="Included">✓</span></td><td><span class="yes" aria-label="Included">✓</span></td></tr>
+          <tr><td>Conversations</td><td><span class="yes" aria-label="Included">✓</span></td><td><span class="yes" aria-label="Included">✓</span></td><td class="col-pop"><span class="yes" aria-label="Included">✓</span></td><td><span class="yes" aria-label="Included">✓</span></td></tr>
+
+          <tr class="group"><td colspan="5">Website crawling</td></tr>
+          <tr><td>Website crawler</td><td><span class="yes" aria-label="Included">✓</span></td><td><span class="yes" aria-label="Included">✓</span></td><td class="col-pop"><span class="yes" aria-label="Included">✓</span></td><td><span class="yes" aria-label="Included">✓</span></td></tr>
+          <tr><td>Website crawls</td><td class="val">1 during trial</td><td class="val">1 per month</td><td class="val col-pop">5 per month</td><td class="val">10 per month</td></tr>
+          <tr><td>Pages per crawl</td><td><span class="no" aria-label="Not specified">–</span></td><td class="val">Up to 25</td><td class="val col-pop">Up to 50</td><td class="val">Up to 100</td></tr>
+
+          <tr class="group"><td colspan="5">Sales tools</td></tr>
+          <tr><td>Sales Assistant</td><td><span class="yes" aria-label="Included">✓</span></td><td><span class="no" aria-label="Not included">–</span></td><td class="col-pop"><span class="yes" aria-label="Included">✓</span></td><td><span class="yes" aria-label="Included">✓</span></td></tr>
+          <tr><td>Product recommendations</td><td><span class="yes" aria-label="Included">✓</span></td><td><span class="no" aria-label="Not included">–</span></td><td class="col-pop"><span class="yes" aria-label="Included">✓</span></td><td><span class="yes" aria-label="Included">✓</span></td></tr>
+          <tr><td>Product cards with images and links</td><td><span class="yes" aria-label="Included">✓</span></td><td><span class="no" aria-label="Not included">–</span></td><td class="col-pop"><span class="yes" aria-label="Included">✓</span></td><td><span class="yes" aria-label="Included">✓</span></td></tr>
+          <tr><td>Upselling</td><td><span class="yes" aria-label="Included">✓</span></td><td><span class="no" aria-label="Not included">–</span></td><td class="col-pop"><span class="yes" aria-label="Included">✓</span></td><td><span class="yes" aria-label="Included">✓</span></td></tr>
+          <tr><td>Cross-selling</td><td><span class="yes" aria-label="Included">✓</span></td><td><span class="no" aria-label="Not included">–</span></td><td class="col-pop"><span class="yes" aria-label="Included">✓</span></td><td><span class="yes" aria-label="Included">✓</span></td></tr>
+          <tr><td>Advanced Sales Assistant</td><td><span class="no" aria-label="Not included">–</span></td><td><span class="no" aria-label="Not included">–</span></td><td class="col-pop"><span class="no" aria-label="Not included">–</span></td><td><span class="yes" aria-label="Included">✓</span></td></tr>
+          <tr><td>Advanced product recommendations</td><td><span class="no" aria-label="Not included">–</span></td><td><span class="no" aria-label="Not included">–</span></td><td class="col-pop"><span class="no" aria-label="Not included">–</span></td><td><span class="yes" aria-label="Included">✓</span></td></tr>
+          <tr><td>Advanced upselling and cross-selling</td><td><span class="no" aria-label="Not included">–</span></td><td><span class="no" aria-label="Not included">–</span></td><td class="col-pop"><span class="no" aria-label="Not included">–</span></td><td><span class="yes" aria-label="Included">✓</span></td></tr>
+
+          <tr class="group"><td colspan="5">Analytics and customization</td></tr>
+          <tr><td>Analytics</td><td><span class="yes" aria-label="Included">✓</span></td><td><span class="no" aria-label="Not included">–</span></td><td class="col-pop"><span class="yes" aria-label="Included">✓</span></td><td><span class="yes" aria-label="Included">✓</span></td></tr>
+          <tr><td>Advanced Analytics</td><td><span class="no" aria-label="Not included">–</span></td><td><span class="no" aria-label="Not included">–</span></td><td class="col-pop"><span class="no" aria-label="Not included">–</span></td><td><span class="yes" aria-label="Included">✓</span></td></tr>
+          <tr><td>AI customization</td><td><span class="yes" aria-label="Included">✓</span></td><td><span class="no" aria-label="Not included">–</span></td><td class="col-pop"><span class="no" aria-label="Not included">–</span></td><td class="val">Full</td></tr>
+
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+
+  <!-- CRAWLING + SALES ASSISTANT -->
+  <section aria-labelledby="howTitle">
+    <div class="sec-head">
+      <h2 id="howTitle">How website crawling and the Sales Assistant work</h2>
+    </div>
+
+    <div class="two">
+
+      <div class="panel" id="crawling">
+        <h3>Website crawling</h3>
+        <p>A crawl is one request to scan and update your website's information. Each plan includes a set number of crawls and a maximum number of pages per crawl.</p>
+
+        <div class="crawl-grid">
+          <div class="crawl-item"><b>Free Trial</b><strong>1 crawl</strong><span>during the trial</span></div>
+          <div class="crawl-item"><b>Basic</b><strong>1 / month</strong><span>up to 25 pages</span></div>
+          <div class="crawl-item"><b>Standard</b><strong>5 / month</strong><span>up to 50 pages</span></div>
+          <div class="crawl-item"><b>Premium</b><strong>10 / month</strong><span>up to 100 pages</span></div>
+        </div>
+
+        <div class="note">Your existing training data stays available after a crawl. Crawl limits only control when you can start a new website crawl.</div>
+      </div>
+
+      <div class="panel" id="sales-assistant">
+        <h3>Sales Assistant with product cards</h3>
+        <p>The Sales Assistant can show your customers actual product cards in the chat. Each card includes:</p>
+
+        <div class="pcard-wrap" aria-hidden="false">
+          <div class="pcard" role="img" aria-label="Example product card showing an image, name, price, short description and a View Product button">
+            <div class="pcard-img">
+              <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="4" width="18" height="16" rx="2.5"/>
+                <circle cx="9" cy="10" r="1.6"/>
+                <path d="M21 16l-5-5-8 8"/>
+              </svg>
+            </div>
+            <div class="pcard-body">
+              <b>Product name</b>
+              <div class="pcard-price">Price</div>
+              <p>Short description of the product.</p>
+              <span class="btn btn-primary btn-block" style="min-height:40px;pointer-events:none">View Product</span>
+            </div>
+          </div>
+          <span class="pcard-cap">Example layout of a product card</span>
+        </div>
+
+        <ul class="check-list">
+          <li>Product image</li>
+          <li>Product name</li>
+          <li>Price</li>
+          <li>Short description</li>
+          <li>A clickable <b>View Product</b> button</li>
+        </ul>
+
+        <p style="margin-top:14px">The button takes the customer to the actual product page on your store.</p>
+        <p>The Sales Assistant is included in the Free Trial, Standard and Premium. It is not included in Basic.</p>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- FINAL CTA -->
+  <div class="final">
+    <h2>Give your online store an AI assistant today</h2>
+    <p>Start with the 7-day free trial and upgrade whenever your store needs more.</p>
+    <a class="btn btn-primary" data-auth="out" href="auth.html?mode=signup">Create AI Agent</a>
+    <a class="btn btn-primary" data-auth="in" href="account.html" hidden>Go to Dashboard</a>
+  </div>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="foot">
+      <div>© 2026 Auvii. All rights reserved.</div>
+      <nav aria-label="Footer">
+        <a href="index.html">Home</a>
+        <a href="index.html#features">Features</a>
+        <a href="how-it-works.html">How It Works</a>
+        <a href="tiers.html">Pricing</a>
+        <a href="index.html#faq">FAQ</a>
+      </nav>
+    </div>
+  </div>
+</footer>
+
+
+<!-- Optional: signed-in state. If these scripts are not available the page simply stays in its signed-out state. -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="sb-config.js"></script>
+
+<script>
+(function(){
+
+  /* mobile menu */
+  var menuBtn = document.getElementById('menuBtn');
+  var menu = document.getElementById('mobileMenu');
+
+  menuBtn.addEventListener('click', function(){
+    var open = menu.classList.toggle('open');
+    menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+
+  /* hide the swipe hint when the table already fits */
+  function checkTable(){
+    var box = document.querySelector('.cmp-wrap');
+    var hint = document.getElementById('swipeHint');
+    if(box && hint){ hint.style.display = box.scrollWidth > box.clientWidth + 2 ? 'block' : 'none'; }
+  }
+  checkTable();
+  window.addEventListener('resize', checkTable);
+
+  /* signed-in state: keeps checkout in the existing dashboard */
+  var NAMES = {free:'Free Trial', basic:'Basic', standard:'Standard', premium:'Premium'};
+
+  function setAuth(signedIn){
+    document.querySelectorAll('[data-auth="in"]').forEach(function(el){ el.hidden = !signedIn; });
+    document.querySelectorAll('[data-auth="out"]').forEach(function(el){ el.hidden = signedIn; });
+  }
+
+  function upgradeButtons(currentKey){
+    document.querySelectorAll('[data-cta]').forEach(function(a){
+      var key = a.getAttribute('data-cta');
+
+      if(key === 'free'){
+        a.textContent = 'Open dashboard';
+        a.setAttribute('href', 'account.html');
+        return;
+      }
+
+      a.setAttribute('href', 'account.html?view=subscription');
+
+      if(currentKey === key){
+        a.textContent = 'Current plan';
+        a.setAttribute('aria-disabled', 'true');
+      }else{
+        a.textContent = 'Choose ' + NAMES[key];
+      }
+    });
+  }
+
+  try{
+    if(window.supabase && typeof sb !== 'undefined' && sb && sb.auth){
+
+      sb.auth.getSession().then(function(res){
+
+        var session = res && res.data && res.data.session;
+        if(!session) return;
+
+        setAuth(true);
+        upgradeButtons(null);
+
+        sb.from('subscriptions').select('*').eq('user_id', session.user.id).maybeSingle()
+          .then(function(r){
+
+            var sub = r && r.data;
+            if(!sub || sub.status !== 'active') return;
+
+            var key = String(sub.plan_key || '').toLowerCase();
+            if(!NAMES[key] || key === 'free') return;
+
+            upgradeButtons(key);
+
+            var box = document.getElementById('yourPlan');
+            box.textContent = 'Your current plan: ' + NAMES[key];
+            box.classList.add('show');
+          })
+          .catch(function(){});
+
+      }).catch(function(){});
+    }
+  }catch(e){}
+
+})();
+</script>
+
+</body>
+</html>
