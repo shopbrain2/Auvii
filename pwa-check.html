@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Auvii install check</title>
+<link rel="manifest" href="manifest.json">
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;background:#F7F7F4;color:#14171C;font:15px/1.5 Arial,sans-serif;padding:16px}
+  h1{font-size:22px;margin:0 0 4px}
+  p.sub{color:#4B5058;margin:0 0 18px}
+  .row{background:#fff;border:1px solid #DDDCD5;border-radius:12px;padding:12px 14px;margin-bottom:10px;overflow-wrap:anywhere}
+  .row b{display:block;margin-bottom:2px}
+  .ok b::before{content:"✓ ";color:#1FAA80}
+  .bad{border-color:#f2b8a6;background:#fff6f2}
+  .bad b::before{content:"✗ ";color:#B5431F}
+  .warn b::before{content:"! ";color:#c98a00}
+  .row span{color:#4B5058;font-size:13.5px}
+  #summary{font-weight:700;margin:16px 0 10px}
+  button{background:#2F5FFF;color:#fff;border:0;border-radius:10px;padding:13px 18px;font:600 15px Arial,sans-serif;width:100%;min-height:46px}
+  button[hidden]{display:none}
+</style>
+</head>
+<body>
+
+<h1>Auvii install check</h1>
+<p class="sub">Open this page on your phone. It tests everything Chrome needs before it will offer to install Auvii.</p>
+
+<div id="results"></div>
+<div id="summary"></div>
+<button id="installNow" hidden>Install Auvii now</button>
+
+<script>
+(function(){
+
+  var results = document.getElementById('results');
+  var summary = document.getElementById('summary');
+  var installBtn = document.getElementById('installNow');
+  var counts = {ok:0, bad:0, warn:0};
+  var deferred = null;
+
+  function add(kind, title, detail){
+    counts[kind]++;
+    var d = document.createElement('div');
+    d.className = 'row ' + kind;
+    d.innerHTML = '<b></b><span></span>';
+    d.querySelector('b').textContent = title;
+    d.querySelector('span').textContent = detail || '';
+    results.appendChild(d);
+  }
+
+  window.addEventListener('beforeinstallprompt', function(e){
+    e.preventDefault();
+    deferred = e;
+  });
+
+  installBtn.addEventListener('click', function(){
+    if(!deferred) return;
+    deferred.prompt();
+  });
+
+  function get(url){
+    return fetch(url + (url.indexOf('?') < 0 ? '?' : '&') + 'check=' + Date.now(), {cache:'no-store'});
+  }
+
+  function imageSize(url){
+    return new Promise(function(resolve){
+      var img = new Image();
+      img.onload = function(){ resolve(img.naturalWidth + 'x' + img.naturalHeight); };
+      img.onerror = function(){ resolve(null); };
+      img.src = url;
+    });
+  }
+
+  async function run(){
+
+    var ua = navigator.userAgent;
+
+    /* 1. secure page */
+    if(location.protocol === 'https:' || location.hostname === 'localhost'){
+      add('ok','Secure page (https)', location.origin);
+    }else{
+      add('bad','Page is not https','Browsers only offer installing on https pages.');
+    }
+
+    /* 2. already installed / inside another app */
+    if(window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true){
+      add('ok','Auvii is already installed','You are viewing this page inside the installed app.');
+    }
+    if(/; wv\)|FBAN|FBAV|Instagram|Snapchat|TikTok|Line\//i.test(ua)){
+      add('bad','This page is open inside another app','WhatsApp, Facebook, Instagram and similar in-app browsers cannot install apps. Open this page in Chrome (menu ⋮ → Open in browser).');
+    }else if(/iphone|ipad|ipod/i.test(ua)){
+      add('warn','iPhone detected','iPhones never show an install pop-up. Use Safari: tap Share, then “Add to Home Screen”.');
+    }else{
+      add('ok','Regular browser','Not inside another app.');
+    }
+
+    /* 3. manifest linked from the real pages */
+    var pages = ['index.html','account.html'];
+    for(var i = 0; i < pages.length; i++){
+      try{
+        var r = await get(pages[i]);
+        var t = await r.text();
+        if(r.ok && /rel=["']manifest["']/i.test(t)){
+          add('ok', pages[i] + ' links the manifest');
+        }else if(r.ok){
+          add('bad', pages[i] + ' does not link manifest.json','Upload the newest ' + pages[i] + '.');
+        }else{
+          add('bad', pages[i] + ' could not be loaded','HTTP ' + r.status);
+        }
+      }catch(e){
+        add('bad', pages[i] + ' could not be loaded', String(e));
+      }
+    }
+
+    /* 4. manifest file */
+    var manifest = null;
+    try{
+      var mr = await get('manifest.json');
+      if(!mr.ok){
+        add('bad','manifest.json is missing','HTTP ' + mr.status + '. Upload manifest.json to the same folder as index.html.');
+      }else{
+        manifest = await mr.json();
+        add('ok','manifest.json loads', (manifest.name || '(no name)'));
+      }
+    }catch(e){
+      add('bad','manifest.json is not valid',String(e));
+    }
+
+    if(manifest){
+
+      if(manifest.start_url) add('ok','start_url', manifest.start_url);
+      else add('bad','start_url is missing');
+
+      if(manifest.display === 'standalone' || manifest.display === 'fullscreen' || manifest.display === 'minimal-ui'){
+        add('ok','display mode', manifest.display);
+      }else{
+        add('bad','display must be "standalone"', String(manifest.display));
+      }
+
+      if(!manifest.name && !manifest.short_name) add('bad','name is missing');
+
+      var icons = manifest.icons || [];
+      var has192 = false, has512 = false;
+
+      for(var k = 0; k < icons.length; k++){
+
+        var ic = icons[k];
+
+        if(/^data:/i.test(ic.src)){
+          add('bad','Icon '+(k+1)+' is embedded inside the manifest','Chrome does not accept embedded icons. Use real files: icon-192.png and icon-512.png.');
+          continue;
+        }
+
+        var url = new URL(ic.src, location.href).href;
+
+        try{
+          var ir = await get(ic.src);
+          var ct = ir.headers.get('content-type') || '';
+          if(!ir.ok){
+            add('bad','Icon file missing: ' + ic.src,'HTTP ' + ir.status + '. Upload it next to index.html.');
+            continue;
+          }
+          if(ct.indexOf('image') !== 0){
+            add('bad','Icon is not an image: ' + ic.src,'Server returned ' + ct);
+            continue;
+          }
+        }catch(e){
+          add('bad','Icon could not be loaded: ' + ic.src,String(e));
+          continue;
+        }
+
+        var size = await imageSize(url);
+        var declared = ic.sizes;
+
+        if(!size){
+          add('bad','Icon is broken: ' + ic.src,'The file is not a valid image.');
+        }else if(size !== declared){
+          add('warn','Icon size differs: ' + ic.src,'Real size ' + size + ', manifest says ' + declared);
+        }else{
+          add('ok','Icon OK: ' + ic.src, size + ' · ' + (ic.purpose || 'any'));
+        }
+
+        if(size === '192x192' && (ic.purpose || 'any').indexOf('any') > -1) has192 = true;
+        if(size === '512x512' && (ic.purpose || 'any').indexOf('any') > -1) has512 = true;
+
+      }
+
+      if(!has192 || !has512){
+        add('bad','Need both a 192x192 and a 512x512 icon','Chrome will not offer to install without them.');
+      }
+
+    }
+
+    /* 5. service worker */
+    try{
+      var sr = await get('sw.js');
+      var st = await sr.text();
+      if(!sr.ok){
+        add('bad','sw.js is missing','HTTP ' + sr.status + '. Upload sw.js next to index.html.');
+      }else if(!/addEventListener\(\s*['"]fetch['"]/.test(st)){
+        add('bad','sw.js has no fetch handler','Chrome needs a fetch handler. Use the sw.js I sent.');
+      }else{
+        add('ok','sw.js found', 'cache name: ' + ((st.match(/CACHE_NAME\s*=\s*['"]([^'"]+)/) || [])[1] || 'unknown'));
+      }
+    }catch(e){
+      add('bad','sw.js could not be loaded',String(e));
+    }
+
+    if('serviceWorker' in navigator){
+      try{
+        var reg = await navigator.serviceWorker.register('sw.js');
+        await navigator.serviceWorker.ready;
+        add('ok','Service worker is running', reg.scope);
+      }catch(e){
+        add('bad','Service worker could not start',String(e));
+      }
+    }else{
+      add('bad','This browser has no service worker support','Use Chrome on Android.');
+    }
+
+    /* 6. did the browser offer to install? */
+    await new Promise(function(res){ setTimeout(res, 4000); });
+
+    if(deferred){
+      add('ok','The browser is ready to install Auvii','Tap the blue button below.');
+      installBtn.hidden = false;
+    }else{
+      add('warn','The browser has not offered installing yet','If everything above is green: reload once, browse for a few seconds, or use Chrome menu ⋮ → Install app. It also stays silent if Auvii is already installed.');
+    }
+
+    summary.textContent = counts.bad
+      ? counts.bad + ' problem' + (counts.bad === 1 ? '' : 's') + ' to fix (marked ✗ above).'
+      : 'Everything needed for installing is in place.';
+
+  }
+
+  run();
+
+})();
+</script>
+
+</body>
+</html>
