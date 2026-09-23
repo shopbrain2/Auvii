@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auvii — Premium AI Customer Support & Sales Automation</title>
+    
+    <!-- Google Fonts & Lucide Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        /* ==========================================================================
+           1. CORE SYSTEM & VARIABLES
+           ========================================================================== */
+        :root {
+            --bg-dark: #07090e;
+            --bg-card: rgba(15, 21, 32, 0.65);
+            --bg-card-hover: rgba(22, 30, 46, 0.85);
+            --border-glow: rgba(99, 102, 241, 0.25);
+            --border-subtle: rgba(255, 255, 255, 0.08);
+            
+            --primary: #6366f1;
+            --primary-light: #818cf8;
+            --primary-glow: rgba(99, 102, 241, 0.35);
+            --accent: #a855f7;
+            --emerald: #10b981;
+            
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --text-dim: #64748b;
+
+            --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-display: 'Space Grotesk', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: var(--font-sans);
+            overflow-x: hidden;
+        }
+
+        body {
+            position: relative;
+            line-height: 1.6;
+            overflow-x: hidden;
+            width: 100%;
+        }
+
+        /* ==========================================================================
+           2. BACKGROUND & ATMOSPHERE
+           ========================================================================== */
+        .ambient-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -2;
+            pointer-events: none;
+            overflow: hidden;
+            background: radial-gradient(circle at 50% 0%, #111827 0%, #07090e 100%);
+        }
+
+        .glow-sphere {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: 0.35;
+            pointer-events: none;
+        }
+
+        .glow-1 {
+            width: 600px;
+            height: 600px;
+            background: var(--primary);
+            top: -200px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .glow-2 {
+            width: 500px;
+            height: 500px;
+            background: var(--accent);
+            top: 40%;
+            right: -100px;
+        }
+
+        .grid-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 40px 40px;
+            z-index: -1;
+            pointer-events: none;
+            mask-image: radial-gradient(circle at 50% 30%, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 80%);
+        }
+
+        /* ==========================================================================
+           3. STRICT VERTICAL FLOATING ANIMATIONS (UP/DOWN ONLY)
+           ========================================================================== */
+        @keyframes floatVerticalSlow {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-12px); }
+        }
+
+        @keyframes floatVerticalMedium {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+        }
+
+        @keyframes floatVerticalSubtle {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-5px); }
+        }
+
+        .float-slow {
+            animation: floatVerticalSlow 6s ease-in-out infinite;
+        }
+
+        .float-medium {
+            animation: floatVerticalMedium 4.5s ease-in-out infinite;
+        }
+
+        .float-subtle {
+            animation: floatVerticalSubtle 3s ease-in-out infinite;
+        }
+
+        /* ==========================================================================
+           4. SCROLL REVEAL ANIMATIONS
+           ========================================================================== */
+        .scroll-reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            will-change: opacity, transform;
+        }
+
+        .scroll-reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .delay-1 { transition-delay: 0.1s; }
+        .delay-2 { transition-delay: 0.2s; }
+        .delay-3 { transition-delay: 0.3s; }
+
+        /* ==========================================================================
+           5. NAVIGATION
+           ========================================================================== */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+            padding: 1.25rem 2rem;
+            transition: background 0.3s, backdrop-filter 0.3s, border-color 0.3s;
+        }
+
+        .navbar.scrolled {
+            background: rgba(7, 9, 14, 0.8);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .brand-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+            color: var(--text-main);
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 1.35rem;
+            letter-spacing: -0.02em;
+        }
+
+        .logo-badge {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 15px var(--primary-glow);
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: color 0.2s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--text-main);
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.7rem 1.4rem;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            text-decoration: none;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            cursor: pointer;
+            border: 1px solid transparent;
+        }
+
+        .btn-ghost {
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--border-subtle);
+        }
+
+        .btn-ghost:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), #4f46e5);
+            color: #ffffff;
+            box-shadow: 0 4px 20px var(--primary-glow);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(99, 102, 241, 0.5);
+        }
+
+        /* ==========================================================================
+           6. HERO SECTION & LIVE AI DEMO
+           ========================================================================== */
+        .hero {
+            padding: 10rem 1.5rem 5rem 1.5rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .hero-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.35rem 1rem;
+            border-radius: 100px;
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            color: var(--primary-light);
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+        }
+
+        .hero-title {
+            font-family: var(--font-display);
+            font-size: clamp(2.5rem, 5vw, 4.25rem);
+            font-weight: 700;
+            line-height: 1.1;
+            letter-spacing: -0.03em;
+            margin-bottom: 1.5rem;
+            max-width: 900px;
+            background: linear-gradient(180deg, #ffffff 0%, #cbd5e1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-description {
+            font-size: clamp(1rem, 2vw, 1.2rem);
+            color: var(--text-muted);
+            max-width: 680px;
+            margin-bottom: 2.5rem;
+        }
+
+        .hero-cta-group {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 4rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        /* Hero AI Visual Sandbox Container */
+        .hero-demo-container {
+            width: 100%;
+            max-width: 950px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-glow);
+            border-radius: 20px;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+            overflow: hidden;
+            position: relative;
+            text-align: left;
+        }
+
+        .demo-header {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .demo-dots {
+            display: flex;
+            gap: 6px;
+        }
+
+        .demo-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .demo-title-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--emerald);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--emerald);
+        }
+
+        .demo-body {
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+            min-height: 380px;
+        }
+
+        /* Animated Chat Simulation */
+        .chat-bubble {
+            max-width: 80%;
+            padding: 1rem 1.25rem;
+            border-radius: 14px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.5s ease;
+        }
+
+        .chat-user {
+            align-self: flex-end;
+            background: var(--primary);
+            color: #ffffff;
+            border-bottom-right-radius: 2px;
+            margin-left: auto;
+        }
+
+        .chat-ai {
+            align-self: flex-start;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-main);
+            border-bottom-left-radius: 2px;
+        }
+
+        .typing-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 0.75rem 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            width: fit-content;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--text-muted);
+            border-radius: 50%;
+            animation: typingBounce 1.4s infinite ease-in-out both;
+        }
+
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes typingBounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+
+        /* Product Recommendation Card inside Chat */
+        .recommended-product-card {
+            margin-top: 0.75rem;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.5s ease;
+        }
+
+        .product-img-placeholder {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(168, 85, 247, 0.2));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-light);
+        }
+
+        /* Floating Analytics Badge (Strict Vertical Float) */
+        .hero-float-badge {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(15, 21, 32, 0.9);
+            border: 1px solid var(--border-glow);
+            padding: 0.85rem 1.25rem;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+
+        /* ==========================================================================
+           7. FEATURES & PRODUCT GRID
+           ========================================================================== */
+        .section-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 6rem 1.5rem;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .section-title {
+            font-family: var(--font-display);
+            font-size: clamp(2rem, 3.5vw, 2.75rem);
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: 1rem;
+        }
+
+        .section-subtitle {
+            color: var(--text-muted);
+            font-size: 1.05rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.75rem;
+        }
+
+        .feature-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            padding: 2rem;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--border-glow);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+        }
+
+        .feature-icon-wrapper {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--primary-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            border: 1px solid rgba(99, 102, 241, 0.2);
+        }
+
+        .feature-card h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: var(--text-main);
+        }
+
+        .feature-card p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        /* Visual Feature Previews */
+        .feature-preview-box {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            font-size: 0.85rem;
+        }
+
+        /* ==========================================================================
+           8. PRICING & TRUST SECTIONS
+           ========================================================================== */
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            align-items: stretch;
+        }
+
+        .pricing-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 20px;
+            padding: 2.5rem 2rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .pricing-card.popular {
+            border-color: var(--primary);
+            background: linear-gradient(180deg, rgba(99, 102, 241, 0.1) 0%, rgba(15, 21, 32, 0.8) 100%);
+            box-shadow: 0 0 30px rgba(99, 102, 241, 0.2);
+        }
+
+        .popular-badge {
+            position: absolute;
+            top: -12px;
+            right: 20px;
+            background: var(--primary);
+            color: #ffffff;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 0.25rem 0.75rem;
+            border-radius: 100px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .price-amount {
+            font-family: var(--font-display);
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin: 1rem 0;
+        }
+
+        .pricing-features {
+            list-style: none;
+            margin: 1.5rem 0 2rem 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.85rem;
+        }
+
+        .pricing-features li {
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        /* ==========================================================================
+           9. FOOTER
+           ========================================================================== */
+        .footer {
+            border-top: 1px solid var(--border-subtle);
+            padding: 4rem 1.5rem 2rem 1.5rem;
+            background: rgba(5, 7, 10, 0.95);
+        }
+
+        .footer-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .footer-bottom {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border-subtle);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--text-dim);
+            font-size: 0.85rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        /* ==========================================================================
+           10. RESPONSIVE MEDIA QUERIES (MOBILE FIRST SAFETY)
+           ========================================================================== */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none; /* Can be hooked up to your existing mobile menu drawer */
+            }
+
+            .hero {
+                padding-top: 7rem;
+            }
+
+            .chat-bubble {
+                max-width: 90%;
+            }
+
+            .hero-float-badge {
+                position: relative;
+                bottom: 0;
+                right: 0;
+                margin: 1rem;
+                justify-content: center;
+            }
+
+            .pricing-card.popular {
+                transform: none;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .float-slow, .float-medium, .float-subtle {
+                animation: none !important;
+            }
+            .scroll-reveal {
+                transition: none !important;
+                opacity: 1 !important;
+                transform: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Ambient Visual Background -->
+    <div class="ambient-background">
+        <div class="glow-sphere glow-1"></div>
+        <div class="glow-sphere glow-2"></div>
+    </div>
+    <div class="grid-overlay"></div>
+
+    <!-- Navigation Bar -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-container">
+            <a href="#" class="brand-logo">
+                <div class="logo-badge"><i data-lucide="bot" style="width:18px;height:18px;"></i></div>
+                <span>Auvii</span>
+            </a>
+
+            <!-- Keep your existing navigation link destinations intact -->
+            <ul class="nav-links">
+                <li><a href="#features">Features</a></li>
+                <li><a href="#demo">Demo</a></li>
+                <li><a href="#pricing">Pricing</a></li>
+            </ul>
+
+            <div class="nav-actions">
+                <!-- Keep existing login / start buttons exactly as wired in your code -->
+                <a href="#login" class="btn btn-ghost">Log In</a>
+                <a href="#get-started" class="btn btn-primary">Get Started</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-pill scroll-reveal">
+            <i data-lucide="sparkles" style="width:14px;height:14px;"></i>
+            <span>Next-Generation AI Sales & Support</span>
+        </div>
+
+        <!-- 🚨 YOUR ORIGINAL HEADLINE GOES HERE -->
+        <h1 class="hero-title scroll-reveal delay-1">
+            Transform Customer Support into Automated Revenue with Auvii
+        </h1>
+
+        <!-- 🚨 YOUR ORIGINAL SUBTITLE / PARAGRAPH GOES HERE -->
+        <p class="hero-description scroll-reveal delay-2">
+            Auvii handles customer queries instantly, recommends products intelligently, and automates support operations 24/7.
+        </p>
+
+        <!-- 🚨 YOUR ORIGINAL CTA BUTTONS GO HERE -->
+        <div class="hero-cta-group scroll-reveal delay-3">
+            <a href="#get-started" class="btn btn-primary">Start Free Trial <i data-lucide="arrow-right" style="width:16px;height:16px;"></i></a>
+            <a href="#demo" class="btn btn-ghost"><i data-lucide="play-circle" style="width:16px;height:16px;"></i> Watch Live Demo</a>
+        </div>
+
+        <!-- Interactive AI Visualization Box -->
+        <div class="hero-demo-container scroll-reveal float-slow" id="demo">
+            <div class="demo-header">
+                <div class="demo-dots">
+                    <div class="demo-dot"></div>
+                    <div class="demo-dot"></div>
+                    <div class="demo-dot"></div>
+                </div>
+                <div class="demo-title-status">
+                    <span class="status-dot"></span>
+                    Auvii AI Agent • Live Assistant
+                </div>
+            </div>
+
+            <div class="demo-body" id="chat-simulation">
+                <!-- User Message -->
+                <div class="chat-bubble chat-user" id="msg-1">
+                    Hi! I'm looking for a comfortable pair of running shoes under $120. Do you have any recommendations?
+                </div>
+
+                <!-- AI Typing Indicator -->
+                <div class="typing-indicator" id="typing-ind">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+
+                <!-- AI Response -->
+                <div class="chat-bubble chat-ai" id="msg-2">
+                    Hello! I recommend the <strong>AeroStride Pro</strong>. It features responsive cushioning and fits right within your budget at $109.99!
+                    
+                    <div class="recommended-product-card" id="product-card">
+                        <div class="product-img-placeholder">
+                            <i data-lucide="shopping-bag"></i>
+                        </div>
+                        <div>
+                            <div style="font-weight: 600; color: var(--text-main);">AeroStride Pro Running Shoes</div>
+                            <div style="font-size: 0.8rem; color: var(--emerald); font-weight: 600;">$109.99 • In Stock</div>
+                        </div>
+                        <button class="btn btn-primary" style="padding: 0.4rem 0.8rem; font-size: 0.75rem; margin-left: auto;">View Item</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vertical Floating Stats Badge -->
+            <div class="hero-float-badge float-medium">
+                <i data-lucide="zap" style="color: #f59e0b; width: 20px; height: 20px;"></i>
+                <div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">Response Speed</div>
+                    <div style="font-size: 0.9rem; font-weight: 700; color: var(--text-main);">0.4s (Instant)</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="section-container" id="features">
+        <div class="section-header scroll-reveal">
+            <!-- 🚨 YOUR ORIGINAL FEATURES SECTION HEADING -->
+            <h2 class="section-title">Built to Scale Your Online Store</h2>
+            <p class="section-subtitle">Everything you need to automate support and drive more sales seamlessly.</p>
+        </div>
+
+        <div class="features-grid">
+            <!-- Feature Card 1 -->
+            <div class="feature-card scroll-reveal float-subtle">
+                <div class="feature-icon-wrapper">
+                    <i data-lucide="message-square"></i>
+                </div>
+                <!-- 🚨 YOUR FEATURE TITLE & COPY -->
+                <h3>Instant AI Customer Support</h3>
+                <p>Answer customer questions 24/7 without delays. Resolve up to 80% of routine inquiries automatically.</p>
+                <div class="feature-preview-box">
+                    <div style="color: var(--emerald); font-weight: 600; margin-bottom: 4px;">✓ Instant Resolution</div>
+                    <div style="color: var(--text-dim);">Order Tracking & Returns handling automated.</div>
+                </div>
+            </div>
+
+            <!-- Feature Card 2 -->
+            <div class="feature-card scroll-reveal delay-1 float-medium">
+                <div class="feature-icon-wrapper">
+                    <i data-lucide="trending-up"></i>
+                </div>
+                <!-- 🚨 YOUR FEATURE TITLE & COPY -->
+                <h3>Smart Product Recommendations</h3>
+                <p>Guide shoppers to the exact product they want and increase average order value with context-aware AI upselling.</p>
+                <div class="feature-preview-box">
+                    <div style="color: var(--primary-light); font-weight: 600; margin-bottom: 4px;">+24% AOV Boost</div>
+                    <div style="color: var(--text-dim);">Personalized cart suggestions active.</div>
+                </div>
+            </div>
+
+            <!-- Feature Card 3 -->
+            <div class="feature-card scroll-reveal delay-2 float-subtle">
+                <div class="feature-icon-wrapper">
+                    <i data-lucide="bar-chart-3"></i>
+                </div>
+                <!-- 🚨 YOUR FEATURE TITLE & COPY -->
+                <h3>Automated Store Analytics</h3>
+                <p>Gain insights into customer questions, frequently requested items, and store performance metrics in real time.</p>
+                <div class="feature-preview-box">
+                    <div style="color: var(--accent); font-weight: 600; margin-bottom: 4px;">Live Insights Dashboard</div>
+                    <div style="color: var(--text-dim);">Track customer intent signals effortlessly.</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section class="section-container" id="pricing">
+        <div class="section-header scroll-reveal">
+            <!-- 🚨 YOUR ORIGINAL PRICING HEADING -->
+            <h2 class="section-title">Simple, Transparent Pricing</h2>
+            <p class="section-subtitle">Choose the plan that fits your business needs.</p>
+        </div>
+
+        <div class="pricing-grid">
+            <!-- Pricing Plan 1 -->
+            <div class="pricing-card scroll-reveal">
+                <div>
+                    <!-- 🚨 YOUR PLAN NAME AND COPY -->
+                    <h3>Starter</h3>
+                    <p style="color: var(--text-muted); font-size: 0.9rem;">Perfect for growing stores</p>
+                    <div class="price-amount">$29<span style="font-size: 1rem; color: var(--text-dim);">/mo</span></div>
+                    <ul class="pricing-features">
+                        <li><i data-lucide="check" style="width: 16px; color: var(--emerald);"></i> Up to 1,000 Conversations/mo</li>
+                        <li><i data-lucide="check" style="width: 16px; color: var(--emerald);"></i> Core AI Customer Support</li>
+                        <li><i data-lucide="check" style="width: 16px; color: var(--emerald);"></i> Basic Analytics</li>
+                    </ul>
+                </div>
+                <a href="#choose-starter" class="btn btn-ghost" style="width: 100%;">Get Started</a>
+            </div>
+
+            <!-- Pricing Plan 2 (Popular Highlighted) -->
+            <div class="pricing-card popular scroll-reveal delay-1 float-subtle">
+                <div class="popular-badge">Most Popular</div>
+                <div>
+                    <!-- 🚨 YOUR PLAN NAME AND COPY -->
+                    <h3>Pro</h3>
+                    <p style="color: var(--text-muted); font-size: 0.9rem;">For high-volume e-commerce brands</p>
+                    <div class="price-amount">$79<span style="font-size: 1rem; color: var(--text-dim);">/mo</span></div>
+                    <ul class="pricing-features">
+                        <li><i data-lucide="check" style="width: 16px; color: var(--emerald);"></i> Unlimited Conversations</li>
+                        <li><i data-lucide="check" style="width: 16px; color: var(--emerald);"></i> Advanced Sales Recommendations</li>
+                        <li><i data-lucide="check" style="width: 16px; color: var(--emerald);"></i> Full Analytics & Custom Integrations</li>
+                    </ul>
+                </div>
+                <a href="#choose-pro" class="btn btn-primary" style="width: 100%;">Start Free Trial</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div>
+                <a href="#" class="brand-logo" style="margin-bottom: 1rem;">
+                    <div class="logo-badge"><i data-lucide="bot" style="width:18px;height:18px;"></i></div>
+                    <span>Auvii</span>
+                </a>
+                <p style="color: var(--text-muted); max-width: 300px; font-size: 0.9rem;">
+                    Automated AI customer support and recommendations for modern e-commerce stores.
+                </p>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <div>&copy; 2026 Auvii. All rights reserved.</div>
+            <div style="display: flex; gap: 1.5rem;">
+                <a href="#privacy" style="color: var(--text-dim); text-decoration: none;">Privacy Policy</a>
+                <a href="#terms" style="color: var(--text-dim); text-decoration: none;">Terms of Service</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ==========================================================================
+       11. LIGHTWEIGHT JAVASCRIPT & ANIMATION LOOPS
+       ========================================================================== -->
+    <script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        // 1. Navbar Scroll Effect
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 20) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        // 2. IntersectionObserver for Scroll-Triggered Animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.scroll-reveal').forEach(el => observer.observe(el));
+
+        // 3. Realistic AI Chat Sequence Animation Loop
+        function runChatAnimation() {
+            const msg1 = document.getElementById('msg-1');
+            const typing = document.getElementById('typing-ind');
+            const msg2 = document.getElementById('msg-2');
+            const productCard = document.getElementById('product-card');
+
+            // Reset states
+            msg1.style.opacity = '0';
+            msg1.style.transform = 'translateY(10px)';
+            typing.style.opacity = '0';
+            msg2.style.opacity = '0';
+            msg2.style.transform = 'translateY(10px)';
+            productCard.style.opacity = '0';
+            productCard.style.transform = 'translateY(10px)';
+
+            // Sequence Timing
+            setTimeout(() => {
+                msg1.style.opacity = '1';
+                msg1.style.transform = 'translateY(0)';
+            }, 600);
+
+            setTimeout(() => {
+                typing.style.opacity = '1';
+            }, 1800);
+
+            setTimeout(() => {
+                typing.style.opacity = '0';
+                msg2.style.opacity = '1';
+                msg2.style.transform = 'translateY(0)';
+            }, 3400);
+
+            setTimeout(() => {
+                productCard.style.opacity = '1';
+                productCard.style.transform = 'translateY(0)';
+            }, 4200);
+        }
+
+        // Run chat demo on load and repeat cleanly
+        runChatAnimation();
+        setInterval(runChatAnimation, 10000);
+    </script>
+</body>
+</html>
