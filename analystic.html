@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Auvii - Overall Platform Analytics</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --border: #e2e8f0;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --primary: #2f5fff;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg);
+      color: var(--text-main);
+      padding: 32px 20px;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 28px;
+    }
+
+    h1 {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .status-badge {
+      font-size: 13px;
+      color: var(--text-muted);
+      background: #ffffff;
+      padding: 6px 12px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      background-color: #22c55e;
+      border-radius: 50%;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+      transition: transform 0.2s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+    }
+
+    .card h3 {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 12px;
+    }
+
+    .card .value {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .error-banner {
+      background-color: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #991b1b;
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <div>
+        <h1>Auvii - Overall Platform Analytics</h1>
+      </div>
+      <div class="status-badge">
+        <span class="status-dot"></span> Live All Users
+      </div>
+    </header>
+
+    <div id="error-banner" class="error-banner"></div>
+
+    <div class="grid">
+      <div class="card">
+        <h3>Total Conversations</h3>
+        <div class="value" id="stat-conversations">-</div>
+      </div>
+      <div class="card">
+        <h3>Total Messages</h3>
+        <div class="value" id="stat-messages">-</div>
+      </div>
+      <div class="card">
+        <h3>Product Clicks</h3>
+        <div class="value" id="stat-clicks">-</div>
+      </div>
+      <div class="card">
+        <h3>Unanswered Questions</h3>
+        <div class="value" id="stat-unanswered">-</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = "https://aqxdmlyvmjmkdnqkwgot.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFxeGRtbHl2bWpta2RucWt3Z290Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzNTkzODIsImV4cCI6MjEwMzkzNTM4Mn0.gNsY7NbIWhSfvvxohZQWAtJNXf_61-UluSfCjanX780";
+
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    async function fetchGlobalAnalytics() {
+      const errorBanner = document.getElementById("error-banner");
+      errorBanner.style.display = "none";
+
+      try {
+        const { data, error } = await supabase.rpc("get_all_store_analytics");
+
+        if (error) {
+          console.error("Supabase RPC error:", error);
+          showError(`Failed to fetch platform analytics: ${error.message}`);
+          return;
+        }
+
+        if (data) {
+          document.getElementById("stat-conversations").textContent = (data.total_conversations || 0).toLocaleString();
+          document.getElementById("stat-messages").textContent = (data.total_messages || 0).toLocaleString();
+          document.getElementById("stat-clicks").textContent = (data.product_clicks || 0).toLocaleString();
+          document.getElementById("stat-unanswered").textContent = (data.unanswered_questions || 0).toLocaleString();
+        }
+      } catch (err) {
+        console.error("Unexpected error:", err);
+        showError("An unexpected error occurred while loading platform analytics.");
+      }
+    }
+
+    function showError(message) {
+      const errorBanner = document.getElementById("error-banner");
+      errorBanner.textContent = message;
+      errorBanner.style.display = "block";
+      
+      document.getElementById("stat-conversations").textContent = "0";
+      document.getElementById("stat-messages").textContent = "0";
+      document.getElementById("stat-clicks").textContent = "0";
+      document.getElementById("stat-unanswered").textContent = "0";
+    }
+
+    // Initial Fetch
+    fetchGlobalAnalytics();
+
+    // Refresh metrics every 30 seconds
+    setInterval(fetchGlobalAnalytics, 30000);
+  </script>
+</body>
+</html>
