@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Auvii — Your AI Assistant for Your Online Store</title>
+<meta name="description" content="Auvii gives your online store an AI assistant that answers customers, recommends products and helps turn conversations into sales.">
+<meta name="theme-color" content="#070b14">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --bg:#070b14;--bg-2:#090f1d;
+  --surface:#0d1424;--surface-2:#111a2d;--surface-3:#151f35;
+  --border:rgba(148,163,184,.13);
+  --blue:#3b82f6;--blue-light:#60a5fa;--cyan:#22d3ee;--purple:#8b5cf6;--pink:#ec4899;--green:#34d399;--orange:#fb923c;
+  --text:#f8fafc;--muted:#94a3b8;--muted-2:#64748b;
+  --heading:"Space Grotesk",sans-serif;--body:"Inter",sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;overflow-x:clip;}
+body{
+  min-height:100vh;color:var(--text);font-family:var(--body);
+  background:radial-gradient(circle at 10% 0%,rgba(59,130,246,.12),transparent 28%),radial-gradient(circle at 90% 15%,rgba(139,92,246,.10),transparent 28%),var(--bg);
+  overflow-x:clip;
+}
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;
+  background-image:linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);
+  background-size:70px 70px;
+  mask-image:linear-gradient(to bottom,black,transparent 75%);
+  z-index:-1;
+}
+a{color:inherit;text-decoration:none;}
+button{font:inherit;}
+.container{width:min(1160px,calc(100% - 36px));margin:auto;}
+
+/* NAVBAR */
+.navbar{position:fixed;top:0;left:0;right:0;z-index:1000;border-bottom:1px solid rgba(148,163,184,.07);background:rgba(7,11,20,.72);backdrop-filter:blur(20px);}
+.nav-inner{min-height:74px;display:flex;align-items:center;justify-content:space-between;}
+.logo{display:flex;align-items:center;gap:10px;font-family:var(--heading);font-size:22px;font-weight:700;letter-spacing:-.045em;}
+.logo-mark{width:35px;height:35px;display:grid;place-items:center;border-radius:11px;background:linear-gradient(135deg,#60a5fa,#3b82f6 48%,#8b5cf6);box-shadow:0 0 28px rgba(59,130,246,.32);position:relative;}
+.logo-mark::before{content:"✦";color:white;font-size:17px;}
+.nav-links{display:flex;align-items:center;gap:30px;color:#94a3b8;font-size:13px;font-weight:600;}
+.nav-links a{transition:.25s ease;}
+.nav-links a:hover{color:white;}
+.nav-actions{display:flex;align-items:center;gap:9px;}
+.nav-login{padding:10px 15px;color:#cbd5e1;font-size:13px;font-weight:700;}
+.nav-cta{padding:11px 17px;border-radius:11px;background:white;color:#07101d;font-size:12px;font-weight:800;transition:.25s ease;}
+.nav-cta:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(255,255,255,.12);}
+.mobile-menu{display:none;border:0;background:transparent;color:white;font-size:24px;cursor:pointer;padding:6px 10px;}
+
+/* MOBILE MENU PANEL */
+.mobile-panel{
+  display:none;position:absolute;top:100%;left:0;right:0;
+  flex-direction:column;gap:2px;padding:10px 18px 20px;
+  max-height:calc(100vh - 74px);overflow-y:auto;
+  background:rgba(7,11,20,.97);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+}
+.mobile-panel.open{display:flex;}
+.mobile-panel a{padding:14px 6px;color:#cbd5e1;font-size:15px;font-weight:600;border-bottom:1px solid rgba(148,163,184,.07);}
+.mobile-panel a.mp-cta{margin-top:14px;padding:14px;border:0;border-radius:12px;text-align:center;color:#fff;font-weight:800;background:linear-gradient(135deg,#3b82f6,#6366f1);}
+@media(min-width:761px){.mobile-panel{display:none!important;}}
+
+/* HERO */
+.hero{position:relative;min-height:850px;padding-top:145px;padding-bottom:90px;display:flex;align-items:center;overflow:hidden;}
+.hero::before{
+  content:"";position:absolute;width:750px;height:750px;left:50%;top:25px;transform:translateX(-50%);border-radius:50%;
+  background:radial-gradient(circle,rgba(59,130,246,.13),rgba(139,92,246,.06) 38%,transparent 70%);
+  filter:blur(15px);animation:heroGlow 7s ease-in-out infinite;
+}
+@keyframes heroGlow{
+  0%,100%{transform:translateX(-50%) scale(.96);opacity:.65;}
+  50%{transform:translateX(-50%) scale(1.06);opacity:1;}
+}
+.hero-grid{position:relative;display:grid;grid-template-columns:minmax(0,.92fr) minmax(0,1.08fr);align-items:center;gap:45px;z-index:2;}
+.hero-copy{position:relative;z-index:10;}
+.hero-badge{width:fit-content;display:flex;align-items:center;gap:8px;margin-bottom:22px;padding:8px 12px;border:1px solid rgba(96,165,250,.18);border-radius:999px;background:rgba(59,130,246,.07);color:#bfdbfe;font-size:11px;font-weight:700;box-shadow:0 0 30px rgba(59,130,246,.08);}
+.badge-dot{width:7px;height:7px;border-radius:50%;background:#34d399;box-shadow:0 0 12px rgba(52,211,153,.9);animation:pulseDot 1.8s ease-in-out infinite;}
+@keyframes pulseDot{
+  0%,100%{transform:scale(.8);opacity:.7;}
+  50%{transform:scale(1.15);opacity:1;}
+}
+.hero h1{max-width:700px;margin-bottom:22px;font-family:var(--heading);font-size:clamp(48px,6.2vw,82px);line-height:.97;letter-spacing:-.065em;}
+.gradient-text{
+  background:linear-gradient(110deg,#ffffff 5%,#93c5fd 42%,#c4b5fd 70%,#ffffff 95%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;background-size:180% auto;animation:textShine 7s ease-in-out infinite;
+}
+@keyframes textShine{
+  0%,100%{background-position:0% center;}
+  50%{background-position:100% center;}
+}
+.hero-description{max-width:600px;margin-bottom:29px;color:#9aa9bd;font-size:16px;line-height:1.8;}
+.hero-description strong{color:#e2e8f0;}
+.hero-buttons{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:26px;}
+.primary-btn,.secondary-btn{min-height:49px;display:inline-flex;align-items:center;justify-content:center;padding:0 20px;border-radius:12px;font-size:13px;font-weight:800;transition:.28s ease;}
+.primary-btn{color:white;background:linear-gradient(135deg,#3b82f6,#6366f1);box-shadow:0 15px 40px rgba(59,130,246,.23);}
+.primary-btn:hover{transform:translateY(-3px);box-shadow:0 20px 45px rgba(59,130,246,.35);}
+.secondary-btn{border:1px solid rgba(148,163,184,.15);color:#dbeafe;background:rgba(255,255,255,.035);}
+.secondary-btn:hover{transform:translateY(-3px);border-color:rgba(96,165,250,.35);background:rgba(59,130,246,.08);}
+.hero-note{display:flex;align-items:center;gap:8px;color:#64748b;font-size:11px;}
+.hero-note span{color:#34d399;}
+
+/* 3D AI SCENE */
+.ai-scene{position:relative;min-height:610px;display:flex;align-items:center;justify-content:center;perspective:1400px;}
+.scene-halo{position:absolute;width:440px;height:440px;border-radius:50%;background:radial-gradient(circle,rgba(59,130,246,.14),rgba(139,92,246,.06) 45%,transparent 72%);filter:blur(7px);animation:haloFloat 6s ease-in-out infinite;}
+@keyframes haloFloat{
+  0%,100%{transform:translateY(12px) scale(.95);}
+  50%{transform:translateY(-15px) scale(1.04);}
+}
+.scene-grid{
+  position:absolute;width:510px;height:510px;border-radius:50%;opacity:.3;
+  background:repeating-radial-gradient(circle,transparent 0,transparent 45px,rgba(96,165,250,.08) 46px,transparent 47px);
+  transform:rotateX(67deg) translateY(80px);animation:gridPulse 7s ease-in-out infinite;
+}
+@keyframes gridPulse{0%,100%{opacity:.2;}50%{opacity:.42;}}
+.orbit{position:absolute;border:1px solid rgba(96,165,250,.12);border-radius:50%;transform-style:preserve-3d;pointer-events:none;}
+.orbit.one{width:475px;height:190px;transform:rotateX(68deg) rotateZ(-12deg);animation:orbitVertical 9s linear infinite;}
+.orbit.two{width:390px;height:155px;transform:rotateX(68deg) rotateZ(55deg);border-color:rgba(139,92,246,.12);animation:orbitVerticalReverse 12s linear infinite;}
+@keyframes orbitVertical{
+  0%{transform:rotateX(68deg) rotateZ(-12deg);}
+  50%{transform:rotateX(68deg) rotateZ(168deg);}
+  100%{transform:rotateX(68deg) rotateZ(348deg);}
+}
+@keyframes orbitVerticalReverse{
+  0%{transform:rotateX(68deg) rotateZ(55deg);}
+  50%{transform:rotateX(68deg) rotateZ(-125deg);}
+  100%{transform:rotateX(68deg) rotateZ(-305deg);}
+}
+
+/* AI CORE */
+.ai-core{position:absolute;width:210px;height:210px;display:grid;place-items:center;border-radius:50%;transform-style:preserve-3d;animation:coreFloat 5s ease-in-out infinite;z-index:3;}
+@keyframes coreFloat{
+  0%,100%{transform:translateY(12px) rotateX(4deg);}
+  50%{transform:translateY(-15px) rotateX(-4deg);}
+}
+.core-ring{position:absolute;inset:0;border-radius:50%;border:1px solid rgba(96,165,250,.3);box-shadow:0 0 40px rgba(59,130,246,.12),inset 0 0 30px rgba(59,130,246,.07);animation:coreSpin 10s linear infinite;}
+.core-ring::before,.core-ring::after{content:"";position:absolute;width:10px;height:10px;border-radius:50%;background:#60a5fa;box-shadow:0 0 18px rgba(96,165,250,.9);}
+.core-ring::before{top:-5px;left:50%;transform:translateX(-50%);}
+.core-ring::after{bottom:16px;right:5px;}
+@keyframes coreSpin{to{transform:rotateZ(360deg);}}
+.core-inner{
+  width:142px;height:142px;display:grid;place-items:center;border-radius:50%;
+  background:radial-gradient(circle at 35% 25%,rgba(255,255,255,.22),transparent 20%),radial-gradient(circle,rgba(59,130,246,.8),rgba(49,46,129,.82) 48%,rgba(8,13,28,.95) 75%);
+  border:1px solid rgba(147,197,253,.3);
+  box-shadow:inset 0 0 45px rgba(59,130,246,.28),0 0 70px rgba(59,130,246,.22);
+  transform:translateZ(35px);
+}
+.core-face{position:relative;width:82px;height:66px;border-radius:42%;background:linear-gradient(145deg,#dbeafe,#93c5fd 35%,#6366f1 100%);box-shadow:0 0 35px rgba(96,165,250,.7);overflow:hidden;}
+.core-face::before{
+  content:"";position:absolute;width:60px;height:17px;left:50%;top:22px;transform:translateX(-50%);border-radius:50%;
+  background:radial-gradient(ellipse,#07111f 0 25%,transparent 27%);
+  box-shadow:-20px 0 0 -4px #07111f,20px 0 0 -4px #07111f;
+}
+.core-face::after{content:"";position:absolute;width:25px;height:7px;left:50%;bottom:13px;transform:translateX(-50%);border-bottom:2px solid rgba(7,17,31,.8);border-radius:50%;}
+
+/* FLOATING 3D CARDS */
+.float-card{
+  position:absolute;display:flex;align-items:center;gap:10px;padding:11px 13px;
+  border:1px solid rgba(148,163,184,.13);border-radius:14px;
+  background:linear-gradient(145deg,rgba(21,31,53,.82),rgba(10,16,29,.86));
+  backdrop-filter:blur(15px);
+  box-shadow:0 20px 45px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.04);
+  color:#dbeafe;font-size:11px;font-weight:700;transform-style:preserve-3d;z-index:8;
+}
+.float-card strong{display:block;color:white;font-size:11px;}
+.float-card small{display:block;margin-top:2px;color:#64748b;font-size:9px;font-weight:500;}
+.float-icon{width:31px;height:31px;flex:0 0 auto;display:grid;place-items:center;border-radius:10px;font-size:15px;background:rgba(59,130,246,.12);border:1px solid rgba(96,165,250,.12);}
+.card-support{top:90px;left:0;animation:cardFloatA 5.5s ease-in-out infinite;}
+.card-sales{top:155px;right:-5px;animation:cardFloatB 6s ease-in-out infinite;}
+.card-training{bottom:135px;left:5px;animation:cardFloatC 6.5s ease-in-out infinite;}
+.card-online{bottom:95px;right:5px;animation:cardFloatD 5.8s ease-in-out infinite;}
+@keyframes cardFloatA{
+  0%,100%{transform:translateY(8px) rotateX(7deg) rotateY(-8deg);}
+  50%{transform:translateY(-13px) rotateX(-2deg) rotateY(5deg);}
+}
+@keyframes cardFloatB{
+  0%,100%{transform:translateY(-5px) rotateX(-4deg) rotateY(8deg);}
+  50%{transform:translateY(14px) rotateX(6deg) rotateY(-4deg);}
+}
+@keyframes cardFloatC{
+  0%,100%{transform:translateY(10px) rotateX(5deg) rotateY(-7deg);}
+  50%{transform:translateY(-12px) rotateX(-4deg) rotateY(4deg);}
+}
+@keyframes cardFloatD{
+  0%,100%{transform:translateY(-7px) rotateX(-5deg) rotateY(7deg);}
+  50%{transform:translateY(12px) rotateX(5deg) rotateY(-3deg);}
+}
+
+/* PARTICLES */
+.particle{position:absolute;width:5px;height:5px;border-radius:50%;background:#60a5fa;box-shadow:0 0 14px rgba(96,165,250,.8);animation:particleFloat 4s ease-in-out infinite;}
+.particle.p1{top:18%;left:27%;animation-delay:-.8s;}
+.particle.p2{top:25%;right:25%;width:4px;height:4px;background:#c4b5fd;animation-delay:-2s;}
+.particle.p3{bottom:23%;left:25%;width:3px;height:3px;background:#22d3ee;animation-delay:-1.2s;}
+.particle.p4{bottom:27%;right:22%;background:#34d399;animation-delay:-3s;}
+.particle.p5{top:42%;left:10%;width:3px;height:3px;background:#ec4899;animation-delay:-2.5s;}
+@keyframes particleFloat{
+  0%,100%{transform:translateY(8px) scale(.8);opacity:.35;}
+  50%{transform:translateY(-18px) scale(1.2);opacity:1;}
+}
+
+/* PHONE */
+.phone{
+  position:absolute;width:275px;height:550px;left:50%;top:50%;
+  transform:translateX(-50%) translateY(-50%);
+  border:7px solid #1c273a;border-radius:40px;background:#050912;
+  box-shadow:0 50px 100px rgba(0,0,0,.5),0 0 70px rgba(59,130,246,.16),inset 0 0 0 1px rgba(255,255,255,.05);
+  z-index:6;overflow:hidden;animation:phoneFloat 5s ease-in-out infinite;
+}
+@keyframes phoneFloat{
+  0%,100%{transform:translateX(-50%) translateY(calc(-50% + 8px));}
+  50%{transform:translateX(-50%) translateY(calc(-50% - 9px));}
+}
+.phone::before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);width:105px;height:22px;background:#02050a;border-radius:0 0 17px 17px;z-index:20;}
+.phone-screen{position:absolute;inset:0;padding:35px 14px 14px;background:linear-gradient(180deg,#0b1322,#070c16);}
+.phone-header{display:flex;align-items:center;justify-content:space-between;padding:8px 8px 13px;border-bottom:1px solid rgba(148,163,184,.09);}
+.phone-brand{display:flex;align-items:center;gap:8px;}
+.phone-brand-icon{width:28px;height:28px;display:grid;place-items:center;border-radius:9px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);font-size:13px;}
+.phone-brand-text strong{display:block;color:white;font-size:10px;}
+.phone-brand-text span{display:block;margin-top:2px;color:#34d399;font-size:8px;}
+.phone-menu{color:#64748b;font-size:16px;}
+.chat-area{height:445px;display:flex;flex-direction:column;justify-content:flex-end;gap:10px;padding:13px 3px 4px;overflow:hidden;}
+.message{max-width:82%;padding:9px 11px;border-radius:13px;font-size:9px;line-height:1.55;animation:messageIn .4s ease forwards;}
+@keyframes messageIn{
+  from{opacity:0;transform:translateY(8px);}
+  to{opacity:1;transform:translateY(0);}
+}
+.message.user{align-self:flex-end;color:#dbeafe;background:rgba(59,130,246,.18);border:1px solid rgba(96,165,250,.12);border-bottom-right-radius:4px;}
+.message.ai{align-self:flex-start;color:#cbd5e1;background:rgba(255,255,255,.045);border:1px solid rgba(148,163,184,.08);border-bottom-left-radius:4px;}
+.typing{align-self:flex-start;display:flex;gap:4px;padding:9px 11px;border-radius:13px 13px 13px 4px;background:rgba(255,255,255,.045);border:1px solid rgba(148,163,184,.08);}
+.typing span{width:4px;height:4px;border-radius:50%;background:#64748b;animation:typingDot 1.2s infinite;}
+.typing span:nth-child(2){animation-delay:.15s;}
+.typing span:nth-child(3){animation-delay:.3s;}
+@keyframes typingDot{
+  0%,60%,100%{transform:translateY(0);opacity:.35;}
+  30%{transform:translateY(-3px);opacity:1;}
+}
+
+/* TRUST STRIP */
+.trust-strip{padding:24px 0 65px;border-top:1px solid rgba(148,163,184,.05);}
+.trust-inner{display:flex;align-items:center;justify-content:center;gap:25px;color:#64748b;text-align:center;font-size:11px;}
+.trust-line{width:55px;height:1px;background:rgba(148,163,184,.12);}
+
+/* SECTIONS */
+.section{padding:110px 0;}
+.section-heading{max-width:690px;margin:0 auto 55px;text-align:center;}
+.section-label{display:block;margin-bottom:13px;color:var(--blue-light);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;}
+.section-heading h2{margin-bottom:16px;font-family:var(--heading);font-size:clamp(32px,5vw,54px);line-height:1.05;letter-spacing:-.05em;}
+.section-heading p{color:var(--muted);font-size:14px;line-height:1.8;}
+
+/* HOW IT WORKS */
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+.step{position:relative;min-height:250px;padding:28px;border:1px solid var(--border);border-radius:22px;background:linear-gradient(145deg,rgba(17,26,45,.72),rgba(9,14,25,.75));overflow:hidden;transition:.3s ease;}
+.step:hover{transform:translateY(-7px);border-color:rgba(96,165,250,.2);box-shadow:0 25px 55px rgba(0,0,0,.2);}
+.step-number{width:43px;height:43px;display:grid;place-items:center;margin-bottom:30px;border-radius:13px;background:rgba(59,130,246,.1);border:1px solid rgba(96,165,250,.13);color:#93c5fd;font-family:var(--heading);font-size:13px;font-weight:700;}
+.step h3{margin-bottom:10px;font-family:var(--heading);font-size:20px;}
+.step p{color:var(--muted);font-size:13px;line-height:1.75;}
+.step-glow{position:absolute;width:150px;height:150px;right:-80px;bottom:-80px;border-radius:50%;background:rgba(59,130,246,.12);filter:blur(20px);}
+
+/* AI FEATURES */
+.features{display:grid;grid-template-columns:repeat(2,1fr);gap:17px;}
+.feature{position:relative;min-height:220px;padding:27px;border:1px solid var(--border);border-radius:22px;background:rgba(13,20,36,.68);overflow:hidden;transition:.3s ease;}
+.feature:hover{transform:translateY(-5px);border-color:rgba(96,165,250,.2);}
+.feature-icon{width:44px;height:44px;display:grid;place-items:center;margin-bottom:22px;border-radius:13px;background:rgba(59,130,246,.1);color:#93c5fd;font-size:18px;}
+.feature h3{margin-bottom:9px;font-family:var(--heading);font-size:19px;}
+.feature p{max-width:470px;color:var(--muted);font-size:13px;line-height:1.75;}
+
+/* PRICING */
+.pricing-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+.price-card{position:relative;padding:25px 21px;border:1px solid var(--border);border-radius:20px;background:linear-gradient(150deg,rgba(17,26,45,.72),rgba(9,14,25,.8));transition:.3s ease;}
+.price-card:hover{transform:translateY(-6px);border-color:rgba(96,165,250,.25);}
+.price-card.featured{border-color:rgba(96,165,250,.35);box-shadow:0 0 50px rgba(59,130,246,.08);}
+.popular{position:absolute;top:14px;right:14px;padding:5px 8px;border-radius:999px;background:rgba(59,130,246,.12);color:#93c5fd;font-size:8px;font-weight:800;text-transform:uppercase;}
+.price-card h3{margin-bottom:15px;font-family:var(--heading);font-size:18px;}
+.price{margin-bottom:5px;font-family:var(--heading);font-size:34px;font-weight:700;letter-spacing:-.04em;}
+.price span{color:#64748b;font-family:var(--body);font-size:10px;font-weight:500;}
+.price-desc{min-height:39px;margin-bottom:22px;color:#64748b;font-size:10px;line-height:1.6;}
+.price-list{list-style:none;display:grid;gap:10px;}
+.price-list li{display:flex;gap:7px;color:#aebbd0;font-size:10px;line-height:1.5;}
+.price-list li::before{content:"✓";color:#34d399;font-weight:800;}
+
+/* FAQ */
+.faq{max-width:780px;margin:auto;}
+.faq-item{border-bottom:1px solid rgba(148,163,184,.09);}
+.faq-question{width:100%;display:flex;align-items:center;justify-content:space-between;gap:20px;padding:21px 0;border:0;background:transparent;color:#e2e8f0;cursor:pointer;text-align:left;font-family:var(--heading);font-size:15px;font-weight:600;}
+.faq-plus{color:#64748b;font-size:22px;transition:.25s ease;}
+.faq-answer{max-height:0;overflow:hidden;transition:max-height .35s ease,padding .35s ease;}
+.faq-answer p{padding-bottom:0;color:var(--muted);font-size:13px;line-height:1.8;}
+.faq-item.open .faq-answer{max-height:200px;}
+.faq-item.open .faq-answer p{padding-bottom:20px;}
+.faq-item.open .faq-plus{transform:rotate(45deg);color:#60a5fa;}
+
+/* CTA */
+.cta{
+  padding:50px;border:1px solid rgba(96,165,250,.16);border-radius:28px;text-align:center;
+  background:radial-gradient(circle at 50% 0%,rgba(59,130,246,.15),transparent 60%),rgba(13,20,36,.72);
+  overflow:hidden;position:relative;
+}
+.cta::before{content:"";position:absolute;width:300px;height:300px;left:50%;top:-220px;transform:translateX(-50%);border-radius:50%;background:rgba(139,92,246,.12);filter:blur(50px);}
+.cta h2{position:relative;margin-bottom:13px;font-family:var(--heading);font-size:clamp(30px,5vw,48px);letter-spacing:-.05em;}
+.cta p{position:relative;max-width:530px;margin:0 auto 25px;color:var(--muted);font-size:13px;line-height:1.8;}
+
+/* FOOTER */
+footer{padding:30px 0 45px;border-top:1px solid rgba(148,163,184,.07);}
+.footer-inner{display:flex;justify-content:space-between;align-items:center;gap:20px;}
+.footer-copy{color:#475569;font-size:11px;}
+.footer-links{display:flex;gap:20px;color:#64748b;font-size:11px;}
+.footer-links a:hover{color:white;}
+
+/* SCROLL REVEAL */
+.reveal{opacity:0;transform:translateY(25px);transition:opacity .7s ease,transform .7s ease;}
+.reveal.visible{opacity:1;transform:translateY(0);}
+
+/* RESPONSIVE */
+@media (max-width:1050px){
+  .hero-grid{grid-template-columns:1fr;text-align:center;}
+  .hero-copy{display:flex;flex-direction:column;align-items:center;}
+  .hero h1{max-width:850px;}
+  .hero-description{max-width:650px;}
+  .ai-scene{min-height:620px;}
+  .pricing-grid{grid-template-columns:repeat(2,1fr);}
+}
+@media (max-width:760px){
+  .nav-links,.nav-actions{display:none;}
+  .mobile-menu{display:block;}
+  .hero{padding-top:120px;min-height:auto;}
+  .hero-grid{gap:10px;}
+  .hero h1{font-size:clamp(43px,13vw,66px);}
+  .hero-description{font-size:14px;}
+  .ai-scene{min-height:580px;transform:scale(.86);}
+  .steps,.features{grid-template-columns:1fr;}
+  .section{padding:80px 0;}
+  .pricing-grid{grid-template-columns:1fr;}
+  .cta{padding:35px 20px;}
+}
+@media (max-width:600px){
+  .footer-inner{flex-direction:column;text-align:center;}
+  .footer-links{flex-wrap:wrap;justify-content:center;}
+}
+@media (max-width:480px){
+  .container{width:min(100% - 26px,1160px);}
+  .ai-scene{min-height:540px;transform:scale(.72);margin:-40px -70px;}
+  .hero-buttons{width:100%;flex-direction:column;}
+  .primary-btn,.secondary-btn{width:100%;}
+  .trust-strip{padding-top:10px;}
+  .trust-line{width:25px;}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{
+    animation-duration:.01ms !important;
+    animation-iteration-count:1 !important;
+    scroll-behavior:auto !important;
+    transition-duration:.01ms !important;
+  }
+}
+/* =========================================================
+   PRICING: free trial banner + card buttons
+========================================================= */
+.trial-banner{display:flex;align-items:center;justify-content:space-between;gap:16px 24px;flex-wrap:wrap;margin:0 0 22px;padding:20px 24px;border:1px solid rgba(96,165,250,.22);border-radius:18px;background:radial-gradient(circle at 0% 0%,rgba(59,130,246,.18),transparent 60%),rgba(13,20,36,.75);}
+.trial-text strong{display:block;font-family:var(--heading);font-size:20px;letter-spacing:-.02em;}
+.trial-text span{display:block;margin-top:3px;color:var(--muted);font-size:13px;}
+.price-card{display:flex;flex-direction:column;}
+.price-btn{
+  margin-top:auto;display:flex;align-items:center;justify-content:center;text-align:center;
+  min-height:46px;padding:12px 14px;border-radius:12px;
+  border:1px solid rgba(148,163,184,.18);background:rgba(255,255,255,.04);
+  color:#dbeafe;font-size:12px;font-weight:800;transition:.28s ease;
+}
+.price-list{margin-bottom:24px;}
+.price-btn:hover{border-color:rgba(96,165,250,.45);background:rgba(59,130,246,.14);}
+.price-card.featured .price-btn{border:0;color:#fff;background:linear-gradient(135deg,#3b82f6,#6366f1);box-shadow:0 12px 30px rgba(59,130,246,.28);}
+
+/* =========================================================
+   3D EVERYWHERE
+========================================================= */
+
+/* 3D tilt cards (JS sets --rx / --ry / --gx / --gy) */
+.tilt{
+  position:relative;
+  transform:perspective(1000px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));
+  transform-style:preserve-3d;
+  will-change:transform;
+  transition:transform .18s ease-out,border-color .3s ease,box-shadow .3s ease;
+  animation:idle3d 7s ease-in-out infinite;
+}
+.tilt:nth-child(2){animation-delay:-1.7s;}
+.tilt:nth-child(3){animation-delay:-3.4s;}
+.tilt:nth-child(4){animation-delay:-5.1s;}
+.step.tilt:hover,.feature.tilt:hover,.price-card.tilt:hover,.cta.tilt:hover,
+.tilt:hover{
+  transform:perspective(1000px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)) translateY(-6px);
+  box-shadow:0 30px 60px rgba(0,0,0,.35),0 0 40px rgba(59,130,246,.12);
+}
+.tilt::after{
+  content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;
+  background:radial-gradient(circle at var(--gx,50%) var(--gy,50%),rgba(147,197,253,.16),transparent 55%);
+  transition:opacity .25s ease;
+}
+.tilt:hover::after{opacity:1;}
+@keyframes idle3d{
+  0%,100%{translate:0 0 0;rotate:1 1 0 0deg;}
+  50%{translate:0 -7px 0;rotate:1 1 0 1.6deg;}
+}
+
+/* depth layers inside price cards */
+.price-card.tilt .price,
+.price-card.tilt .price-btn,
+.price-card.tilt .popular{translate:0 0 14px;}
+
+/* 3D coin-spin step numbers + tumbling feature icons */
+.step-number{animation:coinSpin 6s ease-in-out infinite;}
+.step:nth-child(2) .step-number{animation-delay:-2s;}
+.step:nth-child(3) .step-number{animation-delay:-4s;}
+@keyframes coinSpin{
+  0%,60%{transform:perspective(300px) rotateY(0deg);}
+  100%{transform:perspective(300px) rotateY(360deg);}
+}
+.feature-icon{animation:iconTumble 5s ease-in-out infinite;}
+.feature:nth-child(2) .feature-icon{animation-delay:-1.2s;}
+.feature:nth-child(3) .feature-icon{animation-delay:-2.4s;}
+.feature:nth-child(4) .feature-icon{animation-delay:-3.6s;}
+@keyframes iconTumble{
+  0%,100%{transform:perspective(300px) rotateX(0deg) rotateY(0deg);}
+  25%{transform:perspective(300px) rotateX(18deg) rotateY(-22deg);}
+  75%{transform:perspective(300px) rotateX(-18deg) rotateY(22deg);}
+}
+
+/* logo mark turns in 3D */
+.logo-mark{animation:logoTurn 8s ease-in-out infinite;}
+@keyframes logoTurn{
+  0%,70%{transform:perspective(220px) rotateY(0deg);}
+  100%{transform:perspective(220px) rotateY(360deg);}
+}
+
+/* floating hero badge */
+.hero-badge{animation:idle3d 5s ease-in-out infinite;}
+
+/* 3D press buttons */
+.primary-btn,.secondary-btn,.nav-cta,.price-btn{transform-style:preserve-3d;}
+.primary-btn:hover,.secondary-btn:hover{transform:perspective(600px) translateY(-3px) rotateX(10deg);}
+.nav-cta:hover{transform:perspective(500px) translateY(-2px) rotateX(12deg);}
+.price-btn:hover{transform:perspective(600px) translateY(-2px) rotateX(10deg);}
+
+/* sections fly in with depth */
+.reveal{
+  transform:translateY(40px) scale(.97);
+  transform-origin:50% 0;
+  transition:opacity .8s ease,transform .8s cubic-bezier(.2,.7,.2,1);
+}
+.reveal.visible{transform:translateY(0) scale(1);}
+/* each card flips in with depth once its section appears */
+.reveal.visible .tilt{
+  animation:idle3d 7s ease-in-out infinite,cardIn .9s cubic-bezier(.2,.7,.2,1) backwards;
+}
+.reveal.visible .tilt:nth-child(2){animation-delay:-1.7s,.12s;}
+.reveal.visible .tilt:nth-child(3){animation-delay:-3.4s,.24s;}
+.reveal.visible .tilt:nth-child(4){animation-delay:-5.1s,.36s;}
+@keyframes cardIn{
+  from{transform:perspective(1000px) translateY(60px) rotateX(24deg) rotateY(-8deg);opacity:0;}
+  to{transform:perspective(1000px) translateY(0) rotateX(0deg) rotateY(0deg);opacity:1;}
+}
+
+/* FAQ items lift in 3D */
+.faq-item{transition:transform .3s ease,background .3s ease;}
+.faq-item:hover{transform:perspective(900px) translateZ(8px) rotateX(2deg);background:rgba(59,130,246,.03);}
+
+/* hero scene reacts to the pointer (JS sets --mx / --my from -1 to 1) */
+.phone{rotate:0 1 0 calc(var(--mx,0) * 14deg);translate:calc(var(--mx,0) * -10px) calc(var(--my,0) * -8px);transition:rotate .25s ease-out,translate .25s ease-out;}
+.ai-core{translate:calc(var(--mx,0) * 18px) calc(var(--my,0) * 14px);transition:translate .25s ease-out;}
+.float-card{translate:calc(var(--mx,0) * 28px) calc(var(--my,0) * 22px);transition:translate .25s ease-out;}
+.particle{translate:calc(var(--mx,0) * 40px) calc(var(--my,0) * 30px);transition:translate .25s ease-out;}
+
+@media(prefers-reduced-motion:reduce){
+  .tilt,.step-number,.feature-icon,.logo-mark,.hero-badge{animation:none !important;}
+  .reveal{transform:none;}
+  .reveal.visible .tilt{animation:none !important;}
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- NAVIGATION -->
+<header class="navbar">
+
+  <div class="container nav-inner">
+
+    <a href="index.html" class="logo">
+      <span class="logo-mark"></span>
+      Auvii
+    </a>
+
+    <nav class="nav-links">
+      <a href="#how-it-works">How It Works</a>
+      <a href="#features">AI Features</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+
+    <div class="nav-actions">
+      <a href="auth.html" class="nav-login">Log In</a>
+      <a href="auth.html?mode=signup&next=create-agent.html" class="nav-cta">Create AI Agent</a>
+    </div>
+
+    <button
+      type="button"
+      class="mobile-menu"
+      id="mobileMenu"
+      aria-label="Open menu"
+      aria-expanded="false"
+      aria-controls="mobilePanel"
+    >☰</button>
+
+  </div>
+
+  <div class="mobile-panel" id="mobilePanel">
+    <a href="#how-it-works">How It Works</a>
+    <a href="#features">AI Features</a>
+    <a href="#pricing">Pricing</a>
+    <a href="#faq">FAQ</a>
+    <a href="auth.html">Log In</a>
+    <a href="auth.html?mode=signup&next=create-agent.html" class="mp-cta">Create AI Agent</a>
+  </div>
+
+</header>
+
+<!-- HERO -->
+<main>
+
+<section class="hero">
+
+  <div class="container hero-grid">
+
+    <div class="hero-copy">
+
+      <div class="hero-badge">
+        <span class="badge-dot"></span>
+        AI that understands your store
+      </div>
+
+      <h1>
+        Your Store.
+        <br>
+        <span class="gradient-text">Your AI Assistant.</span>
+      </h1>
+
+      <p class="hero-description">
+        Give your online store an AI that can
+        <strong>answer customers, understand your products,
+        recommend what they need,</strong>
+        and help turn conversations into sales.
+        Auvii learns from your store so your customers
+        can get help whenever they need it.
+      </p>
+
+      <div class="hero-buttons">
+        <a href="auth.html?mode=signup&next=create-agent.html" class="primary-btn">Create Your AI Agent</a>
+        <a href="#how-it-works" class="secondary-btn">See How It Works</a>
+      </div>
+
+      <div class="hero-note">
+        <span>●</span>
+        Train it. Test it. Connect it. Let it work.
+      </div>
+
+    </div>
+
+    <!-- AI 3D SCENE -->
+    <div class="ai-scene">
+
+      <div class="scene-halo"></div>
+      <div class="scene-grid"></div>
+
+      <div class="orbit one"></div>
+      <div class="orbit two"></div>
+
+      <span class="particle p1"></span>
+      <span class="particle p2"></span>
+      <span class="particle p3"></span>
+      <span class="particle p4"></span>
+      <span class="particle p5"></span>
+
+      <div class="ai-core">
+        <div class="core-ring"></div>
+        <div class="core-inner">
+          <div class="core-face"></div>
+        </div>
+      </div>
+
+      <div class="float-card card-support">
+        <div class="float-icon">💬</div>
+        <div>
+          <strong>Customer Support</strong>
+          <small>Always ready to help</small>
+        </div>
+      </div>
+
+      <div class="float-card card-sales">
+        <div class="float-icon">✨</div>
+        <div>
+          <strong>Sales Assistant</strong>
+          <small>Finds relevant products</small>
+        </div>
+      </div>
+
+      <div class="float-card card-training">
+        <div class="float-icon">🧠</div>
+        <div>
+          <strong>Store Knowledge</strong>
+          <small>Trained on your business</small>
+        </div>
+      </div>
+
+      <div class="float-card card-online">
+        <div class="float-icon">⚡</div>
+        <div>
+          <strong>AI Online</strong>
+          <small>Ready for customers</small>
+        </div>
+      </div>
+
+      <div class="phone">
+        <div class="phone-screen">
+
+          <div class="phone-header">
+            <div class="phone-brand">
+              <div class="phone-brand-icon">✦</div>
+              <div class="phone-brand-text">
+                <strong>Store AI</strong>
+                <span>● Online</span>
+              </div>
+            </div>
+            <div class="phone-menu">⋮</div>
+          </div>
+
+          <div class="chat-area" id="chatArea">
+            <!-- JavaScript fills this -->
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
+
+<!-- TRUST STRIP -->
+<section class="trust-strip">
+  <div class="container trust-inner">
+    <span class="trust-line"></span>
+    <span>Built for modern online stores</span>
+    <span class="trust-line"></span>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="section reveal" id="how-it-works">
+  <div class="container">
+
+    <div class="section-heading">
+      <span class="section-label">Simple setup</span>
+      <h2>Give your store an AI brain.</h2>
+      <p>
+        You provide the knowledge.
+        Auvii turns it into an AI assistant
+        your customers can actually talk to.
+      </p>
+    </div>
+
+    <div class="steps">
+
+      <article class="step">
+        <div class="step-number">01</div>
+        <h3>Create your AI</h3>
+        <p>Tell Auvii about your store and create your AI assistant in minutes.</p>
+        <div class="step-glow"></div>
+      </article>
+
+      <article class="step">
+        <div class="step-number">02</div>
+        <h3>Teach it your store</h3>
+        <p>
+          Use your website, products, FAQs, policies and custom instructions
+          to give your AI the knowledge it needs.
+        </p>
+        <div class="step-glow"></div>
+      </article>
+
+      <article class="step">
+        <div class="step-number">03</div>
+        <h3>Let it help customers</h3>
+        <p>
+          Test your AI, connect it to your website and let it answer questions
+          while you focus on your business.
+        </p>
+        <div class="step-glow"></div>
+      </article>
+
+    </div>
+
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="section reveal" id="features">
+  <div class="container">
+
+    <div class="section-heading">
+      <span class="section-label">More than a chatbot</span>
+      <h2>An AI teammate for your store.</h2>
+      <p>
+        Auvii is designed to do more than reply to messages.
+        It can understand your store and help customers move
+        from questions to decisions.
+      </p>
+    </div>
+
+    <div class="features">
+
+      <article class="feature">
+        <div class="feature-icon">🧠</div>
+        <h3>Understands your store</h3>
+        <p>
+          Train your AI with your products, FAQs, policies and business
+          information so it can answer based on your store's knowledge.
+        </p>
+      </article>
+
+      <article class="feature">
+        <div class="feature-icon">💬</div>
+        <h3>Answers customers</h3>
+        <p>
+          Customers can ask about products, delivery, returns, services
+          and other common questions directly on your website.
+        </p>
+      </article>
+
+      <article class="feature">
+        <div class="feature-icon">🛍️</div>
+        <h3>Helps people discover products</h3>
+        <p>
+          When customers explain what they want, Auvii can help guide
+          them toward relevant products and choices.
+        </p>
+      </article>
+
+      <article class="feature">
+        <div class="feature-icon">⚡</div>
+        <h3>Works around the clock</h3>
+        <p>
+          Your AI assistant can keep helping visitors even when nobody
+          from your team is available to answer a message.
+        </p>
+      </article>
+
+    </div>
+
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="section reveal" id="pricing">
+  <div class="container">
+
+    <div class="section-heading">
+      <span class="section-label">Pricing</span>
+      <h2>Start simple. Grow with AI.</h2>
+      <p>
+        Choose the plan that fits your store and
+        upgrade when you need more AI capabilities.
+      </p>
+    </div>
+
+    <div class="trial-banner">
+      <div class="trial-text">
+        <strong>Start your free trial today</strong>
+        <span>Try every Auvii feature free for 7 days.</span>
+      </div>
+      <a href="auth.html?mode=signup&next=create-agent.html" class="primary-btn">Start your free trial today</a>
+    </div>
+
+    <div class="pricing-grid">
+
+      <article class="price-card">
+        <h3>Free Trial</h3>
+        <div class="price">$0 <span>/ 7 days</span></div>
+        <p class="price-desc">Experience the core Auvii platform.</p>
+        <ul class="price-list">
+          <li>AI support</li>
+          <li>Website crawler</li>
+          <li>Training center</li>
+          <li>Test before launch</li>
+          <li>Website connection</li>
+          <li>Analytics</li>
+          <li>Sales Assistant</li>
+          <li>AI customization</li>
+        </ul>
+        <a href="auth.html?mode=signup&next=create-agent.html" class="price-btn">Start your free trial today</a>
+      </article>
+
+      <article class="price-card">
+        <h3>Basic</h3>
+        <div class="price">$5 <span>/ month</span></div>
+        <p class="price-desc">Essential AI support for your store.</p>
+        <ul class="price-list">
+          <li>AI assistant</li>
+          <li>1 crawler credit/month</li>
+          <li>Unlimited training</li>
+          <li>Test before launch</li>
+          <li>Website connection</li>
+          <li>Conversations</li>
+        </ul>
+        <a href="auth.html?mode=signup&next=create-agent.html" class="price-btn">Start your free trial today</a>
+      </article>
+
+      <article class="price-card featured">
+        <span class="popular">Popular</span>
+        <h3>Standard</h3>
+        <div class="price">$10 <span>/ month</span></div>
+        <p class="price-desc">AI support plus tools for selling.</p>
+        <ul class="price-list">
+          <li>Everything in Basic</li>
+          <li>5 crawler credits/month</li>
+          <li>Analytics</li>
+          <li>Sales Assistant</li>
+          <li>Product recommendations</li>
+          <li>Product images &amp; links</li>
+          <li>Upsell &amp; cross-sell</li>
+        </ul>
+        <a href="auth.html?mode=signup&next=create-agent.html" class="price-btn">Start your free trial today</a>
+      </article>
+
+      <article class="price-card">
+        <h3>Premium</h3>
+        <div class="price">$20 <span>/ month</span></div>
+        <p class="price-desc">Advanced AI capabilities for growing stores.</p>
+        <ul class="price-list">
+          <li>Everything in Standard</li>
+          <li>10 crawler credits/month</li>
+          <li>Advanced analytics</li>
+          <li>Advanced Sales Assistant</li>
+          <li>Advanced recommendations</li>
+          <li>Advanced upsell &amp; cross-sell</li>
+          <li>Full AI customization</li>
+        </ul>
+        <a href="auth.html?mode=signup&next=create-agent.html" class="price-btn">Start your free trial today</a>
+      </article>
+
+    </div>
+
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="section reveal" id="faq">
+  <div class="container">
+
+    <div class="section-heading">
+      <span class="section-label">FAQ</span>
+      <h2>Questions about Auvii?</h2>
+      <p>A few things store owners usually want to know.</p>
+    </div>
+
+    <div class="faq">
+
+      <div class="faq-item">
+        <button class="faq-question">
+          <span>What is Auvii?</span>
+          <span class="faq-plus">+</span>
+        </button>
+        <div class="faq-answer">
+          <p>
+            Auvii is an AI customer-service and sales assistant for online
+            stores. It can learn from your store's information and help
+            customers with questions, products, policies and recommendations.
+          </p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question">
+          <span>How does Auvii learn about my store?</span>
+          <span class="faq-plus">+</span>
+        </button>
+        <div class="faq-answer">
+          <p>
+            You can train your AI using your website, products, FAQs, store
+            policies, business information and custom AI instructions.
+          </p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question">
+          <span>Can customers use the AI directly on my website?</span>
+          <span class="faq-plus">+</span>
+        </button>
+        <div class="faq-answer">
+          <p>
+            Yes. Once your AI is ready, you can connect the Auvii widget to
+            your website so visitors can interact with your assistant.
+          </p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question">
+          <span>Can Auvii help with sales?</span>
+          <span class="faq-plus">+</span>
+        </button>
+        <div class="faq-answer">
+          <p>
+            Auvii's Sales Assistant can help customers discover relevant
+            products. Depending on your plan and configuration, it can also
+            support product recommendations, upselling and cross-selling.
+          </p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question">
+          <span>Can I test my AI before launching it?</span>
+          <span class="faq-plus">+</span>
+        </button>
+        <div class="faq-answer">
+          <p>
+            Yes. Auvii includes a testing experience so you can interact with
+            your assistant and check its responses before connecting it to
+            your live website.
+          </p>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="section reveal">
+  <div class="container">
+    <div class="cta">
+      <h2>Your store is ready for an AI teammate.</h2>
+      <p>
+        Create your Auvii assistant, teach it about your
+        store, test it, and put it in front of your customers.
+      </p>
+      <a href="auth.html?mode=signup&next=create-agent.html" class="primary-btn">Create Your AI Agent</a>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container footer-inner">
+
+    <div class="footer-copy">© 2026 Auvii. All rights reserved.</div>
+
+    <div class="footer-links">
+      <a href="privacy.html">Privacy</a>
+      <a href="terms.html">Terms</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#faq">FAQ</a>
+    </div>
+
+  </div>
+</footer>
+
+<script>
+
+/* PHONE AI CONVERSATION */
+
+const chatArea = document.getElementById("chatArea");
+
+const conversations = [
+  {
+    question: "Do you have this product in stock?",
+    answer: "Yes! It's currently available. I can help you find the right option."
+  },
+  {
+    question: "How long does delivery take?",
+    answer: "Delivery time depends on your location. I can help you find the available delivery information."
+  },
+  {
+    question: "Can I return an item?",
+    answer: "Yes. You can check the store's return policy for the requirements and available return period."
+  },
+  {
+    question: "What products do you recommend?",
+    answer: "I'd be happy to help. Tell me what you're looking for and I'll recommend relevant products."
+  }
+];
+
+function sleep(ms){
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function typeQuestion(text){
+  const message = document.createElement("div");
+  message.className = "message user";
+  chatArea.appendChild(message);
+
+  for(let i = 0; i < text.length; i++){
+    message.textContent = text.slice(0, i + 1);
+    await sleep(28);
+  }
+}
+
+function addMessage(text, type){
+  const message = document.createElement("div");
+  message.className = "message " + type;
+  message.textContent = text;
+  chatArea.appendChild(message);
+  return message;
+}
+
+function addTypingIndicator(){
+  const typing = document.createElement("div");
+  typing.className = "typing";
+  typing.innerHTML = "<span></span><span></span><span></span>";
+  chatArea.appendChild(typing);
+  return typing;
+}
+
+async function runAIConversation(){
+  let index = 0;
+
+  while(true){
+    const item = conversations[index];
+
+    await sleep(900);
+    await typeQuestion(item.question);
+    await sleep(450);
+
+    const typing = addTypingIndicator();
+    await sleep(1100);
+    typing.remove();
+
+    addMessage(item.answer, "ai");
+    await sleep(2200);
+
+    if(chatArea.children.length > 6){
+      chatArea.innerHTML = "";
+    }
+
+    index++;
+    if(index >= conversations.length){
+      index = 0;
+    }
+  }
+}
+
+runAIConversation();
+
+
+/* FAQ */
+
+document.querySelectorAll(".faq-question").forEach(button => {
+  button.addEventListener("click", () => {
+    const item = button.closest(".faq-item");
+    const alreadyOpen = item.classList.contains("open");
+
+    document.querySelectorAll(".faq-item").forEach(other => {
+      other.classList.remove("open");
+    });
+
+    if(!alreadyOpen){
+      item.classList.add("open");
+    }
+  });
+});
+
+
+/* SCROLL REVEAL */
+
+const revealObserver = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if(entry.isIntersecting){
+      entry.target.classList.add("visible");
+      revealObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0, rootMargin: "0px 0px -10% 0px" });
+
+document.querySelectorAll(".reveal").forEach(element => {
+  revealObserver.observe(element);
+});
+
+
+/* MOBILE MENU */
+
+const mobileMenu = document.getElementById("mobileMenu");
+const mobilePanel = document.getElementById("mobilePanel");
+
+function setMenu(open){
+  mobilePanel.classList.toggle("open", open);
+  mobileMenu.textContent = open ? "✕" : "☰";
+  mobileMenu.setAttribute("aria-expanded", String(open));
+  mobileMenu.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+}
+
+mobileMenu.addEventListener("click", e => {
+  e.stopPropagation();
+  setMenu(!mobilePanel.classList.contains("open"));
+});
+
+mobilePanel.querySelectorAll("a").forEach(link => {
+  link.addEventListener("click", () => setMenu(false));
+});
+
+document.addEventListener("click", e => {
+  if(!e.target.closest(".navbar")) setMenu(false);
+});
+
+document.addEventListener("keydown", e => {
+  if(e.key === "Escape") setMenu(false);
+});
+
+window.addEventListener("resize", () => {
+  if(window.innerWidth > 760) setMenu(false);
+});
+
+
+/* 3D TILT CARDS */
+
+const canHover = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+document.querySelectorAll(".step, .feature, .price-card, .cta").forEach(card => {
+
+  card.classList.add("tilt");
+
+  if(!canHover || reduceMotion) return;
+
+  card.addEventListener("pointermove", e => {
+    const r = card.getBoundingClientRect();
+    const x = (e.clientX - r.left) / r.width;
+    const y = (e.clientY - r.top) / r.height;
+    card.style.setProperty("--ry", ((x - .5) * 14).toFixed(2) + "deg");
+    card.style.setProperty("--rx", ((.5 - y) * 14).toFixed(2) + "deg");
+    card.style.setProperty("--gx", (x * 100).toFixed(1) + "%");
+    card.style.setProperty("--gy", (y * 100).toFixed(1) + "%");
+  });
+
+  card.addEventListener("pointerleave", () => {
+    card.style.setProperty("--rx", "0deg");
+    card.style.setProperty("--ry", "0deg");
+  });
+
+});
+
+
+/* HERO 3D SCENE FOLLOWS THE POINTER */
+
+const heroEl = document.querySelector(".hero");
+const sceneEl = document.querySelector(".ai-scene");
+
+if(heroEl && sceneEl && canHover && !reduceMotion){
+
+  heroEl.addEventListener("pointermove", e => {
+    const r = heroEl.getBoundingClientRect();
+    const mx = ((e.clientX - r.left) / r.width - .5) * 2;
+    const my = ((e.clientY - r.top) / r.height - .5) * 2;
+    sceneEl.style.setProperty("--mx", mx.toFixed(3));
+    sceneEl.style.setProperty("--my", my.toFixed(3));
+  });
+
+  heroEl.addEventListener("pointerleave", () => {
+    sceneEl.style.setProperty("--mx", 0);
+    sceneEl.style.setProperty("--my", 0);
+  });
+
+}
+
+</script>
+
+</body>
+</html>
