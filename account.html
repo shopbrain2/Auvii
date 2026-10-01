@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Account Dashboard - ShopBrain</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="sb-config.js"></script>
+  <style>
+    :root {
+      --cobalt: #2F5FFF;
+      --cobalt-dim: rgba(47, 95, 255, 0.08);
+      --ink: #0F172A;
+      --ink-soft: #475569;
+      --border: #E2E8F0;
+      --bg: #F8FAFC;
+      --card-bg: #FFFFFF;
+      --radius: 12px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: var(--bg); color: var(--ink); display: flex; min-height: 100vh; }
+
+    /* Layout */
+    .dashboard-container { display: flex; width: 100%; min-height: 100vh; }
+    .sidebar { width: 260px; background: var(--card-bg); border-right: 1px solid var(--border); padding: 24px 16px; flex-shrink: 0; }
+    .content { flex: 1; padding: 32px 40px; max-width: 1100px; }
+
+    /* Sidebar Links */
+    .brand { font-size: 20px; font-weight: 700; color: var(--cobalt); margin-bottom: 32px; display: flex; align-items: center; gap: 8px; }
+    .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 8px; color: var(--ink-soft); font-weight: 500; font-size: 14px; cursor: pointer; transition: all 0.2s; margin-bottom: 4px; }
+    .nav-item:hover, .nav-item.active { background: var(--cobalt-dim); color: var(--cobalt); font-weight: 600; }
+    .nav-item svg { width: 20px; height: 20px; stroke: currentColor; }
+
+    /* Views */
+    .view { display: none; }
+    .view.active { display: block; }
+    .page-title { font-size: 24px; font-weight: 700; margin-bottom: 6px; }
+    .page-sub { font-size: 14px; color: var(--ink-soft); margin-bottom: 28px; }
+
+    /* Stats Cards */
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 32px; }
+    .stat-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+    .stat-card .num { font-size: 28px; font-weight: 700; color: var(--ink); margin-bottom: 4px; }
+    .stat-card .label { font-size: 13px; color: var(--ink-soft); }
+
+    /* Connect Section Styles */
+    .sec-title { margin: 28px 0 12px; font-size: 16px; font-weight: 600; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+    .code-box { background: #0F172A; color: #F8FAFC; padding: 16px; border-radius: 8px; position: relative; font-family: monospace; font-size: 13px; line-height: 1.5; word-break: break-all; margin-bottom: 24px; }
+    .copy-btn { position: absolute; top: 12px; right: 12px; background: rgba(255, 255, 255, 0.15); border: none; color: #FFF; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; }
+    .copy-btn:hover { background: rgba(255, 255, 255, 0.25); }
+
+    /* Form Fields */
+    .field { margin-bottom: 16px; }
+    .field label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+    .field input[type="text"], .field select { width: 100%; max-width: 480px; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; outline: none; }
+    .field input:focus, .field select:focus { border-color: var(--cobalt); }
+    .field-hint { font-size: 12px; color: var(--ink-soft); }
+
+    /* Avatar Uploader */
+    .avatar-uploader { display: flex; align-items: center; gap: 16px; }
+    .avatar-preview { width: 56px; height: 56px; border-radius: 50%; background: #E2E8F0; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid var(--border); }
+    .avatar-preview img { width: 100%; height: 100%; object-fit: cover; }
+
+    /* Buttons */
+    .btn { display: inline-flex; align-items: center; justify-content: center; padding: 10px 20px; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; border: none; transition: 0.2s; text-decoration: none; }
+    .btn-primary { background: var(--cobalt); color: #FFF; }
+    .btn-primary:hover { opacity: 0.9; }
+    .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--ink); }
+    .btn-ghost:hover { background: #F1F5F9; }
+    .btn-sm { padding: 6px 12px; font-size: 13px; }
+
+    /* Empty Card */
+    .empty-card { background: var(--card-bg); border: 1px dashed var(--border); padding: 40px; border-radius: var(--radius); text-align: center; }
+    .empty-card h3 { margin-bottom: 8px; }
+    .empty-card p { color: var(--ink-soft); margin-bottom: 20px; font-size: 14px; }
+  </style>
+</head>
+<body>
+
+<div class="dashboard-container">
+  <!-- SIDEBAR NAVIGATION -->
+  <aside class="sidebar">
+    <div class="brand">⚡ ShopBrain</div>
+    <nav>
+      <div class="nav-item active" data-view="connect" onclick="showView('connect')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+        </svg>
+        Connect Website
+      </div>
+    </nav>
+  </aside>
+
+  <!-- MAIN CONTENT AREA -->
+  <main class="content">
+    
+    <!-- VIEW: CONNECT WEBSITE & ANALYTICS -->
+    <div class="view active" id="view-connect">
+      <h1 class="page-title">Connect Website</h1>
+      <p class="page-sub">Monitor live widget interaction analytics and manage installation settings.</p>
+
+      <div id="connectContent">
+        <!-- Dynamically rendered via loadConnect() -->
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  let sb = null;
+  let currentUser = null;
+  let currentAgent = null;
+  let selectedAvatarUrl = null;
+  const WIDGET_SRC = "https://aqxdmlyvmjmkdnqkwgot.supabase.co/storage/v1/object/public/scripts/widget.js";
+
+  // Helper functions
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function escapeAttr(str) {
+    return escapeHtml(str);
+  }
+
+  function setText(id, val) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val;
+  }
+
+  // Switch Active Dashboard View
+  function showView(name) {
+    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+
+    const targetNav = document.querySelector(`.nav-item[data-view="${name}"]`);
+    const targetView = document.getElementById(`view-${name}`);
+
+    if (targetNav) targetNav.classList.add('active');
+    if (targetView) targetView.classList.add('active');
+
+    if (name === 'connect') {
+      loadConnect();
+    }
+  }
+
+  // Fetch current agent for logged in user
+  async function ensureCurrentAgent() {
+    if (currentAgent) return currentAgent;
+    const { data: { user } } = await sb.auth.getUser();
+    if (!user) throw new Error("User not authenticated");
+    currentUser = user;
+
+    const { data, error } = await sb
+      .from('agents')
+      .select('id, name')
+      .eq('user_id', user.id)
+      .limit(1)
+      .maybeSingle();
+
+    if (error) throw error;
+    return data;
+  }
+
+  // Fetch analytics data specifically for Connect view
+  async function loadConnectAnalytics() {
+    try {
+      const { data, error } = await sb.rpc('get_all_store_analytics');
+
+      if (error) {
+        console.error('Error loading connect analytics:', error);
+        return;
+      }
+
+      if (data) {
+        setText('connStatConversations', (data.total_conversations || 0).toLocaleString());
+        setText('connStatMessages', (data.total_messages || 0).toLocaleString());
+        setText('connStatClicks', (data.product_clicks || 0).toLocaleString());
+        setText('connStatUnanswered', (data.unanswered_questions || 0).toLocaleString());
+      }
+    } catch (err) {
+      console.error('Analytics load exception:', err);
+    }
+  }
+
+  // Render Connect Website View (Analytics + Widget Installation Code + Settings)
+  async function loadConnect() {
+    const box = document.getElementById('connectContent');
+    if (!box) return;
+
+    let agent = null;
+
+    try {
+      agent = await ensureCurrentAgent();
+    } catch (error) {
+      console.error('Connect agent loading error:', error);
+      box.innerHTML = `
+        <div class="empty-card">
+          <h3>Could not load your AI</h3>
+          <p>${escapeHtml(error?.message || 'Please refresh the page and try again.')}</p>
+        </div>
+      `;
+      return;
+    }
+
+    if (!agent) {
+      selectedAvatarUrl = null;
+      box.innerHTML = `
+        <div class="empty-card">
+          <h3>Create an AI first</h3>
+          <p>You'll get a widget code to install once your AI exists.</p>
+          <a href="create-agent.html" class="btn btn-primary">
+            Create AI Agent — 7-day free trial
+          </a>
+        </div>
+      `;
+      return;
+    }
+
+    currentAgent = agent;
+
+    let ws = null;
+    try {
+      const { data, error } = await sb
+        .from('widget_settings')
+        .select('position,theme_color,welcome_message,avatar_url')
+        .eq('agent_id', agent.id)
+        .maybeSingle();
+
+      if (!error) ws = data || null;
+    } catch (error) {
+      console.error('Widget settings read exception:', error);
+      ws = null;
+    }
+
+    const position = ws?.position || 'bottom-right';
+    const color = ws?.theme_color || '#2F5FFF';
+    const welcome = ws?.welcome_message || 'Hi! 👋 How can I help you today?';
+    selectedAvatarUrl = ws?.avatar_url || null;
+
+    box.innerHTML = `
+      <!-- LIVE ANALYTICS SECTION INSIDE CONNECT -->
+      <div class="sec-title" style="margin-top:0;">
+        <h2>Live Connected Analytics</h2>
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="num" id="connStatConversations">-</div>
+          <div class="label">Conversations</div>
+        </div>
+        <div class="stat-card">
+          <div class="num" id="connStatMessages">-</div>
+          <div class="label">Messages</div>
+        </div>
+        <div class="stat-card">
+          <div class="num" id="connStatClicks">-</div>
+          <div class="label">Product Clicks</div>
+        </div>
+        <div class="stat-card">
+          <div class="num" id="connStatUnanswered">-</div>
+          <div class="label">Unanswered Questions</div>
+        </div>
+      </div>
+
+      <!-- WIDGET CODE SECTION -->
+      <div class="sec-title">
+        <h2>Widget Installation Code</h2>
+      </div>
+
+      <p style="font-size:14px;color:var(--ink-soft);margin-bottom:14px;">
+        Add this snippet to your website, right before the closing <code>&lt;/body&gt;</code> tag.
+      </p>
+
+      <div class="code-box">
+        <button class="copy-btn" onclick="copyWidgetCode()">Copy</button>
+        <div>
+          &lt;<span style="color:#7CA6FF;">script</span> 
+          <span style="color:#FFB27C;">src</span>=<span style="color:#7CE0B8;">"${escapeHtml(WIDGET_SRC)}"</span> 
+          <span style="color:#FFB27C;">data-agent</span>=<span style="color:#7CE0B8;">"${escapeHtml(agent.id)}"</span>&gt;
+          &lt;/<span style="color:#7CA6FF;">script</span>&gt;
+        </div>
+      </div>
+
+      <!-- WIDGET CUSTOMIZATION -->
+      <div class="sec-title" style="margin-top:28px;">
+        <h2>Customize your widget</h2>
+      </div>
+
+      <div class="field">
+        <label>Welcome message</label>
+        <input type="text" id="wsWelcome" value="${escapeAttr(welcome)}">
+      </div>
+
+      <div class="field">
+        <label>Position on page</label>
+        <select id="wsPosition">
+          <option value="bottom-right" ${position === 'bottom-right' ? 'selected' : ''}>Bottom right</option>
+          <option value="bottom-left" ${position === 'bottom-left' ? 'selected' : ''}>Bottom left</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Theme color</label>
+        <input type="color" id="wsColor" value="${escapeAttr(color)}" style="height:42px;width:80px;padding:2px;">
+      </div>
+
+      <div class="field">
+        <label>AI avatar</label>
+        <div class="avatar-uploader">
+          <div class="avatar-preview" id="avatarPreview">
+            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" id="avatarPlaceholderIcon">
+              <circle cx="12" cy="8" r="4"/>
+              <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+            </svg>
+            <img id="avatarPreviewImg" alt="Your AI's avatar" style="display:none;">
+          </div>
+
+          <div class="avatar-uploader-actions">
+            <input type="file" id="avatarFileInput" accept="image/png,image/jpeg,image/webp" hidden onchange="handleAvatarFile(event)">
+            <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('avatarFileInput').click()">
+              Upload photo
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm" id="removeAvatarBtn" onclick="removeAvatar()" style="display:none;">
+              Remove
+            </button>
+          </div>
+        </div>
+        <p class="field-hint" id="avatarUploadStatus" style="margin-top:6px;">
+          PNG, JPG or WEBP, up to 2MB.
+        </p>
+      </div>
+
+      <button class="btn btn-primary btn-sm" onclick="saveWidgetSettings()">
+        Save widget settings
+      </button>
+
+      <div id="widgetSaveMsg" style="display:none;margin-top:12px;font-size:13px;padding:8px 12px;border-radius:6px;"></div>
+
+      <a href="widget-preview.html?agent=${encodeURIComponent(agent.id)}" target="_blank" style="font-size:13px;font-weight:600;color:var(--cobalt);display:block;margin-top:22px;">
+        Preview your widget live →
+      </a>
+    `;
+
+    renderAvatarPreview();
+    loadConnectAnalytics();
+  }
+
+  // Copy Snippet Code
+  function copyWidgetCode() {
+    if (!currentAgent) return;
+    const code = `<script src="${WIDGET_SRC}" data-agent="${currentAgent.id}"><\/script>`;
+    navigator.clipboard.writeText(code).then(() => {
+      alert("Widget snippet copied to clipboard!");
+    });
+  }
+
+  // Avatar Management
+  function renderAvatarPreview() {
+    const img = document.getElementById('avatarPreviewImg');
+    const icon = document.getElementById('avatarPlaceholderIcon');
+    const removeBtn = document.getElementById('removeAvatarBtn');
+
+    if (selectedAvatarUrl && img) {
+      img.src = selectedAvatarUrl;
+      img.style.display = 'block';
+      if (icon) icon.style.display = 'none';
+      if (removeBtn) removeBtn.style.display = 'inline-block';
+    } else if (img) {
+      img.style.display = 'none';
+      if (icon) icon.style.display = 'block';
+      if (removeBtn) removeBtn.style.display = 'none';
+    }
+  }
+
+  async function handleAvatarFile(event) {
+    const file = event.target.files[0];
+    if (!file || !currentAgent) return;
+
+    const statusEl = document.getElementById('avatarUploadStatus');
+    if (statusEl) statusEl.textContent = "Uploading image...";
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const filePath = `avatars/${currentAgent.id}-${Date.now()}.${fileExt}`;
+
+      const { data, error } = await sb.storage
+        .from('widget-avatars')
+        .upload(filePath, file, { upsert: true });
+
+      if (error) throw error;
+
+      const { data: publicUrlData } = sb.storage
+        .from('widget-avatars')
+        .getPublicUrl(filePath);
+
+      selectedAvatarUrl = publicUrlData.publicUrl;
+      renderAvatarPreview();
+      if (statusEl) statusEl.textContent = "Photo uploaded successfully!";
+    } catch (err) {
+      console.error('Avatar upload error:', err);
+      if (statusEl) statusEl.textContent = "Upload failed: " + err.message;
+    }
+  }
+
+  function removeAvatar() {
+    selectedAvatarUrl = null;
+    renderAvatarPreview();
+  }
+
+  // Save Settings
+  async function saveWidgetSettings() {
+    if (!currentAgent) return;
+
+    const welcome = document.getElementById('wsWelcome').value;
+    const position = document.getElementById('wsPosition').value;
+    const color = document.getElementById('wsColor').value;
+    const msgEl = document.getElementById('widgetSaveMsg');
+
+    try {
+      const { error } = await sb
+        .from('widget_settings')
+        .upsert({
+          agent_id: currentAgent.id,
+          welcome_message: welcome,
+          position: position,
+          theme_color: color,
+          avatar_url: selectedAvatarUrl,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'agent_id' });
+
+      if (error) throw error;
+
+      if (msgEl) {
+        msgEl.style.display = 'block';
+        msgEl.style.background = '#DCFCE7';
+        msgEl.style.color = '#15803D';
+        msgEl.textContent = "Widget settings saved successfully!";
+      }
+    } catch (err) {
+      console.error('Save error:', err);
+      if (msgEl) {
+        msgEl.style.display = 'block';
+        msgEl.style.background = '#FEE2E2';
+        msgEl.style.color = '#B91C1C';
+        msgEl.textContent = "Error saving settings: " + err.message;
+      }
+    }
+  }
+
+  // Initialize Page
+  async function init() {
+    if (window.sbClient) {
+      sb = window.sbClient;
+    } else if (window.supabase) {
+      sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    }
+
+    if (!sb) {
+      console.error("Supabase client failed to initialize.");
+      return;
+    }
+
+    loadConnect();
+  }
+
+  document.addEventListener('DOMContentLoaded', init);
+</script>
+
+</body>
+</html>
