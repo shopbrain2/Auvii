@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign in to Auvii</title>
+<meta name="theme-color" content="#070b14">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="sb-config.js"></script>
+
+<style>
+:root{
+  --bg:#070b14;--surface:#0d1424;--border:rgba(148,163,184,.16);
+  --blue:#3b82f6;--blue-light:#60a5fa;--green:#34d399;--red:#f87171;
+  --text:#f8fafc;--muted:#94a3b8;--muted-2:#64748b;
+  --heading:"Space Grotesk",sans-serif;--body:"Inter",sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{overflow-x:clip;}
+body{
+  min-height:100vh;color:var(--text);font-family:var(--body);overflow-x:clip;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:28px 16px;
+  background:radial-gradient(circle at 10% 0%,rgba(59,130,246,.16),transparent 30%),radial-gradient(circle at 90% 15%,rgba(139,92,246,.12),transparent 30%),var(--bg);
+}
+a{color:inherit;text-decoration:none;}
+button,input{font:inherit;}
+
+.brand{display:flex;align-items:center;gap:10px;margin-bottom:22px;font-family:var(--heading);font-size:24px;font-weight:700;letter-spacing:-.045em;}
+.brand-mark{width:38px;height:38px;display:grid;place-items:center;border-radius:12px;background:linear-gradient(135deg,#60a5fa,#3b82f6 48%,#8b5cf6);box-shadow:0 0 28px rgba(59,130,246,.35);}
+.brand-mark::before{content:"✦";color:#fff;font-size:18px;}
+
+.card{
+  width:100%;max-width:420px;padding:28px 24px;border:1px solid var(--border);border-radius:22px;
+  background:linear-gradient(150deg,rgba(17,26,45,.85),rgba(9,14,25,.9));
+  box-shadow:0 30px 70px rgba(0,0,0,.35);
+}
+.card h1{font-family:var(--heading);font-size:26px;letter-spacing:-.03em;margin-bottom:6px;}
+.card .sub{color:var(--muted);font-size:14px;line-height:1.6;margin-bottom:20px;}
+
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:5px;margin-bottom:20px;border:1px solid var(--border);border-radius:14px;background:rgba(255,255,255,.03);}
+.tab{padding:11px;border:0;border-radius:10px;background:transparent;color:var(--muted);font-size:14px;font-weight:700;cursor:pointer;transition:.2s;}
+.tab.active{background:linear-gradient(135deg,#3b82f6,#6366f1);color:#fff;}
+
+.google-btn{
+  width:100%;min-height:50px;display:flex;align-items:center;justify-content:center;gap:10px;
+  border:1px solid var(--border);border-radius:12px;background:#fff;color:#1f2937;font-size:14px;font-weight:700;cursor:pointer;transition:.2s;
+}
+.google-btn:hover{transform:translateY(-1px);box-shadow:0 10px 28px rgba(255,255,255,.1);}
+.google-btn svg{width:20px;height:20px;flex:0 0 auto;}
+.divider{display:flex;align-items:center;gap:12px;margin:18px 0;color:var(--muted-2);font-size:12px;}
+.divider::before,.divider::after{content:"";flex:1;height:1px;background:var(--border);}
+
+.field{margin-bottom:14px;}
+.field label{display:block;margin-bottom:6px;color:#cbd5e1;font-size:13px;font-weight:600;}
+.input-wrap{position:relative;}
+.field input{
+  width:100%;min-height:50px;padding:0 14px;border:1px solid var(--border);border-radius:12px;
+  background:rgba(255,255,255,.04);color:var(--text);font-size:16px;outline:none;transition:.2s;
+}
+.field input:focus{border-color:rgba(96,165,250,.6);box-shadow:0 0 0 3px rgba(59,130,246,.15);}
+.field input::placeholder{color:#475569;}
+.input-wrap input{padding-right:64px;}
+.toggle-pw{position:absolute;right:6px;top:50%;transform:translateY(-50%);padding:8px 10px;border:0;background:transparent;color:var(--blue-light);font-size:12px;font-weight:700;cursor:pointer;}
+
+.row-between{display:flex;justify-content:flex-end;margin:-4px 0 16px;}
+.link-btn{border:0;background:transparent;color:var(--blue-light);font-size:13px;font-weight:600;cursor:pointer;padding:4px 0;}
+.link-btn:hover{text-decoration:underline;}
+
+.submit{
+  width:100%;min-height:52px;border:0;border-radius:12px;color:#fff;font-size:15px;font-weight:800;cursor:pointer;
+  background:linear-gradient(135deg,#3b82f6,#6366f1);box-shadow:0 15px 40px rgba(59,130,246,.25);transition:.2s;
+}
+.submit:hover{transform:translateY(-2px);}
+.submit:disabled,.google-btn:disabled{opacity:.6;cursor:default;transform:none;}
+
+.msg{display:none;margin-bottom:16px;padding:12px 14px;border-radius:12px;font-size:13px;line-height:1.55;}
+.msg.show{display:block;}
+.msg.error{background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);color:#fecaca;}
+.msg.ok{background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.3);color:#a7f3d0;}
+.msg.info{background:rgba(59,130,246,.1);border:1px solid rgba(96,165,250,.3);color:#bfdbfe;}
+
+.legal{margin-top:16px;color:var(--muted-2);font-size:12px;line-height:1.6;text-align:center;}
+.legal a{color:var(--muted);text-decoration:underline;}
+.back{margin-top:20px;color:var(--muted-2);font-size:13px;}
+.back a:hover{color:#fff;}
+.hidden{display:none !important;}
+</style>
+</head>
+
+<body>
+
+<a href="index.html" class="brand"><span class="brand-mark"></span>Auvii</a>
+
+<main class="card">
+
+  <!-- LOG IN / SIGN UP -->
+  <section id="viewMain">
+
+    <h1 id="mainTitle">Welcome back</h1>
+    <p class="sub" id="mainSub">Log in to manage your Auvii assistant.</p>
+
+    <div class="tabs" role="tablist">
+      <button type="button" class="tab active" id="tabLogin" role="tab">Log in</button>
+      <button type="button" class="tab" id="tabSignup" role="tab">Sign up</button>
+    </div>
+
+    <div class="msg" id="mainMsg" role="status"></div>
+
+    <button type="button" class="google-btn" id="googleBtn">
+      <svg viewBox="0 0 48 48" aria-hidden="true">
+        <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.2 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z"/>
+        <path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.6 5.9c4.4-4.1 7-10.1 7-17.6z"/>
+        <path fill="#FBBC05" d="M10.5 28.7a14.5 14.5 0 0 1 0-9.4l-7.9-6.1a24 24 0 0 0 0 21.6l7.9-6.1z"/>
+        <path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.6l-7.6-5.9c-2.1 1.4-4.8 2.3-7.6 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/>
+      </svg>
+      <span id="googleLabel">Continue with Google</span>
+    </button>
+
+    <div class="divider">or use your email</div>
+
+    <form id="mainForm" novalidate>
+
+      <div class="field hidden" id="storeField">
+        <label for="storeName">Store name</label>
+        <input id="storeName" type="text" autocomplete="organization" placeholder="My Store">
+      </div>
+
+      <div class="field">
+        <label for="email">Email</label>
+        <input id="email" type="email" inputmode="email" autocomplete="email" placeholder="you@example.com" required>
+      </div>
+
+      <div class="field">
+        <label for="password">Password</label>
+        <div class="input-wrap">
+          <input id="password" type="password" autocomplete="current-password" placeholder="Your password" required>
+          <button type="button" class="toggle-pw" data-target="password">Show</button>
+        </div>
+      </div>
+
+      <div class="row-between" id="forgotRow">
+        <button type="button" class="link-btn" id="forgotLink">Forgot password?</button>
+      </div>
+
+      <button type="submit" class="submit" id="mainSubmit">Log in</button>
+
+    </form>
+
+    <p class="legal hidden" id="legal">
+      By creating an account you agree to our
+      <a href="terms.html">Terms</a> and <a href="privacy.html">Privacy Policy</a>.
+    </p>
+
+  </section>
+
+  <!-- FORGOT PASSWORD -->
+  <section id="viewForgot" class="hidden">
+
+    <h1>Reset your password</h1>
+    <p class="sub">Enter your email and we'll send you a link to choose a new password.</p>
+
+    <div class="msg" id="forgotMsg" role="status"></div>
+
+    <form id="forgotForm" novalidate>
+      <div class="field">
+        <label for="forgotEmail">Email</label>
+        <input id="forgotEmail" type="email" inputmode="email" autocomplete="email" placeholder="you@example.com" required>
+      </div>
+      <button type="submit" class="submit" id="forgotSubmit">Send reset link</button>
+    </form>
+
+    <div style="text-align:center;margin-top:16px;">
+      <button type="button" class="link-btn" id="backToLogin">← Back to log in</button>
+    </div>
+
+  </section>
+
+  <!-- SET NEW PASSWORD -->
+  <section id="viewReset" class="hidden">
+
+    <h1>Choose a new password</h1>
+    <p class="sub">Use at least 8 characters.</p>
+
+    <div class="msg" id="resetMsg" role="status"></div>
+
+    <form id="resetForm" novalidate>
+      <div class="field">
+        <label for="newPassword">New password</label>
+        <div class="input-wrap">
+          <input id="newPassword" type="password" autocomplete="new-password" placeholder="New password" required>
+          <button type="button" class="toggle-pw" data-target="newPassword">Show</button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="confirmPassword">Confirm password</label>
+        <input id="confirmPassword" type="password" autocomplete="new-password" placeholder="Repeat password" required>
+      </div>
+      <button type="submit" class="submit" id="resetSubmit">Update password</button>
+    </form>
+
+  </section>
+
+</main>
+
+<p class="back"><a href="index.html">← Back to home</a></p>
+
+<script>
+(function(){
+
+  /* ---------- helpers ---------- */
+
+  const $ = id => document.getElementById(id);
+  const params = new URLSearchParams(window.location.search);
+  const hash = window.location.hash || '';
+
+  const ALLOWED_NEXT = ['account.html','create-agent.html'];
+  let next = params.get('next');
+  if(!ALLOWED_NEXT.includes(next)) next = null;
+
+  const isRecovery =
+    params.get('mode') === 'reset' ||
+    hash.includes('type=recovery');
+
+  let mode = params.get('mode') === 'signup' ? 'signup' : 'login';
+  let recoveryActive = isRecovery;
+  let busy = false;
+
+  function pageUrl(query){
+    return new URL('auth.html' + (query || ''), window.location.href).href;
+  }
+
+  function showMsg(id, type, text){
+    const el = $(id);
+    el.className = 'msg show ' + type;
+    el.textContent = text;
+  }
+
+  function clearMsg(id){
+    const el = $(id);
+    el.className = 'msg';
+    el.textContent = '';
+  }
+
+  function show(viewId){
+    ['viewMain','viewForgot','viewReset'].forEach(v => {
+      $(v).classList.toggle('hidden', v !== viewId);
+    });
+  }
+
+  function friendly(error){
+    const m = String(error?.message || error || '').toLowerCase();
+    if(m.includes('invalid login')) return 'Wrong email or password. If you signed up with Google, use "Continue with Google".';
+    if(m.includes('email not confirmed')) return 'Please confirm your email first. Check your inbox for the confirmation link.';
+    if(m.includes('already registered') || m.includes('already been registered')) return 'This email already has an account. Log in instead.';
+    if(m.includes('password') && m.includes('6')) return 'Password must be at least 6 characters.';
+    if(m.includes('rate limit') || m.includes('too many')) return 'Too many attempts. Please wait a minute and try again.';
+    if(m.includes('network') || m.includes('failed to fetch')) return 'Network problem. Check your connection and try again.';
+    return error?.message || 'Something went wrong. Please try again.';
+  }
+
+  function setBusy(on, buttons){
+    busy = on;
+    buttons.forEach(id => { $(id).disabled = on; });
+  }
+
+  /* ---------- mode switching ---------- */
+
+  function setMode(newMode){
+    mode = newMode;
+    const signup = mode === 'signup';
+
+    $('tabLogin').classList.toggle('active', !signup);
+    $('tabSignup').classList.toggle('active', signup);
+    $('storeField').classList.toggle('hidden', !signup);
+    $('forgotRow').classList.toggle('hidden', signup);
+    $('legal').classList.toggle('hidden', !signup);
+
+    $('mainTitle').textContent = signup ? 'Create your Auvii account' : 'Welcome back';
+    $('mainSub').textContent = signup
+      ? 'Sign up, then create your AI agent from your dashboard. Free for 7 days.'
+      : 'Log in to manage your Auvii assistant.';
+    $('mainSubmit').textContent = signup ? 'Create account' : 'Log in';
+    $('googleLabel').textContent = signup ? 'Sign up with Google' : 'Continue with Google';
+    $('password').autocomplete = signup ? 'new-password' : 'current-password';
+    $('password').placeholder = signup ? 'At least 8 characters' : 'Your password';
+
+    clearMsg('mainMsg');
+  }
+
+  $('tabLogin').addEventListener('click', () => setMode('login'));
+  $('tabSignup').addEventListener('click', () => setMode('signup'));
+
+  $('forgotLink').addEventListener('click', () => {
+    $('forgotEmail').value = $('email').value.trim();
+    clearMsg('forgotMsg');
+    show('viewForgot');
+  });
+
+  $('backToLogin').addEventListener('click', () => {
+    show('viewMain');
+    setMode('login');
+  });
+
+  document.querySelectorAll('.toggle-pw').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const input = $(btn.dataset.target);
+      const hide = input.type === 'text';
+      input.type = hide ? 'password' : 'text';
+      btn.textContent = hide ? 'Show' : 'Hide';
+    });
+  });
+
+  /* ---------- routing after sign-in ---------- */
+
+  async function routeAfterAuth(user){
+
+    /* Everyone lands on the dashboard (account.html).
+       New users press "Create AI Agent" there. */
+    window.location.replace(next || 'account.html');
+  }
+
+  /* ---------- log in / sign up ---------- */
+
+  $('mainForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    if(busy) return;
+    clearMsg('mainMsg');
+
+    const email = $('email').value.trim();
+    const password = $('password').value;
+
+    if(!email || !/^\S+@\S+\.\S+$/.test(email)){
+      showMsg('mainMsg','error','Please enter a valid email address.');
+      return;
+    }
+    if(!password){
+      showMsg('mainMsg','error','Please enter your password.');
+      return;
+    }
+
+    const signup = mode === 'signup';
+
+    if(signup && password.length < 8){
+      showMsg('mainMsg','error','Password must be at least 8 characters.');
+      return;
+    }
+
+    setBusy(true, ['mainSubmit','googleBtn']);
+    $('mainSubmit').textContent = signup ? 'Creating account…' : 'Logging in…';
+
+    try{
+
+      if(signup){
+
+        const storeName = $('storeName').value.trim();
+
+        const {data, error} = await sb.auth.signUp({
+          email,
+          password,
+          options:{
+            data:{ store_name: storeName || email },
+            emailRedirectTo: pageUrl(next ? '?next=' + next : '')
+          }
+        });
+
+        if(error) throw error;
+
+        /* Supabase returns an empty identities list for an existing email */
+        if(data?.user && Array.isArray(data.user.identities) && data.user.identities.length === 0){
+          showMsg('mainMsg','error','This email already has an account. Log in instead.');
+          return;
+        }
+
+        if(data?.session){
+          await routeAfterAuth(data.user);
+          return;
+        }
+
+        showMsg('mainMsg','ok','Account created. Check your email and tap the confirmation link, then log in.');
+        setMode('login');
+        showMsg('mainMsg','ok','Account created. Check your email and tap the confirmation link, then log in.');
+
+      }else{
+
+        const {data, error} = await sb.auth.signInWithPassword({email, password});
+        if(error) throw error;
+        await routeAfterAuth(data.user);
+
+      }
+
+    }catch(error){
+      console.error('Auth error:', error);
+      showMsg('mainMsg','error', friendly(error));
+    }finally{
+      setBusy(false, ['mainSubmit','googleBtn']);
+      $('mainSubmit').textContent = mode === 'signup' ? 'Create account' : 'Log in';
+    }
+  });
+
+  /* ---------- Google ---------- */
+
+  $('googleBtn').addEventListener('click', async () => {
+    if(busy) return;
+    clearMsg('mainMsg');
+    setBusy(true, ['mainSubmit','googleBtn']);
+
+    try{
+      const {error} = await sb.auth.signInWithOAuth({
+        provider:'google',
+        options:{ redirectTo: pageUrl(next ? '?next=' + next : '') }
+      });
+      if(error) throw error;
+      /* the browser now leaves for Google */
+    }catch(error){
+      console.error('Google sign-in error:', error);
+      showMsg('mainMsg','error', friendly(error));
+      setBusy(false, ['mainSubmit','googleBtn']);
+    }
+  });
+
+  /* ---------- forgot password ---------- */
+
+  $('forgotForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    if(busy) return;
+    clearMsg('forgotMsg');
+
+    const email = $('forgotEmail').value.trim();
+
+    if(!email || !/^\S+@\S+\.\S+$/.test(email)){
+      showMsg('forgotMsg','error','Please enter a valid email address.');
+      return;
+    }
+
+    setBusy(true, ['forgotSubmit']);
+    $('forgotSubmit').textContent = 'Sending…';
+
+    try{
+      const {error} = await sb.auth.resetPasswordForEmail(email, {
+        redirectTo: pageUrl('?mode=reset')
+      });
+      if(error) throw error;
+
+      showMsg('forgotMsg','ok','If an account exists for that email, a reset link is on its way. Check your inbox and spam folder.');
+
+    }catch(error){
+      console.error('Reset email error:', error);
+      showMsg('forgotMsg','error', friendly(error));
+    }finally{
+      setBusy(false, ['forgotSubmit']);
+      $('forgotSubmit').textContent = 'Send reset link';
+    }
+  });
+
+  /* ---------- set new password ---------- */
+
+  $('resetForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    if(busy) return;
+    clearMsg('resetMsg');
+
+    const pw = $('newPassword').value;
+    const pw2 = $('confirmPassword').value;
+
+    if(pw.length < 8){
+      showMsg('resetMsg','error','Password must be at least 8 characters.');
+      return;
+    }
+    if(pw !== pw2){
+      showMsg('resetMsg','error','The two passwords do not match.');
+      return;
+    }
+
+    setBusy(true, ['resetSubmit']);
+    $('resetSubmit').textContent = 'Updating…';
+
+    try{
+      const {data, error} = await sb.auth.updateUser({password: pw});
+      if(error) throw error;
+
+      recoveryActive = false;
+      showMsg('resetMsg','ok','Password updated. Taking you in…');
+
+      setTimeout(() => routeAfterAuth(data.user), 900);
+
+    }catch(error){
+      console.error('Update password error:', error);
+      showMsg('resetMsg','error', friendly(error));
+      setBusy(false, ['resetSubmit']);
+      $('resetSubmit').textContent = 'Update password';
+    }
+  });
+
+  /* ---------- start up ---------- */
+
+  async function start(){
+
+    setMode(mode);
+
+    if(typeof sb === 'undefined'){
+      showMsg('mainMsg','error','Sign-in is unavailable right now (Supabase is not loaded). Check sb-config.js.');
+      setBusy(true, ['mainSubmit','googleBtn']);
+      return;
+    }
+
+    /* Password recovery link opened */
+    sb.auth.onAuthStateChange((event) => {
+      if(event === 'PASSWORD_RECOVERY'){
+        recoveryActive = true;
+        show('viewReset');
+      }
+    });
+
+    if(recoveryActive){
+      show('viewReset');
+      return;
+    }
+
+    /* Account suspended: make sure the old session is gone */
+    if(params.get('suspended') === '1'){
+      try{ await sb.auth.signOut(); }catch(error){ console.error(error); }
+      showMsg('mainMsg','error','This account has been suspended. Contact support if you think this is a mistake.');
+      return;
+    }
+
+    /* Already signed in (also covers the return trip from Google) */
+    try{
+      const {data:{session}, error} = await sb.auth.getSession();
+      if(error) throw error;
+
+      if(session?.user && !recoveryActive){
+        showMsg('mainMsg','info','Signing you in…');
+        await routeAfterAuth(session.user);
+      }
+    }catch(error){
+      console.error('Session check failed:', error);
+    }
+  }
+
+  /* Coming back from Google with the Back button: unlock the form */
+  window.addEventListener('pageshow', e => {
+    if(e.persisted){
+      setBusy(false, ['mainSubmit','googleBtn']);
+      $('mainSubmit').textContent = mode === 'signup' ? 'Create account' : 'Log in';
+    }
+  });
+
+  start();
+
+})();
+</script>
+
+</body>
+</html>
