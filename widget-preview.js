@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Widget Preview — Auvii</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin:0; background:#F4F5F7; color:#1C1C1E; }
+  .wrap { max-width:560px; margin:0 auto; padding:28px 20px 160px; }
+  h1 { font-size:20px; margin:0 0 6px; }
+  p { color:#5A5A60; font-size:14px; line-height:1.5; margin:0 0 10px; }
+  .mock-site { background:#fff; border-radius:14px; padding:26px 20px; margin-top:22px; box-shadow:0 2px 10px rgba(0,0,0,0.06); }
+  .mock-site h2 { font-size:16px; margin:0 0 8px; }
+  .mock-site .line { height:10px; background:#EEE; border-radius:5px; margin-bottom:10px; }
+  .mock-site .line.short { width:60%; }
+  .step { background:#EFEFEA; color:#4B5058; padding:11px 14px; border-radius:10px; font-size:13px; margin-top:10px; white-space:pre-wrap; overflow-wrap:anywhere; }
+  .step.ok { background:#E4F5EC; color:#1A7A4C; }
+  .step.bad { background:#FFF3EC; color:#B5431F; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Widget Preview</h1>
+    <p>This page acts like a customer's website with your Auvii widget installed. Tap the chat bubble in the corner to try it.</p>
+
+    <div class="step" id="s1">1. Checking your agent…</div>
+    <div class="step" id="s2">2. Loading the widget file…</div>
+    <div class="step" id="s3">3. Showing the bubble…</div>
+
+    <div class="mock-site">
+      <h2>Example Store</h2>
+      <div class="line"></div>
+      <div class="line"></div>
+      <div class="line short"></div>
+    </div>
+  </div>
+
+<script>
+(function(){
+  var FN = "https://aqxdmlyvmjmkdnqkwgot.supabase.co/functions/v1/chat_ai";
+  var KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFxeGRtbHl2bWpta2RucWt3Z290Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzNTkzODIsImV4cCI6MjEwMzkzNTM4Mn0.gNsY7NbIWhSfvvxohZQWAtJNXf_61-UluSfCjanX780";
+  var agentId = new URLSearchParams(location.search).get('agent');
+  /* Preview mode shows the real reason when something goes wrong in the chat */
+  try{
+    if(agentId && location.search.toLowerCase().indexOf('auviidebug') === -1){
+      history.replaceState(null, '', location.pathname + location.search + '&auviidebug=1');
+    }
+  }catch(e){}
+
+  function set(id, text, kind){
+    var el = document.getElementById(id);
+    el.textContent = text;
+    el.className = 'step' + (kind ? ' ' + kind : '');
+  }
+
+  window.addEventListener('error', function(e){
+    set('s3', 'The widget script stopped with an error:\n' + e.message, 'bad');
+  });
+
+  if(!agentId){
+    set('s1', '1. No agent ID in the address. Open this page from the Preview button in your dashboard (Connect).', 'bad');
+    set('s2', '2. Skipped.');
+    set('s3', '3. Skipped.');
+    return;
+  }
+
+  /* Step 1: ask the server directly, so the real reason is visible */
+  fetch(FN, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + KEY },
+    body: JSON.stringify({ agent_id: agentId, action: 'init' })
+  }).then(function(r){
+    return r.text().then(function(t){
+      var j = null; try { j = JSON.parse(t); } catch(e) {}
+      return { status: r.status, json: j, raw: t };
+    });
+  }).then(function(res){
+    if(res.status === 200 && res.json && !res.json.error){
+      set('s1', '1. Agent found: ' + (res.json.agent_name || 'your assistant') +
+        '\nPosition: ' + (res.json.position || 'bottom-right') +
+        '  |  Size: ' + (res.json.size || 'medium (old chat_ai: not updated yet)') +
+        '  |  Distance: ' + (res.json.offset || 'normal') +
+        '\nPicture: ' + (res.json.avatar_url ? 'yes' : 'none saved'), 'ok');
+      loadWidget();
+    }else{
+      var why = res.json && (res.json.reason || res.json.error) ? (res.json.reason ? res.json.reason + ' - ' : '') + res.json.error : res.raw.slice(0, 200);
+      set('s1', '1. The server did not accept this agent (HTTP ' + res.status + ').\nReason: ' + why +
+        '\n\nThe widget stays hidden when this happens, which is why no bubble shows.', 'bad');
+      set('s2', '2. Skipped.');
+      set('s3', '3. Skipped.');
+    }
+  }).catch(function(err){
+    set('s1', '1. Could not reach the chat_ai function (' + err.message + ').\nCheck that chat_ai is deployed and Verify JWT is off.', 'bad');
+    set('s2', '2. Skipped.');
+    set('s3', '3. Skipped.');
+  });
+
+  /* Step 2: find and load the real widget file */
+  function probe(url){
+    return fetch(url + '?v=' + Date.now(), { cache: 'no-store' }).then(function(r){
+      return r.text().then(function(t){
+        return { url: url, status: r.status, isAuvii: t.indexOf('Auvii AI Widget') !== -1, size: t.length };
+      });
+    }).catch(function(){ return { url: url, status: 0, isAuvii: false, size: 0 }; });
+  }
+
+  function loadWidget(){
+    var tries = ['auvii-chat.js', 'https://auvii.vercel.app/auvii-chat.js'];
+    Promise.all(tries.map(probe)).then(function(list){
+      var report = list.map(function(x){
+        return x.url + ' -> ' + (x.status ? 'HTTP ' + x.status : 'blocked/unreachable') +
+          (x.status === 200 ? (x.isAuvii ? ' (Auvii widget, ' + x.size + ' bytes)' : ' (this is NOT the Auvii widget file - wrong or old file)') : '');
+      }).join('\n');
+      var good = list.filter(function(x){ return x.status === 200 && x.isAuvii; })[0];
+      if(!good){
+        set('s2', '2. The widget file was not found.\n' + report +
+          '\n\nUpload the newest auvii-chat.js to the main folder of your site (next to index.html), named exactly auvii-chat.js, then open https://auvii.vercel.app/auvii-chat.js in a browser - it should start with "/* Auvii AI Widget".', 'bad');
+        set('s3', '3. Skipped.');
+        return;
+      }
+      var s = document.createElement('script');
+      s.src = good.url + '?v=' + Date.now();
+      s.setAttribute('data-agent', agentId);
+      s.onload = function(){
+        set('s2', '2. Widget file loaded.\n' + report, 'ok');
+        setTimeout(function(){
+          var root = document.getElementById('auvii-widget-root');
+          if(root){
+            set('s3', '3. The bubble is on the page. Look at the corner of your screen and tap it.', 'ok');
+          }else{
+            set('s3', '3. The file loaded but built no bubble. Reload the page once and try again.', 'bad');
+          }
+        }, 1500);
+      };
+      s.onerror = function(){
+        set('s2', '2. The browser could not run the widget file.\n' + report, 'bad');
+        set('s3', '3. Skipped.');
+      };
+      document.body.appendChild(s);
+    });
+  }
+})();
+</script>
+</body>
+</html>
