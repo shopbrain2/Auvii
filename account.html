@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#070A12">
+<title>Opening your dashboard - Auvii</title>
+<style>
+  html,body{margin:0;height:100%;background:#070A12;color:#9AA5C0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+  .w{height:100%;display:flex;align-items:center;justify-content:center;text-align:center;padding:20px;font-size:15px}
+  a{color:#8FAEFF}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="sb-config.js"></script>
+<script src="plan-config.js"></script>
+</head>
+<body>
+<div class="w" id="msg">Opening your dashboard...</div>
+<script>
+/* Router: sends each signed-in user to the dashboard page for their plan.
+   Free Trial and Premium -> premium.html, Standard -> standard.html, Basic -> basic.html.
+   (Old links to account.html keep working.) */
+(function(){
+  var qs = window.location.search || '';
+  function go(plan){ window.location.replace((AUVII_PAGE_FOR[plan] || 'basic') + '.html' + qs); }
+  function fail(){ document.getElementById('msg').innerHTML = 'Could not open your dashboard. <a href="auth.html">Log in again</a>'; }
+  try{
+    sb.auth.getSession().then(function(r){
+      var session = r && r.data && r.data.session;
+      if(!session){ window.location.replace('auth.html'); return; }
+      if(!AUVII_BILLING_LIVE){ go(auviiPreviewPlan()); return; }
+      sb.from('subscriptions').select('*').eq('user_id', session.user.id).maybeSingle().then(function(res){
+        go(auviiPlanKeyFromRow(res && res.data, session.user.created_at));
+      }).catch(function(){ go('free'); });
+    }).catch(fail);
+  }catch(e){ fail(); }
+})();
+</script>
+</body>
+</html>
